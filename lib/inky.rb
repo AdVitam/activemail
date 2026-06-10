@@ -1,94 +1,141 @@
+# typed: strict
+# frozen_string_literal: true
+
 require 'nokogiri'
+require 'sorbet-runtime'
+
+require_relative 'inky/version'
+require_relative 'inky/components/base'
+require_relative 'inky/components/button'
+require_relative 'inky/components/row'
+require_relative 'inky/components/columns'
+require_relative 'inky/components/container'
+require_relative 'inky/components/inky'
+require_relative 'inky/components/block_grid'
+require_relative 'inky/components/menu'
+require_relative 'inky/components/menu_item'
+require_relative 'inky/components/center'
+require_relative 'inky/components/callout'
+require_relative 'inky/components/spacer'
+require_relative 'inky/components/h_line'
+require_relative 'inky/components/wrapper'
 require_relative 'inky/configuration'
-require_relative 'inky/component_factory'
 
 module Inky
   class Core
-    attr_accessor :components, :column_count, :component_lookup, :component_tags
+    extend T::Sig
 
-    include ComponentFactory
+    # Used to circumvent a Nokogiri limitation: a bare <th> cannot live outside a
+    # <tr>, so components that emit <th> use this placeholder, swapped back at the
+    # end. See https://github.com/zurb/inky-rb/pull/94
+    INTERIM_TH_TAG = 'inky-interim-th'
+    INTERIM_TH_TAG_REGEX = T.let(%r{(?<=<|</)#{Regexp.escape(INTERIM_TH_TAG)}}, Regexp)
+
+    DEFAULT_COMPONENTS = T.let(
+      {
+        'button' => Inky::Components::Button,
+        'row' => Inky::Components::Row,
+        'columns' => Inky::Components::Columns,
+        'container' => Inky::Components::Container,
+        'inky' => Inky::Components::Inky,
+        'block-grid' => Inky::Components::BlockGrid,
+        'menu' => Inky::Components::Menu,
+        'item' => Inky::Components::MenuItem,
+        'center' => Inky::Components::Center,
+        'callout' => Inky::Components::Callout,
+        'spacer' => Inky::Components::Spacer,
+        'h-line' => Inky::Components::HLine,
+        'wrapper' => Inky::Components::Wrapper
+      }.freeze,
+      Inky::ComponentMap
+    )
+
+    sig { returns(Integer) }
+    attr_reader :column_count
+
+    sig { returns(Integer) }
+    attr_reader :container_width
+
+    sig { returns(T::Hash[String, Inky::Components::Base]) }
+    attr_reader :components
+
+    sig { params(options: T::Hash[Symbol, T.untyped]).void }
     def initialize(options = {})
-      self.components = {
-        button: 'button',
-        row: 'row',
-        columns: 'columns',
-        container: 'container',
-        inky: 'inky',
-        block_grid: 'block-grid',
-        menu: 'menu',
-        center: 'center',
-        callout: 'callout',
-        spacer: 'spacer',
-        wrapper: 'wrapper',
-        menu_item: 'item',
-        h_line: 'h-line',
-      }.merge(::Inky.configuration.components).merge(options[:components] || {})
+      config = ::Inky.configuration
+      registry = DEFAULT_COMPONENTS.merge(config.components).merge(options[:components] || {})
 
-      self.component_lookup = components.invert
-
-      self.column_count = options[:column_count] || ::Inky.configuration.column_count
-
-      self.component_tags = components.values
+      @components = T.let(
+        registry.transform_values { |klass| klass.new(self) },
+        T::Hash[String, Inky::Components::Base]
+      )
+      @column_count = T.let((options[:column_count] || config.column_count).to_i, Integer)
+      @container_width = T.let((options[:container_width] || config.container_width).to_i, Integer)
     end
 
+    sig { params(html_string: T.untyped).returns(String) }
     def release_the_kraken(html_string)
-      # Force conversion to string. (required for Rails 7.1+)
       html_string = html_string.to_s
-
-      if html_string.encoding.name == "ASCII-8BIT"
-        html_string.force_encoding('utf-8') # transform_doc barfs if encoding is ASCII-8bit
-      end
+      html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
       html_string = html_string.gsub(/doctype/i, 'DOCTYPE')
+
       raws, str = Inky::Core.extract_raws(html_string)
       parse_cmd = str =~ /<html/i ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)
       transform_doc(html)
       string = html.to_html
-      string.gsub!(INTERIM_TH_TAG_REGEX, 'th')
-      string.gsub!(' ', '&nbsp;') # Convert non-breaking spaces to explicit &nbsp; entity
+      string = string.gsub(INTERIM_TH_TAG_REGEX, 'th')
+      string = string.gsub(" ", '&nbsp;')
       Inky::Core.re_inject_raws(string, raws)
     end
 
+    sig { params(elem: Nokogiri::XML::Node).returns(Nokogiri::XML::Node) }
     def transform_doc(elem)
       if elem.respond_to?(:children)
-        elem.children.each do |child|
-          transform_doc(child)
-        end
-        component = component_factory(elem)
-        elem.replace(component) if component
+        elem.children.each { |child| transform_doc(child) }
+        markup = component_factory(elem)
+        elem.replace(markup) if markup
       end
       elem
     end
 
+    sig { params(node: Nokogiri::XML::Node).returns(T.nilable(String)) }
+    def component_factory(node)
+      component = components[node.name]
+      return unless component
+
+      inner = node.children.map(&:to_s).join
+      component.transform(node, inner)
+    end
+
+    sig { params(string: String).returns([T::Array[String], String]) }
     def self.extract_raws(string)
       raws = []
       i = 0
-      regex = %r(< *raw *>(.*?)</ *raw *>)
+      # Multi-line aware (PR #101): captures everything between non-nested raw tags.
+      regex = %r{(?:\n *)?< *raw *>([\s\S]*?)</ *raw *>(?: *\n)?}i
       str = string
-      while raw = str.match(regex)
-        raws[i] = raw[1]
+      while (raw = str.match(regex))
+        raws[i] = T.must(raw[1])
         str = str.sub(regex, "###RAW#{i}###")
         i += 1
       end
       [raws, str]
     end
 
+    sig { params(string: String, raws: T::Array[String]).returns(String) }
     def self.re_inject_raws(string, raws)
       str = string
       raws.each_with_index do |val, i|
         str = str.sub("###RAW#{i}###", val)
       end
-      # If we're in rails, these should be considered safe strings
       str = str.html_safe if str.respond_to?(:html_safe)
       str
     end
   end
 end
-begin
-  # Only valid in rails environments
-  require 'foundation_emails'
+
+if defined?(::Rails::Engine)
   require 'inky/rails/engine'
   require 'inky/rails/template_handler'
   require 'inky/rails/version'
-rescue LoadError
 end

@@ -1,6 +1,10 @@
+# typed: strict
+# frozen_string_literal: true
+
+require_relative '../version'
+
 module Inky
   module Rails
-    VERSION = '1.4.2.1'.freeze
+    VERSION = Inky::VERSION
   end
-  NODE_VERSION, GEM_VERSION = Rails::VERSION.rpartition('.').map(&:freeze)
 end

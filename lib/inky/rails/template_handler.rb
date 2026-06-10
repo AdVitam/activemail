@@ -1,3 +1,6 @@
+# typed: false
+# frozen_string_literal: true
+
 module Inky
   module Rails
     class TemplateHandler
