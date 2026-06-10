@@ -82,6 +82,13 @@ class GridTest < InkyTest
     assert_includes output, 'small-6 large-6'
   end
 
+  def test_passed_through_attribute_values_are_escaped
+    output = render('<columns title="a &quot;b&quot;">x</columns>')
+    th = Nokogiri::HTML.fragment(output).at_css('th.columns')
+
+    assert_equal 'a "b"', th['title']
+  end
+
   def test_expander_only_on_full_width_without_nested_row
     full = render('<columns>One</columns>')
     nested = render('<row><columns><row></row></columns></row>')
