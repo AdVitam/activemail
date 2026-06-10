@@ -26,8 +26,9 @@ markup updated to 2026 email best practices.
 - **`mso-line-height-rule:exactly`** on `<spacer>` to stop Outlook inflating it.
 - **Multi-line `<raw>` support** (upstream PR #101).
 - **Sorbet `# typed: strict`** across `lib/`, with full signatures.
-- **Minitest suite** with golden-file coverage for every component plus error and
-  edge cases.
+- **Minitest suite** with golden-markup assertions (structural comparison:
+  whitespace, attribute and class ordering normalized) for every component, plus
+  error and edge cases and the Rails template-handler integration path.
 - **GitHub Actions CI**: Ruby 3.2/3.3/3.4/4.0 × Rails 7.1/8.0/8.1.
 
 ### Changed
@@ -36,6 +37,13 @@ markup updated to 2026 email best practices.
   pixel `max-width` so columns stack naturally on small screens without a media
   query, and are restored to a grid in Outlook via ghost cells. The `small-*`,
   `large-*`, `first`, `last` classes are preserved for media-query enhancement.
+  Ghost-cell widths are `container_width × large / column_count`, capped at
+  `container_width`, with **no gutter model** (unlike 1.x where gutters came from
+  Foundation's CSS padding) — add padding inside columns for gutters.
+- Column content cells carry an inline `font-weight:normal;text-align:left`
+  reset, replacing the equivalent rule foundation-emails applied via CSS.
+- The install generator no longer emits Foundation's SCSS; it generates a
+  neutral modern mailer layout (MSO settings, color-scheme metas, `role="article"`).
 - All generated tables carry explicit `border="0" cellpadding="0" cellspacing="0"`
   and inline `style` (no reliance on `!important` or `border-radius`, both stripped
   by Orange.fr webmail).

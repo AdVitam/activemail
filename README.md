@@ -75,7 +75,7 @@ Fluid-hybrid wrapper, capped at `container_width`, wrapped in an MSO ghost table
 ```
 
 ```html
-<!--[if mso | IE]><table align="center" width="600">...<![endif]-->
+<!--[if mso | IE]><table role="presentation" align="center" width="600">...<![endif]-->
 <table class="container" align="center" style="width:100%;max-width:600px;margin:0 auto;">
   <tbody><tr><td>...</td></tr></tbody>
 </table>
@@ -97,11 +97,17 @@ media-query enhancement.
 <table class="row" style="width:100%;"><tbody><tr>
   <!--[if mso | IE]><td width="300" valign="top"><![endif]-->
   <th class="small-12 large-6 columns first last" style="display:inline-block;vertical-align:top;width:100%;max-width:300px;">
-    <table style="width:100%;"><tbody><tr><th>Hi</th></tr></tbody></table>
+    <table style="width:100%;"><tbody><tr><th style="font-weight:normal;text-align:left;">Hi</th></tr></tbody></table>
   </th>
   <!--[if mso | IE]></td><![endif]-->
 </tr></tbody></table>
 ```
+
+Column widths are computed as `container_width × large / column_count`, capped
+at `container_width`, **with no gutter model**: two `large="6"` columns sit
+edge-to-edge (300px + 300px in a 600px container). Add padding inside your
+columns for gutters, and keep the `large` sizes of a row summing to at most
+`column_count`, otherwise the ghost cells will wrap in Outlook.
 
 ### `<button>`
 
@@ -200,6 +206,9 @@ markup string.
 
 ```ruby
 class Hr < Inky::Components::Base
+  extend T::Sig
+
+  sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
   def transform(node, _inner)
     klass = combine_classes(node, 'divider')
     %(<table class="#{klass}" role="presentation" style="width:100%;"><tbody><tr><td></td></tr></tbody></table>)
@@ -208,6 +217,9 @@ end
 
 Inky.configuration.register_component('hr-line', Hr)
 ```
+
+The `sig` is recommended (and required if your app runs `srb tc`); a plain
+`def transform(node, _inner)` without it also works at runtime.
 
 ```html
 <hr-line class="muted"></hr-line>
