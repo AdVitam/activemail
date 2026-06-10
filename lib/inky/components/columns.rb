@@ -10,7 +10,7 @@ module Inky
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
-        col_count = T.must(node.parent).elements.size
+        col_count = node.parent.elements.size
 
         small_val = node.attr('small')
         large_val = node.attr('large')

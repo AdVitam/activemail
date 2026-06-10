@@ -84,7 +84,7 @@ module Inky
       transform_doc(html)
       string = html.to_html
       string = string.gsub(INTERIM_TH_TAG_REGEX, 'th')
-      string = string.gsub(" ", '&nbsp;')
+      string = string.gsub(' ', '&nbsp;')
       Inky::Core.re_inject_raws(string, raws)
     end
 
@@ -103,7 +103,7 @@ module Inky
       component = components[node.name]
       return unless component
 
-      inner = node.children.map(&:to_s).join
+      inner = node.children.join
       component.transform(node, inner)
     end
 
@@ -134,7 +134,7 @@ module Inky
   end
 end
 
-if defined?(::Rails::Engine)
+if defined?(Rails::Engine)
   require 'inky/rails/engine'
   require 'inky/rails/template_handler'
   require 'inky/rails/version'

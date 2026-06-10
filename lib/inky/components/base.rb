@@ -15,6 +15,7 @@ module Inky
     class Base
       extend T::Sig
       extend T::Helpers
+
       abstract!
 
       # Attributes consumed by components themselves and never copied onto the
@@ -49,7 +50,7 @@ module Inky
 
       sig { params(node: Nokogiri::XML::Node, klass: String).returns(T::Boolean) }
       def class?(node, klass)
-        !(T.must(node.attr('class') || '') =~ /(^|\s)#{Regexp.escape(klass)}($|\s)/).nil?
+        !((node.attr('class') || '') =~ /(^|\s)#{Regexp.escape(klass)}($|\s)/).nil?
       end
 
       sig { params(node: Nokogiri::XML::Node, extra_classes: T.nilable(String)).returns(String) }

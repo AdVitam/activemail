@@ -1,160 +1,51 @@
 AllCops:
-  DisplayCopNames: true
-  TargetRubyVersion: 2.2
-# Relaxed.Ruby.Style
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - 'sorbet/**/*'
+    - 'spec/test_app/**/*'
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+    - 'lib/generators/inky/templates/**/*'
 
-Style/Alias:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylealias
-
-Style/BeginBlock:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylebeginblock
-
-Style/BlockDelimiters:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleblockdelimiters
+# Generated markup lines are long by nature.
+Layout/LineLength:
+  Max: 160
+  Exclude:
+    - 'lib/inky/components/**/*'
 
 Style/Documentation:
   Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styledocumentation
 
-Layout/DotPosition:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styledotposition
-
-Style/DoubleNegation:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styledoublenegation
-
-Style/EndBlock:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleendblock
-
-Style/FormatString:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleformatstring
-
-Style/IfUnlessModifier:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleifunlessmodifier
-
-Style/Lambda:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylelambda
-
-Style/ModuleFunction:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylemodulefunction
-
-Style/MultilineBlockChain:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylemultilineblockchain
-
-Style/NegatedIf:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylenegatedif
-
-Style/NegatedWhile:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylenegatedwhile
-
-Style/ParallelAssignment:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleparallelassignment
-
-Style/PercentLiteralDelimiters:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylepercentliteraldelimiters
-
-Style/PerlBackrefs:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleperlbackrefs
-
-Style/Semicolon:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylesemicolon
-
-Style/SignalException:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylesignalexception
-
-Style/SingleLineBlockParams:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylesinglelineblockparams
-
-Style/SingleLineMethods:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylesinglelinemethods
-
-Layout/SpaceBeforeBlockBraces:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylespacebeforeblockbraces
-
-Layout/SpaceInsideParens:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylespaceinsideparens
-
-Style/SpecialGlobalVars:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylespecialglobalvars
-
-Style/StringLiterals:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylestringliterals
-
-Style/WhileUntilModifier:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylewhileuntilmodifier
-
-Lint/AmbiguousRegexpLiteral:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#lintambiguousregexpliteral
-
-Lint/AssignmentInCondition:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#lintassignmentincondition
-
-Metrics/AbcSize:
-  Enabled: false
-
-Metrics/BlockNesting:
-  Enabled: false
-
-Metrics/ClassLength:
-  Enabled: false
-
-Metrics/ModuleLength:
-  Enabled: false
-
-Metrics/CyclomaticComplexity:
-  Enabled: false
-
-Metrics/LineLength:
-  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: true
 
 Metrics/MethodLength:
-  Enabled: false
-
-Metrics/ParameterLists:
-  Enabled: false
-
-Metrics/PerceivedComplexity:
-  Enabled: false
-
-# inky-rb gem specifics
-Lint/HandleExceptions:
+  Max: 25
   Exclude:
-    - 'Rakefile'
+    - 'lib/inky/components/columns.rb'
+
+Metrics/AbcSize:
+  Exclude:
+    - 'lib/inky/components/columns.rb'
+    - 'lib/inky/components/button.rb'
+    - 'lib/inky/components/center.rb'
     - 'lib/inky.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/inky/components/columns.rb'
 
 Metrics/BlockLength:
   Exclude:
-    - 'Rakefile'
-    - 'spec/**/*.rb'
+    - 'test/**/*'
+    - 'inky.gemspec'
 
-Style/MutableConstant:
-  Enabled: false
+# Test files: autofix only, relaxed metrics.
+Metrics/ClassLength:
+  Exclude:
+    - 'test/**/*'
 
-Style/Encoding:
+Naming/PredicateMethod:
   Enabled: false

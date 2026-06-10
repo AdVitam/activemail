@@ -13,7 +13,7 @@ module Inky
     @configuration ||= T.let(Configuration.new, T.nilable(Inky::Configuration))
   end
 
-  sig { params(config: Inky::Configuration).returns(Inky::Configuration) }
+  sig { params(config: T.untyped).returns(Inky::Configuration) }
   def self.configuration=(config)
     raise TypeError, 'Not an Inky::Configuration' unless config.is_a?(Configuration)
 
@@ -69,7 +69,7 @@ module Inky
       @container_width = value.to_int
     end
 
-    sig { params(value: Inky::ComponentMap).returns(Inky::ComponentMap) }
+    sig { params(value: T.untyped).returns(Inky::ComponentMap) }
     def components=(value)
       raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_hash'" unless value.respond_to?(:to_hash)
 
@@ -80,9 +80,7 @@ module Inky
     # The class must inherit from Inky::Components::Base.
     sig { params(tag: String, component_class: T.class_of(Inky::Components::Base)).void }
     def register_component(tag, component_class)
-      unless component_class < Inky::Components::Base
-        raise TypeError, "#{component_class} must inherit from Inky::Components::Base"
-      end
+      raise TypeError, "#{component_class} must inherit from Inky::Components::Base" unless component_class < Inky::Components::Base
 
       @components = @components.merge(tag.to_s => component_class)
     end

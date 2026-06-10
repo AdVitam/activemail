@@ -9,7 +9,7 @@ module Inky
     class Inky < Base
       extend T::Sig
 
-      sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
+      sig { override.params(_node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(_node, inner)
         %(<tr>#{inner}</tr>)
       end

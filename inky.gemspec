@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
     every layout table, and bulletproof buttons. Components are an extensible,
     open/closed registry: register your own tags with full access to the Nokogiri DOM.
   DESC
-  s.authors  = ['Foundation', 'Advitam']
+  s.authors  = %w[Foundation Advitam]
   s.email    = ['contact@get.foundation']
   s.homepage = 'https://github.com/foundation/inky-rb'
   s.licenses = ['MIT']

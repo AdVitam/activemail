@@ -29,7 +29,7 @@ module Inky
       module Composer
         def register_template_handler(ext, *)
           super
-          super :"inky-#{ext}", Inky::Rails::TemplateHandler.new(ext)
+          super(:"inky-#{ext}", Inky::Rails::TemplateHandler.new(ext))
         end
       end
     end
