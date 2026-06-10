@@ -127,7 +127,8 @@ module Inky
     def self.re_inject_raws(string, raws)
       str = string
       raws.each_with_index do |val, i|
-        str = str.sub("###RAW#{i}###", val)
+        # Block form: the 2-arg String#sub would expand \0/\1/\& in val.
+        str = str.sub("###RAW#{i}###") { val }
       end
       str = str.html_safe if str.respond_to?(:html_safe)
       str

@@ -70,6 +70,13 @@ class RawTest < InkyTest
     assert_includes output, 'class="button"'
   end
 
+  def test_raw_preserves_backslashes_and_backreference_sequences
+    payload = 'price \1 = \0 and \& or \\\\ done'
+    output = render("<body><raw>#{payload}</raw></body>")
+
+    assert_includes output, payload
+  end
+
   def test_multiple_raw_blocks
     output = render('<div><raw><a></raw><button href="#">b</button><raw><c></raw></div>')
 
