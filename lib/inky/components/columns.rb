@@ -24,14 +24,18 @@ module Inky
         subrows = node.elements.css('.row').to_a.concat(node.elements.css('row').to_a)
         expander = %(<th class="expander"></th>) if large_size == column_count && subrows.empty?
 
-        width_px = ((large_size.to_f / column_count) * container_width).round
+        # Clamp: an oversized `large` would push the MSO ghost cell past the
+        # container and force a wrap in Outlook Word.
+        width_px = [((large_size.to_f / column_count) * container_width).round, container_width].min
         # display:inline-block + max-width gives natural stacking on small screens
         # without a media query; MSO ghost cells restore the grid in Outlook Word.
         style = "display:inline-block;vertical-align:top;width:100%;max-width:#{width_px}px;"
+        # Neutralize the client default th rendering (bold, centered).
+        content_style = 'font-weight:normal;text-align:left;'
 
         <<~HTML.delete("\n")
           <!--[if mso | IE]><td width="#{width_px}" valign="top"><![endif]-->
-          <#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}" style="#{style}" #{pass_through_attributes(node)}><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th>#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>
+          <#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}" style="#{style}" #{pass_through_attributes(node)}><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="#{content_style}">#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>
           <!--[if mso | IE]></td><![endif]-->
         HTML
       end

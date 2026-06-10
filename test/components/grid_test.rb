@@ -15,7 +15,7 @@ class GridTest < InkyTest
       '<columns>One</columns>',
       <<~HTML
         <!--[if mso | IE]><td width="600" valign="top"><![endif]-->
-        <th class="small-12 large-12 columns first last" style="display:inline-block;vertical-align:top;width:100%;max-width:600px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th>One</th><th class="expander"></th></tr></tbody></table></th>
+        <th class="small-12 large-12 columns first last" style="display:inline-block;vertical-align:top;width:100%;max-width:600px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="font-weight:normal;text-align:left;">One</th><th class="expander"></th></tr></tbody></table></th>
         <!--[if mso | IE]></td><![endif]-->
       HTML
     )
@@ -107,5 +107,19 @@ class GridTest < InkyTest
     output = render('<body><columns large="6">One</columns><columns large="6">Two</columns></body>')
 
     assert_includes output, 'max-width:300px'
+  end
+
+  def test_ghost_cell_width_is_clamped_to_container_width
+    output = render('<columns large="14">One</columns>')
+
+    assert_includes output, 'width="600"'
+    assert_includes output, 'max-width:600px'
+    refute_includes output, 'max-width:700px'
+  end
+
+  def test_column_content_cell_neutralizes_th_defaults
+    output = render('<columns>One</columns>')
+
+    assert_includes output, 'font-weight:normal;text-align:left;'
   end
 end
