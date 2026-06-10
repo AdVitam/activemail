@@ -33,6 +33,28 @@ class CoreTest < InkyTest
     assert_includes output, '<!DOCTYPE html>'
   end
 
+  def test_unclosed_component_tag_is_still_transformed
+    output = render('<row><columns>One')
+
+    assert_includes output, 'class="row"'
+    assert_includes output, 'columns'
+    assert_includes output, 'One'
+  end
+
+  def test_mismatched_nesting_does_not_raise
+    output = render('<container><b><i>x</b></i></container>')
+
+    assert_includes output, 'class="container"'
+    assert_includes output, 'x'
+  end
+
+  def test_component_with_missing_attributes_renders
+    output = render('<menu><item>No href</item></menu>')
+
+    assert_includes output, 'class="menu-item"'
+    assert_includes output, 'No href'
+  end
+
   def test_non_breaking_space_becomes_entity
     output = render('<p>a b</p>')
 
