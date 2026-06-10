@@ -1,0 +1,104 @@
+# frozen_string_literal: true
+
+require 'test_helper'
+
+class GridTest < InkyTest
+  def test_row_renders_a_presentation_table
+    assert_renders(
+      '<row></row>',
+      '<table class="row" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr></tr></tbody></table>'
+    )
+  end
+
+  def test_single_column_default_classes_and_ghost_cells
+    assert_renders(
+      '<columns>One</columns>',
+      <<~HTML
+        <!--[if mso | IE]><td width="600" valign="top"><![endif]-->
+        <th class="small-12 large-12 columns first last" style="display:inline-block;vertical-align:top;width:100%;max-width:600px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th>One</th><th class="expander"></th></tr></tbody></table></th>
+        <!--[if mso | IE]></td><![endif]-->
+      HTML
+    )
+  end
+
+  def test_column_count_option_changes_default_sizes
+    output = render('<columns>One</columns>', column_count: 5)
+
+    assert_includes output, 'small-5 large-5'
+  end
+
+  def test_two_columns_get_first_and_last
+    output = render(<<~INKY)
+      <body>
+        <columns large="6" small="12">One</columns>
+        <columns large="6" small="12">Two</columns>
+      </body>
+    INKY
+
+    assert_includes output, 'small-12 large-6 columns first'
+    assert_includes output, 'small-12 large-6 columns last'
+  end
+
+  def test_three_columns_middle_has_no_first_or_last
+    output = render(<<~INKY)
+      <body>
+        <columns large="4" small="12">One</columns>
+        <columns large="4" small="12">Two</columns>
+        <columns large="4" small="12">Three</columns>
+      </body>
+    INKY
+
+    middle = output.scan(/class="([^"]*)"/).flatten.find { |c| c.include?('large-4') && !c.include?('first') && !c.include?('last') }
+
+    refute_nil middle
+  end
+
+  def test_borrows_large_from_small_when_large_missing
+    output = render('<body><columns small="4">One</columns><columns small="8">Two</columns></body>')
+
+    assert_includes output, 'small-4 large-4'
+    assert_includes output, 'small-8 large-8'
+  end
+
+  def test_small_defaults_to_full_width_when_only_large_given
+    output = render('<body><columns large="4">One</columns><columns large="8">Two</columns></body>')
+
+    assert_includes output, 'small-12 large-4'
+    assert_includes output, 'small-12 large-8'
+  end
+
+  def test_two_columns_without_sizes_split_large_in_half
+    output = render('<body><columns>One</columns><columns>Two</columns></body>')
+
+    assert_includes output, 'small-12 large-6 columns first'
+    assert_includes output, 'small-12 large-6 columns last'
+  end
+
+  def test_transfers_extra_classes_and_attributes
+    output = render('<columns small="6" valign="middle" foo="bar">x</columns>')
+
+    assert_includes output, 'valign="middle"'
+    assert_includes output, 'foo="bar"'
+    assert_includes output, 'small-6 large-6'
+  end
+
+  def test_expander_only_on_full_width_without_nested_row
+    full = render('<columns>One</columns>')
+    nested = render('<row><columns><row></row></columns></row>')
+
+    assert_includes full, 'class="expander"'
+    refute_includes nested, 'class="expander"'
+  end
+
+  def test_supports_nested_grids
+    output = render('<row><columns><row></row></columns></row>')
+
+    assert_equal 2, output.scan('class="row"').size
+  end
+
+  def test_column_max_width_scales_with_large_size
+    output = render('<body><columns large="6">One</columns><columns large="6">Two</columns></body>')
+
+    assert_includes output, 'max-width:300px'
+  end
+end

@@ -1,1 +1,0 @@
-TestApp::Application.config.secret_token = 'whatevericouldntcarelessaboutthisthingwerejusttestingafterallarentwe'

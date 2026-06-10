@@ -14,6 +14,7 @@ Layout/LineLength:
   Max: 160
   Exclude:
     - 'lib/inky/components/**/*'
+    - 'test/**/*'
 
 Style/Documentation:
   Enabled: false
@@ -49,3 +50,12 @@ Metrics/ClassLength:
 
 Naming/PredicateMethod:
   Enabled: false
+
+Naming/VariableNumber:
+  Exclude:
+    - 'test/**/*'
+
+# Test classes share a file by component; that is intentional grouping.
+Style/ClassAndModuleChildren:
+  Exclude:
+    - 'test/**/*'

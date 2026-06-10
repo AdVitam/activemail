@@ -103,7 +103,8 @@ module Inky
       component = components[node.name]
       return unless component
 
-      inner = node.children.join
+      # Nokogiri::NodeSet has no #join; map to String first.
+      inner = node.children.map(&:to_s).join # rubocop:disable Style/MapJoin
       component.transform(node, inner)
     end
 
