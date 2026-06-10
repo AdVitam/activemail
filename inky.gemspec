@@ -24,14 +24,13 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 3.2'
 
   s.metadata = {
-    'homepage_uri' => s.homepage,
     'source_code_uri' => s.homepage,
     'changelog_uri' => "#{s.homepage}/blob/develop/CHANGELOG.md",
     'bug_tracker_uri' => "#{s.homepage}/issues",
     'rubygems_mfa_required' => 'true'
   }
 
-  s.files = Dir['lib/**/*', 'sorbet/**/*', 'LICENSE.txt', 'README.md', 'CHANGELOG.md']
+  s.files = Dir['lib/**/*', 'LICENSE.txt', 'README.md', 'CHANGELOG.md']
   s.require_paths = ['lib']
 
   s.add_dependency 'nokogiri', '>= 1.16'
