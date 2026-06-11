@@ -65,8 +65,8 @@ module Inky
     def initialize(options = {})
       config = ::Inky.configuration
       @component_instances = T.let(build_components(config, options[:components]), T::Hash[String, Inky::Components::Base])
-      @column_count = T.let((options[:column_count] || config.column_count).to_i, Integer)
-      @container_width = T.let((options[:container_width] || config.container_width).to_i, Integer)
+      @column_count = T.let(Inky.assert_positive_dimension!(:column_count, options[:column_count] || config.column_count), Integer)
+      @container_width = T.let(Inky.assert_positive_dimension!(:container_width, options[:container_width] || config.container_width), Integer)
     end
 
     # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.

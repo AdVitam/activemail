@@ -44,6 +44,28 @@ class ConfigurationTest < InkyTest
     assert_raises(TypeError) { config.container_width = :nope }
   end
 
+  def test_setters_reject_non_positive_dimensions
+    config = Inky::Configuration.new
+
+    assert_raises(ArgumentError) { config.column_count = 0 }
+    assert_raises(ArgumentError) { config.column_count = -3 }
+    assert_raises(ArgumentError) { config.container_width = 0 }
+    assert_equal 12, config.column_count
+    assert_equal 600, config.container_width
+  end
+
+  def test_constructor_rejects_non_positive_dimensions
+    assert_raises(ArgumentError) { Inky::Core.new(column_count: 0) }
+    assert_raises(ArgumentError) { Inky::Core.new(container_width: -1) }
+  end
+
+  def test_columns_render_with_valid_constructor_dimensions
+    output = render('<columns>x</columns>', column_count: 10, container_width: 500)
+
+    assert_includes output, 'small-10 large-10'
+    assert_includes output, 'max-width:500px'
+  end
+
   def test_configuration_assignment_rejects_non_configuration
     assert_raises(TypeError) { Inky.configuration = {} }
   end

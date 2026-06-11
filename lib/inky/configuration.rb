@@ -25,6 +25,15 @@ module Inky
     block.call(configuration)
   end
 
+  # Zero or negative dimensions blow up at transform time (Infinity ghost width).
+  sig { params(name: Symbol, value: T.untyped).returns(Integer) }
+  def self.assert_positive_dimension!(name, value)
+    int = value.to_i
+    raise ArgumentError, "#{name} must be a positive integer, got #{int}" unless int.positive?
+
+    int
+  end
+
   class Configuration
     extend T::Sig
 
@@ -74,16 +83,12 @@ module Inky
 
     sig { params(value: T.untyped).returns(Integer) }
     def column_count=(value)
-      raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_int'" unless value.respond_to?(:to_int)
-
-      @column_count = value.to_int
+      @column_count = positive_integer!(:column_count, value)
     end
 
     sig { params(value: T.untyped).returns(Integer) }
     def container_width=(value)
-      raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_int'" unless value.respond_to?(:to_int)
-
-      @container_width = value.to_int
+      @container_width = positive_integer!(:container_width, value)
     end
 
     sig { params(value: T.untyped).returns(Inky::ComponentMap) }
@@ -101,6 +106,15 @@ module Inky
       Inky::Components.validate_component!(tag, component_class)
 
       @components = @components.merge(tag.to_s => component_class)
+    end
+
+    private
+
+    sig { params(name: Symbol, value: T.untyped).returns(Integer) }
+    def positive_integer!(name, value)
+      raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_int'" unless value.respond_to?(:to_int)
+
+      Inky.assert_positive_dimension!(name, value.to_int)
     end
   end
 end
