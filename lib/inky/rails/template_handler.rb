@@ -1,13 +1,23 @@
-# typed: false
+# typed: strict
 # frozen_string_literal: true
+
+require 'sorbet-runtime'
 
 module Inky
   module Rails
     class TemplateHandler
+      extend T::Sig
+
+      sig { params(compose_with: T.nilable(T.any(String, Symbol))).void }
       def initialize(compose_with = nil)
-        @engine_handler = ActionView::Template.registered_template_handler(compose_with) if compose_with
+        # ActionView handlers share no interface (Procs, objects, classes).
+        @engine_handler = T.let(
+          compose_with ? ActionView::Template.registered_template_handler(compose_with) : nil,
+          T.untyped
+        )
       end
 
+      sig { returns(T.untyped) }
       def engine_handler
         return @engine_handler if @engine_handler
 
@@ -16,6 +26,7 @@ module Inky
           raise("No template handler found for #{type}")
       end
 
+      sig { params(template: T.untyped, source: T.nilable(String)).returns(String) }
       def call(template, source = nil)
         compiled_source =
           if source
@@ -27,7 +38,10 @@ module Inky
       end
 
       module Composer
-        def register_template_handler(ext, *)
+        extend T::Sig
+
+        sig { params(ext: T.untyped, args: T.untyped).returns(T.untyped) }
+        def register_template_handler(ext, *args)
           super
           super(:"inky-#{ext}", Inky::Rails::TemplateHandler.new(ext))
         end
