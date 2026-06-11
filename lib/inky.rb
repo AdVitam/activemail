@@ -69,7 +69,8 @@ module Inky
       @container_width = T.let((options[:container_width] || config.container_width).to_i, Integer)
     end
 
-    sig { params(html_string: T.untyped).returns(String) }
+    # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.
+    sig { params(html_string: Object).returns(String) }
     def release_the_kraken(html_string)
       raws, str = Inky::Core.extract_raws(normalize_input(html_string))
       parse_cmd = str =~ /<html/i ? :parse : :fragment
@@ -138,12 +139,13 @@ module Inky
       DEFAULT_COMPONENTS.merge(config.components).merge(overrides).transform_values { |klass| klass.new(self) }
     end
 
-    sig { params(html_string: T.untyped).returns(String) }
+    sig { params(html_string: Object).returns(String) }
     def normalize_input(html_string)
       html_string = html_string.to_s
-      # scrub: invalid bytes degrade deterministically (U+FFFD) instead of
-      # whatever the Nokogiri version at hand does with an invalid String.
-      html_string = html_string.dup.force_encoding(Encoding::UTF_8).scrub if html_string.encoding == Encoding::BINARY
+      html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
+      # scrub: invalid bytes (whatever the claimed encoding) degrade
+      # deterministically to U+FFFD instead of raising on the first gsub.
+      html_string = html_string.scrub unless html_string.valid_encoding?
       html_string.gsub(/doctype/i, 'DOCTYPE')
     end
   end

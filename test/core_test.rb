@@ -16,6 +16,14 @@ class CoreTest < InkyTest
     assert_includes output, 'class="container"'
   end
 
+  def test_utf8_marked_input_with_invalid_bytes_degrades_deterministically
+    input = "<container>a\xFFb</container>".dup.force_encoding(Encoding::UTF_8)
+    output = render(input)
+
+    assert_predicate output, :valid_encoding?
+    assert_includes output, 'class="container"'
+  end
+
   def test_handles_utf8_input
     output = render('<container><p>Güten tag Marc-André</p></container>')
 
