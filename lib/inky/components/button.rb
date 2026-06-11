@@ -11,21 +11,23 @@ module Inky
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         expand = class?(node, 'expand')
-        attributes = pass_through_attributes(node)
-        href = node.attr('href')
-
-        if href
-          target = target_attribute(node)
-          extra = ' align="center" class="float-center"' if expand
-          # Padding on the <a> makes the whole button a clickable target.
-          link_style = 'display:inline-block;text-decoration:none;padding:12px 24px;'
-          inner = %(<a #{attributes}href="#{href}"#{target}#{extra}#{style_attribute(node, link_style)}>#{inner}</a>)
-        end
+        inner = anchor(node, inner, expand) if node.attr('href')
         inner = "<center>#{inner}</center>" if expand
 
         classes = combine_classes(node, 'button')
-        expander = '<td class="expander"></td>' if expand
+        expander = expand ? '<td class="expander"></td>' : ''
         %(<table class="#{classes}" #{TABLE_RESET}><tbody><tr><td><table #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table></td>#{expander}</tr></tbody></table>)
+      end
+
+      private
+
+      sig { params(node: Nokogiri::XML::Node, inner: String, expand: T::Boolean).returns(String) }
+      def anchor(node, inner, expand)
+        target = target_attribute(node)
+        extra = expand ? ' align="center" class="float-center"' : ''
+        # Padding on the <a> makes the whole button a clickable target.
+        link_style = 'display:inline-block;text-decoration:none;padding:12px 24px;'
+        %(<a #{pass_through_attributes(node)}href="#{node.attr('href')}"#{target}#{extra}#{style_attribute(node, link_style)}>#{inner}</a>)
       end
     end
   end

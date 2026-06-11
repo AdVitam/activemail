@@ -62,25 +62,14 @@ module Inky
     sig { params(options: T::Hash[Symbol, T.untyped]).void }
     def initialize(options = {})
       config = ::Inky.configuration
-      # Lookup is by node name (String); 1.x callers used Symbol keys.
-      overrides = (options[:components] || {}).transform_keys(&:to_s)
-      registry = DEFAULT_COMPONENTS.merge(config.components).merge(overrides)
-
-      @components = T.let(
-        registry.transform_values { |klass| klass.new(self) },
-        T::Hash[String, Inky::Components::Base]
-      )
+      @components = T.let(build_components(config, options[:components]), T::Hash[String, Inky::Components::Base])
       @column_count = T.let((options[:column_count] || config.column_count).to_i, Integer)
       @container_width = T.let((options[:container_width] || config.container_width).to_i, Integer)
     end
 
     sig { params(html_string: T.untyped).returns(String) }
     def release_the_kraken(html_string)
-      html_string = html_string.to_s
-      html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
-      html_string = html_string.gsub(/doctype/i, 'DOCTYPE')
-
-      raws, str = Inky::Core.extract_raws(html_string)
+      raws, str = Inky::Core.extract_raws(normalize_input(html_string))
       parse_cmd = str =~ /<html/i ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)
       transform_doc(html)
@@ -134,6 +123,22 @@ module Inky
       end
       str = str.html_safe if str.respond_to?(:html_safe)
       str
+    end
+
+    private
+
+    sig { params(config: Inky::Configuration, overrides: T.untyped).returns(T::Hash[String, Inky::Components::Base]) }
+    def build_components(config, overrides)
+      # Lookup is by node name (String); 1.x callers used Symbol keys.
+      overrides = (overrides || {}).transform_keys(&:to_s)
+      DEFAULT_COMPONENTS.merge(config.components).merge(overrides).transform_values { |klass| klass.new(self) }
+    end
+
+    sig { params(html_string: T.untyped).returns(String) }
+    def normalize_input(html_string)
+      html_string = html_string.to_s
+      html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
+      html_string.gsub(/doctype/i, 'DOCTYPE')
     end
   end
 end

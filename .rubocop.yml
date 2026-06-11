@@ -4,7 +4,6 @@ AllCops:
   SuggestExtensions: false
   Exclude:
     - 'sorbet/**/*'
-    - 'spec/test_app/**/*'
     - 'vendor/**/*'
     - 'tmp/**/*'
     - 'lib/generators/inky/templates/**/*'
@@ -22,22 +21,6 @@ Style/Documentation:
 Style/FrozenStringLiteralComment:
   Enabled: true
 
-Metrics/MethodLength:
-  Max: 25
-  Exclude:
-    - 'lib/inky/components/columns.rb'
-
-Metrics/AbcSize:
-  Exclude:
-    - 'lib/inky/components/columns.rb'
-    - 'lib/inky/components/button.rb'
-    - 'lib/inky/components/center.rb'
-    - 'lib/inky.rb'
-
-Metrics/CyclomaticComplexity:
-  Exclude:
-    - 'lib/inky/components/columns.rb'
-
 Metrics/BlockLength:
   Exclude:
     - 'test/**/*'
@@ -48,8 +31,13 @@ Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
 
-Naming/PredicateMethod:
-  Enabled: false
+Metrics/MethodLength:
+  Exclude:
+    - 'test/**/*'
+
+Metrics/AbcSize:
+  Exclude:
+    - 'test/**/*'
 
 Naming/VariableNumber:
   Exclude:

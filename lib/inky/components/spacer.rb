@@ -14,14 +14,12 @@ module Inky
         size_sm = node.attr('size-sm')
         size_lg = node.attr('size-lg')
 
-        if size_sm || size_lg
-          html = +''
-          html << build_table(node, classes, 'hide-for-large', size_sm) if size_sm
-          html << build_table(node, classes, 'show-for-large', size_lg) if size_lg
-          html
-        else
-          build_table(node, classes, nil, node.attr('size') || '16')
-        end
+        return build_table(node, classes, nil, node.attr('size') || '16') unless size_sm || size_lg
+
+        html = +''
+        html << build_table(node, classes, 'hide-for-large', size_sm) if size_sm
+        html << build_table(node, classes, 'show-for-large', size_lg) if size_lg
+        html
       end
 
       private

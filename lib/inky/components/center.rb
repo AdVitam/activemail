@@ -10,11 +10,12 @@ module Inky
 
       sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
       def transform(node, _inner)
-        node.elements.each do |child|
+        elements = node.elements
+        elements.each do |child|
           child['align'] = 'center'
           child['class'] = combine_classes(child, 'float-center')
         end
-        items = node.elements.css('.menu-item').to_a.concat(node.elements.css('item').to_a)
+        items = elements.css('.menu-item').to_a.concat(elements.css('item').to_a)
         items.each { |item| item['class'] = combine_classes(item, 'float-center') }
         node.to_s
       end
