@@ -54,4 +54,11 @@ class ButtonTest < InkyTest
 
     assert_equal output.scan('<table').size, output.scan('role="presentation"').size
   end
+
+  def test_href_with_double_quote_is_escaped
+    output = render('<button href="https://x.test/?q=&quot;a&quot;">B</button>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('a')
+
+    assert_equal 'https://x.test/?q="a"', anchor['href']
+  end
 end

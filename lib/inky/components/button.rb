@@ -27,7 +27,7 @@ module Inky
         extra = expand ? ' align="center" class="float-center"' : ''
         # Padding on the <a> makes the whole button a clickable target.
         link_style = 'display:inline-block;text-decoration:none;padding:12px 24px;'
-        %(<a #{pass_through_attributes(node)}href="#{node.attr('href')}"#{target}#{extra}#{style_attribute(node, link_style)}>#{inner}</a>)
+        %(<a #{pass_through_attributes(node)}href="#{escape_attr(node.attr('href'))}"#{target}#{extra}#{style_attribute(node, link_style)}>#{inner}</a>)
       end
     end
   end

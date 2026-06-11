@@ -44,10 +44,15 @@ module Inky
 
       private
 
+      sig { params(value: T.untyped).returns(String) }
+      def escape_attr(value)
+        value.to_s.gsub('"', '&quot;')
+      end
+
       sig { params(node: Nokogiri::XML::Node).returns(String) }
       def pass_through_attributes(node)
         node.attributes.reject { |name, _| IGNORED_ON_PASSTHROUGH.include?(name.downcase) }.map do |name, value|
-          %(#{name}="#{value.to_s.gsub('"', '&quot;')}" )
+          %(#{name}="#{escape_attr(value)}" )
         end.join
       end
 
@@ -56,7 +61,7 @@ module Inky
       # overlapping properties.
       sig { params(node: Nokogiri::XML::Node, layout: String).returns(String) }
       def style_attribute(node, layout = '')
-        user = node.attr('style').to_s.strip
+        user = escape_attr(node.attr('style').to_s.strip)
         user = "#{user};" unless user.empty? || user.end_with?(';')
         value = "#{layout}#{user}"
         value.empty? ? '' : %( style="#{value}")
@@ -82,7 +87,7 @@ module Inky
 
       sig { params(node: Nokogiri::XML::Node).returns(String) }
       def target_attribute(node)
-        node.attributes['target'] ? %( target="#{node.attributes['target']}") : ''
+        node.attributes['target'] ? %( target="#{escape_attr(node.attributes['target'])}") : ''
       end
 
       sig { returns(Integer) }

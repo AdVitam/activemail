@@ -33,4 +33,11 @@ class MenuTest < InkyTest
 
     assert_includes output, 'class="menu-item"'
   end
+
+  def test_item_href_with_double_quote_is_escaped
+    output = render('<menu><item href="https://x.test/?q=&quot;a&quot;">I</item></menu>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('th.menu-item a')
+
+    assert_equal 'https://x.test/?q="a"', anchor['href']
+  end
 end

@@ -82,6 +82,13 @@ class StyleMergeTest < InkyTest
     assert_equal 'width:100%;', style
   end
 
+  def test_user_style_with_double_quote_is_escaped
+    output = render(%q(<row style='background:url("x.png")'></row>))
+    style = Nokogiri::HTML.fragment(output).at_css('table.row')['style']
+
+    assert_includes style, 'background:url("x.png")'
+  end
+
   def test_user_style_without_trailing_semicolon_is_terminated
     output = render('<row style="background:#eee"></row>')
     style = Nokogiri::HTML.fragment(output).at_css('table.row')['style']
