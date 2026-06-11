@@ -25,7 +25,7 @@ module Inky
 
         classes = combine_classes(node, 'button')
         expander = '<td class="expander"></td>' if expand
-        %(<table class="#{classes}" role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>#{inner}</td></tr></tbody></table></td>#{expander}</tr></tbody></table>)
+        %(<table class="#{classes}" #{TABLE_RESET}><tbody><tr><td><table #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table></td>#{expander}</tr></tbody></table>)
       end
     end
   end

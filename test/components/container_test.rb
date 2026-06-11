@@ -7,8 +7,8 @@ class ContainerTest < InkyTest
     assert_renders(
       '<container></container>',
       <<~HTML
-        <!--[if mso | IE]><table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="600"><tr><td><![endif]-->
-        <table class="container" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;"><tbody><tr><td></td></tr></tbody></table>
+        <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="600"><tr><td><![endif]-->
+        <table class="container" role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:600px;margin:0 auto;"><tbody><tr><td></td></tr></tbody></table>
         <!--[if mso | IE]></td></tr></table><![endif]-->
       HTML
     )

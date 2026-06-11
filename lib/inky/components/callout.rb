@@ -12,7 +12,7 @@ module Inky
       def transform(node, inner)
         classes = combine_classes(node, 'callout-inner')
         attributes = pass_through_attributes(node)
-        %(<table #{attributes}class="callout" role="presentation" border="0" cellpadding="0" cellspacing="0"#{style_attribute(node, 'width:100%;')}><tbody><tr><th class="#{classes}">#{inner}</th><th class="expander"></th></tr></tbody></table>)
+        %(<table #{attributes}class="callout" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr><th class="#{classes}">#{inner}</th><th class="expander"></th></tr></tbody></table>)
       end
     end
   end

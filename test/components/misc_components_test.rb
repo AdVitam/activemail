@@ -94,7 +94,7 @@ class WrapperTest < InkyTest
   def test_basic_wrapper
     assert_renders(
       '<wrapper class="header"></wrapper>',
-      '<table class="header wrapper" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><td class="wrapper-inner"></td></tr></tbody></table>'
+      '<table class="header wrapper" role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;"><tbody><tr><td class="wrapper-inner"></td></tr></tbody></table>'
     )
   end
 end

@@ -25,6 +25,9 @@ module Inky
         T::Array[String]
       )
 
+      # Layout tables: presentation role (a11y) and zeroed legacy spacing.
+      TABLE_RESET = 'role="presentation" border="0" cellpadding="0" cellspacing="0"'
+
       sig { params(core: ::Inky::Core).void }
       def initialize(core)
         @core = core
