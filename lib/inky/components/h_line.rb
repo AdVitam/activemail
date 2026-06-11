@@ -12,7 +12,7 @@ module Inky
       def transform(node, _inner)
         classes = combine_classes(node, 'h-line')
         attributes = pass_through_attributes(node)
-        %(<table #{attributes}class="#{classes}" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th>&nbsp;</th></tr></tbody></table>)
+        %(<table #{attributes}class="#{classes}" role="presentation" border="0" cellpadding="0" cellspacing="0"#{style_attribute(node, 'width:100%;')}><tbody><tr><th>&nbsp;</th></tr></tbody></table>)
       end
     end
   end

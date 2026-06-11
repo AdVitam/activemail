@@ -21,7 +21,7 @@ module Inky
       # Attributes consumed by components themselves and never copied onto the
       # generated markup.
       IGNORED_ON_PASSTHROUGH = T.let(
-        %w[class id href size large no-expander small target up size-sm size-lg].freeze,
+        %w[class id href size large no-expander small target up size-sm size-lg style].freeze,
         T::Array[String]
       )
 
@@ -46,6 +46,17 @@ module Inky
         node.attributes.reject { |name, _| IGNORED_ON_PASSTHROUGH.include?(name.downcase) }.map do |name, value|
           %(#{name}="#{value.to_s.gsub('"', '&quot;')}" )
         end.join
+      end
+
+      # Merges the author's style after the layout style (a duplicated style
+      # attribute would make HTML parsers drop one of the two). Author wins on
+      # overlapping properties.
+      sig { params(node: Nokogiri::XML::Node, layout: String).returns(String) }
+      def style_attribute(node, layout = '')
+        user = node.attr('style').to_s.strip
+        user = "#{user};" unless user.empty? || user.end_with?(';')
+        value = "#{layout}#{user}"
+        value.empty? ? '' : %( style="#{value}")
       end
 
       sig { params(node: Nokogiri::XML::Node, klass: String).returns(T::Boolean) }

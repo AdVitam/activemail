@@ -16,22 +16,22 @@ module Inky
 
         if size_sm || size_lg
           html = +''
-          html << build_table(classes, 'hide-for-large', size_sm) if size_sm
-          html << build_table(classes, 'show-for-large', size_lg) if size_lg
+          html << build_table(node, classes, 'hide-for-large', size_sm) if size_sm
+          html << build_table(node, classes, 'show-for-large', size_lg) if size_lg
           html
         else
-          build_table(classes, nil, node.attr('size') || '16')
+          build_table(node, classes, nil, node.attr('size') || '16')
         end
       end
 
       private
 
-      sig { params(classes: String, extra: T.nilable(String), size: String).returns(String) }
-      def build_table(classes, extra, size)
+      sig { params(node: Nokogiri::XML::Node, classes: String, extra: T.nilable(String), size: String).returns(String) }
+      def build_table(node, classes, extra, size)
         css_class = extra ? "#{classes} #{extra}" : classes
         # mso-line-height-rule:exactly keeps Outlook from inflating the spacer.
         style = "font-size:#{size}px;line-height:#{size}px;mso-line-height-rule:exactly;"
-        %(<table class="#{css_class}" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><td height="#{size}" style="#{style}">&nbsp;</td></tr></tbody></table>)
+        %(<table class="#{css_class}" role="presentation" border="0" cellpadding="0" cellspacing="0"#{style_attribute(node, 'width:100%;')}><tbody><tr><td height="#{size}" style="#{style}">&nbsp;</td></tr></tbody></table>)
       end
     end
   end

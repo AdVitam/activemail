@@ -35,7 +35,7 @@ module Inky
 
         <<~HTML.delete("\n")
           <!--[if mso | IE]><td width="#{width_px}" valign="top"><![endif]-->
-          <#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}" style="#{style}" #{pass_through_attributes(node)}><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="#{content_style}">#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>
+          <#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="#{content_style}">#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>
           <!--[if mso | IE]></td><![endif]-->
         HTML
       end

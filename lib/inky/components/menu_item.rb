@@ -12,7 +12,7 @@ module Inky
       def transform(node, inner)
         target = target_attribute(node)
         attributes = combine_attributes(node, 'menu-item')
-        %(<#{::Inky::Core::INTERIM_TH_TAG} #{attributes}><a href="#{node.attr('href')}"#{target}>#{inner}</a></#{::Inky::Core::INTERIM_TH_TAG}>)
+        %(<#{::Inky::Core::INTERIM_TH_TAG} #{attributes}#{style_attribute(node)}><a href="#{node.attr('href')}"#{target}>#{inner}</a></#{::Inky::Core::INTERIM_TH_TAG}>)
       end
     end
   end

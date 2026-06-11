@@ -19,7 +19,7 @@ module Inky
           extra = ' align="center" class="float-center"' if expand
           # Padding on the <a> makes the whole button a clickable target.
           link_style = 'display:inline-block;text-decoration:none;padding:12px 24px;'
-          inner = %(<a #{attributes}href="#{href}"#{target}#{extra} style="#{link_style}">#{inner}</a>)
+          inner = %(<a #{attributes}href="#{href}"#{target}#{extra}#{style_attribute(node, link_style)}>#{inner}</a>)
         end
         inner = "<center>#{inner}</center>" if expand
 
