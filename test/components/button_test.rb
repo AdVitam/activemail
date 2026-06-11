@@ -55,6 +55,13 @@ class ButtonTest < InkyTest
     assert_equal output.scan('<table').size, output.scan('role="presentation"').size
   end
 
+  def test_href_with_ampersand_and_angle_brackets_round_trips
+    output = render('<button href="https://x.test/?a=1&amp;b=&lt;2&gt;">B</button>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('a')
+
+    assert_equal 'https://x.test/?a=1&b=<2>', anchor['href']
+  end
+
   def test_href_with_double_quote_is_escaped
     output = render('<button href="https://x.test/?q=&quot;a&quot;">B</button>')
     anchor = Nokogiri::HTML.fragment(output).at_css('a')

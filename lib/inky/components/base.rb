@@ -1,6 +1,7 @@
 # typed: strict
 # frozen_string_literal: true
 
+require 'cgi/escape'
 require 'sorbet-runtime'
 
 module Inky
@@ -62,7 +63,7 @@ module Inky
 
       sig { params(value: T.untyped).returns(String) }
       def escape_attr(value)
-        value.to_s.gsub('"', '&quot;')
+        CGI.escapeHTML(value.to_s)
       end
 
       # Author attributes are untrusted: "abc".to_i would silently become 0.
