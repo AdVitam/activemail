@@ -36,10 +36,10 @@ class GridTest < InkyTest
 
   def test_two_columns_get_first_and_last
     output = render(<<~INKY)
-      <body>
+      <div>
         <columns large="6" small="12">One</columns>
         <columns large="6" small="12">Two</columns>
-      </body>
+      </div>
     INKY
 
     assert_includes output, 'small-12 large-6 columns first'
@@ -48,11 +48,11 @@ class GridTest < InkyTest
 
   def test_three_columns_middle_has_no_first_or_last
     output = render(<<~INKY)
-      <body>
+      <div>
         <columns large="4" small="12">One</columns>
         <columns large="4" small="12">Two</columns>
         <columns large="4" small="12">Three</columns>
-      </body>
+      </div>
     INKY
 
     middle = output.scan(/class="([^"]*)"/).flatten.find { |c| c.include?('large-4') && !c.include?('first') && !c.include?('last') }
@@ -61,21 +61,21 @@ class GridTest < InkyTest
   end
 
   def test_borrows_large_from_small_when_large_missing
-    output = render('<body><columns small="4">One</columns><columns small="8">Two</columns></body>')
+    output = render('<div><columns small="4">One</columns><columns small="8">Two</columns></div>')
 
     assert_includes output, 'small-4 large-4'
     assert_includes output, 'small-8 large-8'
   end
 
   def test_small_defaults_to_full_width_when_only_large_given
-    output = render('<body><columns large="4">One</columns><columns large="8">Two</columns></body>')
+    output = render('<div><columns large="4">One</columns><columns large="8">Two</columns></div>')
 
     assert_includes output, 'small-12 large-4'
     assert_includes output, 'small-12 large-8'
   end
 
   def test_two_columns_without_sizes_split_large_in_half
-    output = render('<body><columns>One</columns><columns>Two</columns></body>')
+    output = render('<div><columns>One</columns><columns>Two</columns></div>')
 
     assert_includes output, 'small-12 large-6 columns first'
     assert_includes output, 'small-12 large-6 columns last'
@@ -111,7 +111,7 @@ class GridTest < InkyTest
   end
 
   def test_column_max_width_scales_with_large_size
-    output = render('<body><columns large="6">One</columns><columns large="6">Two</columns></body>')
+    output = render('<div><columns large="6">One</columns><columns large="6">Two</columns></div>')
 
     assert_includes output, 'max-width:300px'
   end

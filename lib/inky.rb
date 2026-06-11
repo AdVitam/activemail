@@ -20,8 +20,11 @@ require_relative 'inky/components/spacer'
 require_relative 'inky/components/h_line'
 require_relative 'inky/components/wrapper'
 require_relative 'inky/configuration'
+require_relative 'inky/parse_error_reporter'
 
 module Inky
+  class ParseError < StandardError; end
+
   class Core
     extend T::Sig
 
@@ -72,6 +75,7 @@ module Inky
       raws, str = Inky::Core.extract_raws(normalize_input(html_string))
       parse_cmd = str =~ /<html/i ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)
+      ParseErrorReporter.new(components.keys).call(html.errors)
       transform_doc(html)
       string = html.to_html
       string = string.gsub(INTERIM_TH_TAG_REGEX, 'th')

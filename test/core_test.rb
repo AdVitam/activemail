@@ -41,6 +41,7 @@ class CoreTest < InkyTest
   end
 
   def test_unclosed_component_tag_is_still_transformed
+    Inky.configuration.on_parse_error = :ignore
     output = render('<row><columns>One')
 
     assert_includes output, 'class="row"'
@@ -49,6 +50,7 @@ class CoreTest < InkyTest
   end
 
   def test_mismatched_nesting_does_not_raise
+    Inky.configuration.on_parse_error = :ignore
     output = render('<container><b><i>x</b></i></container>')
 
     assert_includes output, 'class="container"'
@@ -92,7 +94,7 @@ end
 
 class RawTest < InkyTest
   def test_single_line_raw_passes_through_untouched
-    input = "<body><raw><<LCG Default='246996'>></raw></body>"
+    input = "<div><raw><<LCG Default='246996'>></raw></div>"
     output = render(input)
 
     assert_includes output, "<<LCG Default='246996'>>"
@@ -122,7 +124,7 @@ class RawTest < InkyTest
 
   def test_raw_preserves_backslashes_and_backreference_sequences
     payload = 'price \1 = \0 and \& or \\\\ done'
-    output = render("<body><raw>#{payload}</raw></body>")
+    output = render("<div><raw>#{payload}</raw></div>")
 
     assert_includes output, payload
   end

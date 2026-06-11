@@ -51,8 +51,15 @@ Inky.configure do |config|
   config.template_engine  = :erb   # underlying engine for `.html.inky` (default :erb)
   config.column_count     = 12     # grid columns (default 12)
   config.container_width  = 600    # px width of <container> and MSO ghost table (default 600)
+  config.on_parse_error   = :warn  # :ignore, :warn or :raise (default :warn)
 end
 ```
+
+`on_parse_error` surfaces HTML the parser had to repair (unclosed/mismatched
+tags, broken attributes) instead of silently sending a different email than
+intended. Registered component tags never trigger it. Note: the parser knows
+HTML4 — HTML5-only tags (`<section>`, ...) are reported as unknown; register
+them as components or use `:ignore` if you rely on them.
 
 Per-render overrides:
 

@@ -28,8 +28,13 @@ module Inky
   class Configuration
     extend T::Sig
 
+    ON_PARSE_ERROR_MODES = T.let(%i[ignore warn raise].freeze, T::Array[Symbol])
+
     sig { returns(Symbol) }
     attr_reader :template_engine
+
+    sig { returns(Symbol) }
+    attr_reader :on_parse_error
 
     sig { returns(Integer) }
     attr_reader :column_count
@@ -46,6 +51,15 @@ module Inky
       @column_count = T.let(12, Integer)
       @container_width = T.let(600, Integer)
       @components = T.let({}, Inky::ComponentMap)
+      @on_parse_error = T.let(:warn, Symbol)
+    end
+
+    sig { params(value: T.untyped).returns(Symbol) }
+    def on_parse_error=(value)
+      mode = value.respond_to?(:to_sym) ? value.to_sym : value
+      raise ArgumentError, "on_parse_error must be one of #{ON_PARSE_ERROR_MODES.inspect}" unless ON_PARSE_ERROR_MODES.include?(mode)
+
+      @on_parse_error = mode
     end
 
     sig { params(value: T.untyped).returns(Symbol) }
