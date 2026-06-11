@@ -2,6 +2,8 @@
 
 require 'test_helper'
 require 'tmpdir'
+# ActionView 7.1 references URI without requiring it (NameError on Ruby 3.3+ outside a full Rails app).
+require 'uri'
 require 'action_view'
 require 'action_view/base'
 require 'inky/rails/template_handler'
