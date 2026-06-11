@@ -50,4 +50,15 @@ class ParseErrorsTest < InkyTest
 
     assert_silent { render('<container><b><i>x</b></i></container>') }
   end
+
+  # Locks the libxml2 message format the tag filter depends on: if a Nokogiri
+  # bump changes it, this fails before users drown in false warnings.
+  def test_unknown_tag_filter_matches_pinned_libxml2_message_format
+    error = Nokogiri::HTML.fragment('<row></row>').errors
+                          .find { |e| e.code == Inky::ParseErrorReporter::UNKNOWN_TAG_ERROR_CODE }
+
+    refute_nil error
+    assert_silent { Inky::ParseErrorReporter.new(['row']).call([error]) }
+    assert_output(nil, /\S/) { Inky::ParseErrorReporter.new([]).call([error]) }
+  end
 end

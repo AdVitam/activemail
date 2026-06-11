@@ -38,6 +38,9 @@ module Inky
     def known_tag_error?(error)
       return false unless error.code == UNKNOWN_TAG_ERROR_CODE
 
+      # Fragile by necessity: the 801 error does not carry the tag name, only
+      # the libxml2 message text does. Locked by test against the pinned
+      # Nokogiri; revisit on bump if that test breaks.
       tag = error.message.to_s[/Tag (\S+) invalid/, 1]
       !tag.nil? && @known_tags.include?(tag)
     end
