@@ -77,6 +77,15 @@ class RegistryTest < InkyTest
     assert_raises(TypeError) { Inky.configuration.register_component('bad', String) }
   end
 
+  def test_components_setter_rejects_1x_string_values
+    assert_raises(TypeError) { Inky.configuration.components = { button: 'inky-button' } }
+    assert_empty Inky.configuration.components
+  end
+
+  def test_constructor_components_option_rejects_1x_string_values
+    assert_raises(TypeError) { Inky::Core.new(components: { button: 'inky-button' }) }
+  end
+
   def test_constructor_components_option_overrides_registry
     output = render('<button href="#">B</button>', components: { 'button' => CustomComponent })
 

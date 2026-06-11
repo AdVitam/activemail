@@ -131,6 +131,7 @@ module Inky
     def build_components(config, overrides)
       # Lookup is by node name (String); 1.x callers used Symbol keys.
       overrides = (overrides || {}).transform_keys(&:to_s)
+      overrides.each { |tag, klass| Inky::Components.validate_component!(tag, klass) }
       DEFAULT_COMPONENTS.merge(config.components).merge(overrides).transform_values { |klass| klass.new(self) }
     end
 

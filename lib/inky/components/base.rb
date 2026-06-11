@@ -5,6 +5,22 @@ require 'sorbet-runtime'
 
 module Inky
   module Components
+    class << self
+      extend T::Sig
+
+      # Catches 1.x-style string maps early, with an actionable error, instead
+      # of a NoMethodError later in Core#initialize.
+      sig { params(tag: T.untyped, klass: T.untyped).void }
+      def validate_component!(tag, klass)
+        return if klass.is_a?(Class) && klass < Components::Base
+
+        raise TypeError,
+              "component for tag '#{tag}' must be a class inheriting from Inky::Components::Base, " \
+              "got #{klass.inspect}. The 1.x string map (components: { button: 'tag-name' }) was " \
+              'replaced in 2.0 by Inky.configuration.register_component(tag, ComponentClass).'
+      end
+    end
+
     # Base class for every Inky component. A component receives the matched
     # Nokogiri node and the owning Core instance, and returns the replacement
     # markup (an HTML String) for that node.
