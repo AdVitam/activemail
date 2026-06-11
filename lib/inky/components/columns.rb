@@ -33,11 +33,11 @@ module Inky
         # Neutralize the client default th rendering (bold, centered).
         content_style = 'font-weight:normal;text-align:left;'
 
-        <<~HTML.delete("\n")
-          <!--[if mso | IE]><td width="#{width_px}" valign="top"><![endif]-->
-          <#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="#{content_style}">#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>
-          <!--[if mso | IE]></td><![endif]-->
-        HTML
+        [
+          %(<!--[if mso | IE]><td width="#{width_px}" valign="top"><![endif]-->),
+          %(<#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="#{content_style}">#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>),
+          '<!--[if mso | IE]></td><![endif]-->'
+        ].join
       end
     end
   end

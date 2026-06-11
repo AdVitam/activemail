@@ -55,6 +55,19 @@ class CoreTest < InkyTest
     assert_includes output, 'No href'
   end
 
+  def test_newlines_in_content_are_preserved
+    output = render("<container><row><columns><p>line1\nline2</p></columns></row></container>")
+
+    assert_includes output, "line1\nline2"
+  end
+
+  def test_pre_content_is_preserved_verbatim
+    pre = "<pre>def f\n  42\nend</pre>"
+    output = render("<container>#{pre}</container>")
+
+    assert_includes output, pre
+  end
+
   def test_non_breaking_space_becomes_entity
     output = render('<p>a b</p>')
 
