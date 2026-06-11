@@ -86,6 +86,12 @@ class RegistryTest < InkyTest
     assert_raises(TypeError) { Inky::Core.new(components: { button: 'inky-button' }) }
   end
 
+  def test_components_getter_cannot_be_mutated_to_bypass_validation
+    assert_raises(FrozenError) { Inky.configuration.components['x'] = String }
+    assert_empty Inky.configuration.components
+    assert_includes render('<button href="#">B</button>'), 'class="button"'
+  end
+
   def test_constructor_components_option_overrides_registry
     output = render('<button href="#">B</button>', components: { 'button' => CustomComponent })
 

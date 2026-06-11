@@ -42,8 +42,11 @@ module Inky
     sig { returns(Integer) }
     attr_reader :container_width
 
+    # Mutating the returned hash would bypass validate_component!.
     sig { returns(Inky::ComponentMap) }
-    attr_reader :components
+    def components
+      @components.dup.freeze
+    end
 
     sig { void }
     def initialize
@@ -93,7 +96,6 @@ module Inky
       @components = normalized
     end
 
-    # Registers a custom tag handled by an Inky::Components::Base subclass.
     sig { params(tag: T.any(String, Symbol), component_class: T.class_of(Inky::Components::Base)).void }
     def register_component(tag, component_class)
       Inky::Components.validate_component!(tag, component_class)

@@ -29,7 +29,6 @@ module Inky
 
       abstract!
 
-      # Consumed by components themselves, never copied onto the output.
       IGNORED_ON_PASSTHROUGH = T.let(
         %w[class id href size large no-expander small target up size-sm size-lg style].freeze,
         T::Array[String]
@@ -46,8 +45,6 @@ module Inky
       sig { returns(::Inky::Core) }
       attr_reader :core
 
-      # Returns the replacement markup for the matched node; inner is its
-      # already-transformed inner HTML.
       sig { abstract.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner); end
 
