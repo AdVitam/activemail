@@ -9,9 +9,8 @@ module Inky
     class << self
       extend T::Sig
 
-      # Catches 1.x-style string maps early, with an actionable error, instead
-      # of a NoMethodError later in Core#initialize.
-      sig { params(tag: T.untyped, klass: T.untyped).void }
+      # Rejects 1.x-style string maps early instead of a NoMethodError downstream.
+      sig { params(tag: T.any(String, Symbol), klass: T.untyped).void }
       def validate_component!(tag, klass)
         return if klass.is_a?(Class) && klass < Components::Base
 
@@ -22,21 +21,15 @@ module Inky
       end
     end
 
-    # Base class for every Inky component. A component receives the matched
-    # Nokogiri node and the owning Core instance, and returns the replacement
-    # markup (an HTML String) for that node.
-    #
-    # Subclasses implement #transform. Helper methods cover the attribute and
-    # class manipulation shared by the built-in components, and are available to
-    # custom components registered via Inky.configuration.register_component.
+    # Public extension point: subclasses implement #transform(node, inner) and
+    # are registered via Inky.configuration.register_component.
     class Base
       extend T::Sig
       extend T::Helpers
 
       abstract!
 
-      # Attributes consumed by components themselves and never copied onto the
-      # generated markup.
+      # Consumed by components themselves, never copied onto the output.
       IGNORED_ON_PASSTHROUGH = T.let(
         %w[class id href size large no-expander small target up size-sm size-lg style].freeze,
         T::Array[String]
@@ -53,9 +46,8 @@ module Inky
       sig { returns(::Inky::Core) }
       attr_reader :core
 
-      # @param node the matched custom-tag node
-      # @param inner the already-transformed inner HTML of the node
-      # @return the replacement markup
+      # Returns the replacement markup for the matched node; inner is its
+      # already-transformed inner HTML.
       sig { abstract.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner); end
 
@@ -81,9 +73,8 @@ module Inky
         end.join
       end
 
-      # Merges the author's style after the layout style (a duplicated style
-      # attribute would make HTML parsers drop one of the two). Author wins on
-      # overlapping properties.
+      # Author style merged after layout (a duplicated style attribute would be
+      # dropped by parsers); author wins on overlapping properties.
       sig { params(node: Nokogiri::XML::Node, layout: String).returns(String) }
       def style_attribute(node, layout = '')
         user = escape_attr(node.attr('style').to_s.strip)

@@ -93,8 +93,7 @@ module Inky
       @components = normalized
     end
 
-    # Register a custom tag handled by the given component class.
-    # The class must inherit from Inky::Components::Base.
+    # Registers a custom tag handled by an Inky::Components::Base subclass.
     sig { params(tag: T.any(String, Symbol), component_class: T.class_of(Inky::Components::Base)).void }
     def register_component(tag, component_class)
       Inky::Components.validate_component!(tag, component_class)

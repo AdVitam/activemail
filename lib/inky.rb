@@ -28,9 +28,8 @@ module Inky
   class Core
     extend T::Sig
 
-    # Used to circumvent a Nokogiri limitation: a bare <th> cannot live outside a
-    # <tr>, so components that emit <th> use this placeholder, swapped back at the
-    # end. See https://github.com/zurb/inky-rb/pull/94
+    # Nokogiri cannot parse a bare <th> outside a <tr>; components that emit
+    # <th> use this placeholder, swapped back at the end.
     INTERIM_TH_TAG = 'inky-interim-th'
     INTERIM_TH_TAG_REGEX = T.let(%r{(?<=<|</)#{Regexp.escape(INTERIM_TH_TAG)}}, Regexp)
 
@@ -60,12 +59,12 @@ module Inky
     attr_reader :container_width
 
     sig { returns(T::Hash[String, Inky::Components::Base]) }
-    attr_reader :components
+    attr_reader :component_instances
 
     sig { params(options: T::Hash[Symbol, T.untyped]).void }
     def initialize(options = {})
       config = ::Inky.configuration
-      @components = T.let(build_components(config, options[:components]), T::Hash[String, Inky::Components::Base])
+      @component_instances = T.let(build_components(config, options[:components]), T::Hash[String, Inky::Components::Base])
       @column_count = T.let((options[:column_count] || config.column_count).to_i, Integer)
       @container_width = T.let((options[:container_width] || config.container_width).to_i, Integer)
     end
@@ -75,7 +74,7 @@ module Inky
       raws, str = Inky::Core.extract_raws(normalize_input(html_string))
       parse_cmd = str =~ /<html/i ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)
-      ParseErrorReporter.new(components.keys).call(html.errors)
+      ParseErrorReporter.new(component_instances.keys).call(html.errors)
       transform_doc(html)
       string = html.to_html
       string = string.gsub(INTERIM_TH_TAG_REGEX, 'th')
@@ -95,7 +94,7 @@ module Inky
 
     sig { params(node: Nokogiri::XML::Node).returns(T.nilable(String)) }
     def component_factory(node)
-      component = components[node.name]
+      component = component_instances[node.name]
       return unless component
 
       # Nokogiri::NodeSet has no #join; map to String first.
@@ -107,7 +106,7 @@ module Inky
     def self.extract_raws(string)
       raws = []
       i = 0
-      # Multi-line aware (PR #101): captures everything between non-nested raw tags.
+      # Captures everything between non-nested raw tags, across lines.
       regex = %r{(?:\n *)?< *raw *>([\s\S]*?)</ *raw *>(?: *\n)?}i
       str = string
       while (raw = str.match(regex))
