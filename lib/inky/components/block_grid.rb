@@ -10,7 +10,8 @@ module Inky
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
-        classes = combine_classes(node, "block-grid up-#{node.attr('up')}")
+        up = positive_int(node.attr('up'))
+        classes = combine_classes(node, ['block-grid', up && "up-#{up}"].compact.join(' '))
         %(<table class="#{classes}" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr>#{inner}</tr></tbody></table>)
       end
     end

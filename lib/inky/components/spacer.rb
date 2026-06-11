@@ -14,17 +14,22 @@ module Inky
         size_sm = node.attr('size-sm')
         size_lg = node.attr('size-lg')
 
-        return build_table(node, classes, nil, node.attr('size') || '16') unless size_sm || size_lg
+        return build_table(node, classes, nil, size_for(node.attr('size'))) unless size_sm || size_lg
 
         html = +''
-        html << build_table(node, classes, 'hide-for-large', size_sm) if size_sm
-        html << build_table(node, classes, 'show-for-large', size_lg) if size_lg
+        html << build_table(node, classes, 'hide-for-large', size_for(size_sm)) if size_sm
+        html << build_table(node, classes, 'show-for-large', size_for(size_lg)) if size_lg
         html
       end
 
       private
 
-      sig { params(node: Nokogiri::XML::Node, classes: String, extra: T.nilable(String), size: String).returns(String) }
+      sig { params(value: T.untyped).returns(Integer) }
+      def size_for(value)
+        positive_int(value) || 16
+      end
+
+      sig { params(node: Nokogiri::XML::Node, classes: String, extra: T.nilable(String), size: Integer).returns(String) }
       def build_table(node, classes, extra, size)
         css_class = extra ? "#{classes} #{extra}" : classes
         # mso-line-height-rule:exactly keeps Outlook from inflating the spacer.

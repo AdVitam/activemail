@@ -40,6 +40,13 @@ class SpacerTest < InkyTest
     assert_includes output, 'height="16"'
   end
 
+  def test_non_numeric_size_falls_back_to_default
+    output = render('<spacer size="abc"></spacer>')
+
+    assert_includes output, 'height="16"'
+    refute_includes output, 'height="abc"'
+  end
+
   def test_small_only
     output = render('<spacer size-sm="10"></spacer>')
 
@@ -111,6 +118,13 @@ class BlockGridTest < InkyTest
     output = render('<block-grid up="4" class="show-for-large"></block-grid>')
 
     assert_includes output, 'show-for-large'
+  end
+
+  def test_non_numeric_up_is_dropped
+    output = render('<block-grid up="abc"></block-grid>')
+
+    assert_includes output, 'class="block-grid"'
+    refute_includes output, 'up-abc'
   end
 end
 

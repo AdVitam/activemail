@@ -116,6 +116,25 @@ class GridTest < InkyTest
     assert_includes output, 'max-width:300px'
   end
 
+  def test_non_numeric_small_falls_back_to_default
+    output = render('<columns small="abc">x</columns>')
+
+    assert_includes output, 'small-12'
+    refute_includes output, 'small-0'
+  end
+
+  def test_negative_large_falls_back_to_default
+    output = render('<columns large="-3">x</columns>')
+
+    assert_includes output, 'large-12'
+  end
+
+  def test_non_numeric_large_borrows_valid_small
+    output = render('<columns small="6" large="abc">x</columns>')
+
+    assert_includes output, 'small-6 large-6'
+  end
+
   def test_ghost_cell_width_is_clamped_to_container_width
     output = render('<columns large="14">One</columns>')
 

@@ -24,11 +24,10 @@ module Inky
 
       sig { params(node: Nokogiri::XML::Node).returns([Integer, Integer]) }
       def column_sizes(node)
-        small_val = node.attr('small')
-        large_val = node.attr('large')
-        small = (small_val || column_count).to_i
-        large = (large_val || small_val || (column_count / node.parent.elements.size)).to_i
-        [small, large]
+        small = positive_int(node.attr('small'))
+        large = positive_int(node.attr('large'))
+        siblings = node.parent ? node.parent.elements.size : 1
+        [small || column_count, large || small || [column_count / siblings, 1].max]
       end
 
       sig { params(node: Nokogiri::XML::Node, small: Integer, large: Integer).returns(String) }
