@@ -138,7 +138,9 @@ module Inky
     sig { params(html_string: T.untyped).returns(String) }
     def normalize_input(html_string)
       html_string = html_string.to_s
-      html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
+      # scrub: invalid bytes degrade deterministically (U+FFFD) instead of
+      # whatever the Nokogiri version at hand does with an invalid String.
+      html_string = html_string.dup.force_encoding(Encoding::UTF_8).scrub if html_string.encoding == Encoding::BINARY
       html_string.gsub(/doctype/i, 'DOCTYPE')
     end
   end
