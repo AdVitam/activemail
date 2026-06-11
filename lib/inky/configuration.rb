@@ -73,12 +73,13 @@ module Inky
     def components=(value)
       raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_hash'" unless value.respond_to?(:to_hash)
 
-      @components = value.to_hash
+      # Lookup is by node name (String); 1.x callers used Symbol keys.
+      @components = value.to_hash.transform_keys(&:to_s)
     end
 
     # Register a custom tag handled by the given component class.
     # The class must inherit from Inky::Components::Base.
-    sig { params(tag: String, component_class: T.class_of(Inky::Components::Base)).void }
+    sig { params(tag: T.any(String, Symbol), component_class: T.class_of(Inky::Components::Base)).void }
     def register_component(tag, component_class)
       raise TypeError, "#{component_class} must inherit from Inky::Components::Base" unless component_class < Inky::Components::Base
 

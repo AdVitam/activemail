@@ -62,7 +62,9 @@ module Inky
     sig { params(options: T::Hash[Symbol, T.untyped]).void }
     def initialize(options = {})
       config = ::Inky.configuration
-      registry = DEFAULT_COMPONENTS.merge(config.components).merge(options[:components] || {})
+      # Lookup is by node name (String); 1.x callers used Symbol keys.
+      overrides = (options[:components] || {}).transform_keys(&:to_s)
+      registry = DEFAULT_COMPONENTS.merge(config.components).merge(overrides)
 
       @components = T.let(
         registry.transform_values { |klass| klass.new(self) },

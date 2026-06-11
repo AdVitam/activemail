@@ -84,6 +84,26 @@ class RegistryTest < InkyTest
     refute_includes output, 'class="button"'
   end
 
+  def test_constructor_components_option_accepts_symbol_keys
+    output = render('<button href="#">B</button>', components: { button: CustomComponent })
+
+    assert_includes output, '<div class="custom">'
+    refute_includes output, 'class="button"'
+  end
+
+  def test_components_setter_normalizes_symbol_keys
+    Inky.configuration.components = { button: CustomComponent }
+
+    assert_equal({ 'button' => CustomComponent }, Inky.configuration.components)
+    assert_includes render('<button href="#">B</button>'), '<div class="custom">'
+  end
+
+  def test_register_component_accepts_symbol_tags
+    Inky.configuration.register_component(:'my-box', CustomComponent)
+
+    assert_includes render('<my-box>hi</my-box>'), '<div class="custom">hi</div>'
+  end
+
   def test_custom_component_has_dom_access
     counter = Class.new(Inky::Components::Base) do
       def transform(node, _inner)
