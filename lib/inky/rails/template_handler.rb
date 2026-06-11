@@ -11,10 +11,13 @@ module Inky
       sig { params(compose_with: T.nilable(T.any(String, Symbol))).void }
       def initialize(compose_with = nil)
         # ActionView handlers share no interface (Procs, objects, classes).
-        @engine_handler = T.let(
-          compose_with ? ActionView::Template.registered_template_handler(compose_with) : nil,
-          T.untyped
-        )
+        @engine_handler = T.let(nil, T.untyped)
+        return unless compose_with
+
+        # Without this guard a typo would silently fall back to the configured
+        # template_engine in #engine_handler.
+        @engine_handler = ActionView::Template.registered_template_handler(compose_with) ||
+                          raise(ArgumentError, "No template handler found for #{compose_with}")
       end
 
       sig { returns(T.untyped) }

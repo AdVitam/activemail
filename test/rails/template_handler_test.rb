@@ -36,6 +36,10 @@ class TemplateHandlerTest < InkyTest
     assert_raises(RuntimeError) { handler.engine_handler }
   end
 
+  def test_initialize_raises_when_compose_with_does_not_resolve
+    assert_raises(ArgumentError) { Inky::Rails::TemplateHandler.new(:does_not_exist) }
+  end
+
   def test_renders_an_inky_template_through_action_view
     Dir.mktmpdir do |dir|
       File.write(File.join(dir, 'mail.html.inky'), "<container><row><columns><%= 'Hello' %></columns></row></container>")
