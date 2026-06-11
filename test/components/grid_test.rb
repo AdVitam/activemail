@@ -110,6 +110,31 @@ class GridTest < InkyTest
     assert_equal 2, output.scan('class="row"').size
   end
 
+  def test_consumed_attributes_do_not_leak_into_output
+    output = render('<columns small="6" large="8" href="#x" size="3" no-expander="1" target="_blank">x</columns>')
+    th = Nokogiri::HTML.fragment(output).at_css('th.columns')
+
+    %w[small large href size no-expander target].each do |attr|
+      assert_nil th[attr], "#{attr} leaked onto the column"
+    end
+  end
+
+  def test_consumed_attributes_are_filtered_case_insensitively
+    output = render('<columns SIZE="10" Large="6">x</columns>')
+    th = Nokogiri::HTML.fragment(output).at_css('th.columns')
+
+    assert_nil th['size']
+    assert_nil th['large']
+    assert_includes output, 'large-6'
+  end
+
+  def test_user_style_is_not_emitted_twice_on_the_column
+    output = render('<columns style="background:#fff">x</columns>')
+    th_open_tag = output[/<th class="[^"]*columns[^"]*"[^>]*>/]
+
+    assert_equal 1, th_open_tag.scan('style="').size
+  end
+
   def test_column_max_width_scales_with_large_size
     output = render('<div><columns large="6">One</columns><columns large="6">Two</columns></div>')
 
