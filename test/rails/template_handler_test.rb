@@ -48,4 +48,10 @@ class TemplateHandlerTest < InkyTest
       assert_includes html, 'role="presentation"'
     end
   end
+
+  def test_output_is_html_safe_when_active_support_is_loaded
+    output = Inky::Core.new.release_the_kraken('<row></row>')
+
+    assert_predicate output, :html_safe?
+  end
 end

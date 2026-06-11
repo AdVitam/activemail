@@ -27,6 +27,13 @@ class GridTest < InkyTest
     assert_includes output, 'small-5 large-5'
   end
 
+  def test_column_count_from_global_configuration
+    Inky.configure { |config| config.column_count = 5 }
+    output = render('<columns>One</columns>')
+
+    assert_includes output, 'small-5 large-5'
+  end
+
   def test_two_columns_get_first_and_last
     output = render(<<~INKY)
       <body>

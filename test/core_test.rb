@@ -50,9 +50,17 @@ class CoreTest < InkyTest
 
   def test_component_with_missing_attributes_renders
     output = render('<menu><item>No href</item></menu>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('th.menu-item a')
 
     assert_includes output, 'class="menu-item"'
     assert_includes output, 'No href'
+    assert_equal '', anchor['href']
+  end
+
+  def test_interim_th_literal_in_author_content_is_untouched
+    output = render('<p>inky-interim-th</p>')
+
+    assert_includes output, '<p>inky-interim-th</p>'
   end
 
   def test_newlines_in_content_are_preserved
