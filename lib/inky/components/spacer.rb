@@ -29,7 +29,11 @@ module Inky
         css_class = extra ? "#{classes} #{extra}" : classes
         # mso-line-height-rule:exactly keeps Outlook from inflating the spacer.
         style = "font-size:#{size}px;line-height:#{size}px;mso-line-height-rule:exactly;"
-        %(<table class="#{css_class}" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr><td height="#{size}" style="#{style}">&nbsp;</td></tr></tbody></table>)
+        [
+          %(<table class="#{css_class}" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr>),
+          %(<td height="#{size}" style="#{style}">&nbsp;</td>),
+          '</tr></tbody></table>'
+        ].join
       end
     end
   end

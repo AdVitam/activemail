@@ -11,7 +11,10 @@ module Inky
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         attributes = combine_attributes(node, 'wrapper')
-        %(<table #{attributes} #{TABLE_RESET} align="center"#{style_attribute(node, 'width:100%;')}><tbody><tr><td class="wrapper-inner">#{inner}</td></tr></tbody></table>)
+        [
+          %(<table #{attributes} #{TABLE_RESET} align="center"#{style_attribute(node, 'width:100%;')}><tbody><tr>),
+          %(<td class="wrapper-inner">#{inner}</td></tr></tbody></table>)
+        ].join
       end
     end
   end

@@ -61,7 +61,12 @@ module Inky
         style = "display:inline-block;vertical-align:top;width:100%;max-width:#{width_px}px;"
         # Neutralize the client default th rendering (bold, centered).
         content_style = 'font-weight:normal;text-align:left;'
-        %(<#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}><table #{TABLE_RESET} style="width:100%;"><tbody><tr><th style="#{content_style}">#{inner}</th>#{expander}</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>)
+        [
+          %(<#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}>),
+          %(<table #{TABLE_RESET} style="width:100%;"><tbody><tr>),
+          %(<th style="#{content_style}">#{inner}</th>#{expander}),
+          %(</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>)
+        ].join
       end
     end
   end

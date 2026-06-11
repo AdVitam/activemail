@@ -8,11 +8,9 @@ AllCops:
     - 'tmp/**/*'
     - 'lib/generators/inky/templates/**/*'
 
-# Generated markup lines are long by nature.
 Layout/LineLength:
   Max: 160
   Exclude:
-    - 'lib/inky/components/**/*'
     - 'test/**/*'
 
 Style/Documentation:

@@ -15,7 +15,8 @@ module Inky
         # Outlook Word ignores max-width; the MSO ghost table pins the width.
         [
           %(<!--[if mso | IE]><table #{TABLE_RESET} align="center" width="#{width}"><tr><td><![endif]-->),
-          %(<table #{attributes} #{TABLE_RESET} align="center"#{style_attribute(node, "width:100%;max-width:#{width}px;margin:0 auto;")}><tbody><tr><td>#{inner}</td></tr></tbody></table>),
+          %(<table #{attributes} #{TABLE_RESET} align="center"#{style_attribute(node, "width:100%;max-width:#{width}px;margin:0 auto;")}>),
+          %(<tbody><tr><td>#{inner}</td></tr></tbody></table>),
           '<!--[if mso | IE]></td></tr></table><![endif]-->'
         ].join
       end
