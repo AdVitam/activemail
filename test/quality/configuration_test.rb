@@ -14,6 +14,11 @@ class QualityConfigurationTest < QualityTest
     assert_empty @config.required_previews
   end
 
+  def test_output_dir_rejects_blank
+    assert_raises(ArgumentError) { @config.output_dir = '' }
+    assert_raises(ArgumentError) { @config.output_dir = '   ' }
+  end
+
   def test_required_previews_coerces_to_strings
     @config.required_previews = [:welcome, 'mailer#hi']
 

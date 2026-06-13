@@ -136,10 +136,10 @@ class CenterTest < ActiveMailTest
     )
   end
 
-  def test_nested_centers_do_not_choke
+  def test_nested_centers_propagate_align_to_the_inner_element
     output = render('<center><center>a</center></center>')
 
-    assert_includes output, 'float-center'
+    assert_includes output, '<center align="center" class="float-center">'
   end
 
   def test_applies_float_center_to_menu_items

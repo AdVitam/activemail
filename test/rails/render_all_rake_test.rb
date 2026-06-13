@@ -2,6 +2,7 @@
 
 require 'test_helper'
 require 'minitest/mock'
+require 'tmpdir'
 require 'rake'
 require 'active_mail/quality'
 
@@ -45,6 +46,15 @@ class RenderAllRakeTest < ActiveMailTest
       stub_render_all(broken: []) do
         Rake::Task['active_mail:emails:render_all'].invoke
       end
+    end
+  end
+
+  def test_tokens_export_writes_the_scss_partial_creating_dirs
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, 'nested', '_tokens.scss')
+      capture_io { Rake::Task['active_mail:tokens:export'].invoke(path) }
+
+      assert_includes File.read(path), '$am-color-primary:'
     end
   end
 end

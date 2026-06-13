@@ -5,7 +5,6 @@ require 'sorbet-runtime'
 
 module ActiveMail
   module Quality
-    # Renders ActionMailer previews to HTML (string or disk) for diffing/quality checks.
     module PreviewRenderer
       class << self
         extend T::Sig

@@ -24,6 +24,10 @@ class GuardTest < QualityTest
     assert_raises(ArgumentError) { ActiveMail::Quality::Guard.new(min_full_doc_bytes: -1) }
   end
 
+  def test_rejects_unknown_disable_rule
+    assert_raises(ArgumentError) { ActiveMail::Quality::Guard.new(disable: [:nope]) }
+  end
+
   def test_blank_lang_attribute_is_a_violation
     html = %(<html lang="   "><head></head><body>#{'x ' * 600}</body></html>)
 

@@ -61,7 +61,8 @@ class MinitestQualityTest < QualityTest
     end
 
     generated = klass.instance_methods.find { |m| m.to_s.include?('email_quality') }
-    klass.new(generated).send(generated) # not required → skipped, no failure
+    # Not required → skipped (visible), not a silent pass.
+    assert_raises(Minitest::Skip) { klass.new(generated).send(generated) }
   end
 
   private

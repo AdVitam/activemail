@@ -7,17 +7,22 @@ require_relative 'guard'
 
 module ActiveMail
   module Quality
-    # Opt-in config for the quality layer. Mirrors ActiveMail::Configuration:
-    # frozen dup readers, type-checked writers, sensible defaults.
+    # Opt-in config for the quality layer.
     class Configuration
       extend T::Sig
 
       sig { returns(Guard) }
       attr_accessor :guard
 
-      # Default directory for active_mail:emails:render_all output.
       sig { returns(String) }
-      attr_accessor :output_dir
+      attr_reader :output_dir
+
+      sig { params(value: String).void }
+      def output_dir=(value)
+        raise ArgumentError, 'output_dir must not be blank' if value.strip.empty?
+
+        @output_dir = value
+      end
 
       # Preview keys ("preview_name#email") that MUST render and pass the guard;
       # a failure on any of these aborts the rake task. Other previews are only

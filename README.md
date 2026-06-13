@@ -85,9 +85,11 @@ end
 
 `on_parse_error` surfaces HTML the parser had to repair (unclosed/mismatched
 tags, broken attributes) instead of silently sending a different email than
-intended. Registered component tags never trigger it. The parser knows HTML4 —
-HTML5-only tags (`<section>`, …) are reported as unknown; register them as
-components or use `:ignore`.
+intended. `:warn` logs via `Rails.logger` when available (else `$stderr`); use
+`:raise` in CI/staging to fail the build on malformed templates. Registered
+component tags never trigger it. The parser knows HTML4 — HTML5-only tags
+(`<section>`, …) are reported as unknown; register them as components or use
+`:ignore`.
 
 ## Design tokens
 

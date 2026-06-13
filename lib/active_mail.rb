@@ -82,6 +82,8 @@ module ActiveMail
       transform_doc(html)
       string = html.to_html
       string = string.gsub(INTERIM_TH_TAG_REGEX, 'th')
+      # Needle is a literal U+00A0 (Nokogiri decodes the nbsp entity to one); re-encode
+      # it to the entity for email clients that mishandle raw NBSP bytes.
       string = string.gsub(' ', '&nbsp;')
       ActiveMail::Core.re_inject_raws(string, raws)
     end

@@ -10,6 +10,8 @@ module ActiveMail
 
       sig { override.params(html: String).returns(String) }
       def inline(html)
+        # premailer is a hard runtime dependency (the default inliner), so require
+        # can't fail — unlike the optional Roadie adapter, which guards LoadError.
         require 'premailer'
         # warn_level NONE: premailer's un-inlinable-CSS warnings are noise at delivery
         # time; the quality layer is where coverage gaps should surface.

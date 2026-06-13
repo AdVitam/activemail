@@ -6,7 +6,6 @@ require 'sorbet-runtime'
 
 module ActiveMail
   module Quality
-    # Pure, framework-agnostic HTML email checker: HTML string in, violations out.
     class Guard
       extend T::Sig
 
@@ -17,6 +16,7 @@ module ActiveMail
         const :message, String
       end
 
+      DISABLEABLE = T.let(%i[parse_error table_role img_alt lang min_full_doc_bytes].freeze, T::Array[Symbol])
       # libxml2 code for a non-HTML4 tag; benign (HTML5/custom tags), not malformedness.
       UNKNOWN_TAG_CODE = 801
       # Gmail clips messages past ~102KB.
@@ -30,6 +30,9 @@ module ActiveMail
         # A non-positive threshold would silently disable (or invert) a check.
         @max_bytes = T.let(positive_threshold!(:max_bytes, max_bytes), Integer)
         @min_full_doc_bytes = T.let(positive_threshold!(:min_full_doc_bytes, min_full_doc_bytes), Integer)
+        unknown = disable - DISABLEABLE
+        raise ArgumentError, "unknown rule(s): #{unknown.inspect}, expected a subset of #{DISABLEABLE.inspect}" unless unknown.empty?
+
         @disabled = T.let(disable.to_set, T::Set[Symbol])
       end
 
