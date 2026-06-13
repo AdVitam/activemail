@@ -1,7 +1,14 @@
 # ActiveMail
 
-ActiveMail is an HTML-based templating language that converts simple, semantic tags
-into the verbose, bulletproof table markup that email clients require.
+**Opinionated, plug & play responsive email for Rails.** ActiveMail turns simple,
+semantic tags into the bulletproof table markup email clients require, and ships a
+batteries-included layer on top — a themeable SCSS framework, dark mode, design
+tokens, automatic CSS inlining, generators, and test-time quality guards — so a
+responsive, accessible email renders **out of the box**, with every default
+overridable.
+
+> Not affiliated with Rails core. The name echoes the `Active*` family by
+> convention only.
 
 Write this:
 
@@ -18,10 +25,19 @@ and ActiveMail produces a fluid-hybrid, Outlook-safe table layout with MSO ghost
 tables, `role="presentation"` on every table, and inline styles — markup that
 renders consistently from Apple Mail to Outlook (Word engine) to Gmail mobile.
 
-> **v2.0** is a ground-up modernization: extensible component registry, modern
-> email markup (2026 best practices), Sorbet types, and Ruby 3.2-4.0 / Rails
-> 7.1-8.1 support. See [`CHANGELOG.md`](CHANGELOG.md) and the
-> [migration guide](#migrating-from-1x).
+## Features
+
+- **Semantic markup** → bulletproof tables (`<container>`, `<row>`, `<columns>`,
+  `<button>`, `<menu>`, `<callout>`, `<spacer>`, …), with an extensible
+  open/closed component registry.
+- **Design tokens** as the single Ruby source of truth, bridged to SCSS.
+- **Themeable SCSS framework** with built-in **dark mode** (`prefers-color-scheme`
+  + Outlook `[data-ogsc]`).
+- **Automatic CSS inlining** via a pluggable adapter (premailer by default, roadie
+  optional, or your own).
+- **Generators** to install, eject views/styles, and scaffold components.
+- **Opt-in quality layer**: a Guard (size, `role`, `alt`, `lang`), preview
+  renderer, Minitest assertions + RSpec matcher, and a `render_all` rake task.
 
 ## Installation
 
@@ -32,46 +48,104 @@ gem 'activemail'
 
 ```bash
 bundle install
+bin/rails g active_mail:install
 ```
 
-ActiveMail registers ActionView template handlers automatically. Name a mailer view
-`welcome.html.inky` (or compose with another engine: `welcome.html.inky-erb`,
-`.inky-slim`, `.inky-haml`) and it is transpiled on render.
+The generator drops a commented initializer, a mailer layout, and wires the
+framework stylesheet. It works zero-config; customize only what you want.
 
-For programmatic use:
-
-```ruby
-ActiveMail::Core.new.release_the_kraken('<container><row><columns>Hi</columns></row></container>')
-```
+Name a mailer view `welcome.html.inky` (or compose with another engine:
+`welcome.html.inky-erb`, `.inky-slim`, `.inky-haml`) and it is transpiled on
+render. CSS is inlined automatically before delivery.
 
 ## Configuration
 
 ```ruby
+# config/initializers/active_mail.rb
 ActiveMail.configure do |config|
   config.template_engine  = :erb   # underlying engine for `.html.inky` (default :erb)
   config.column_count     = 12     # grid columns (default 12)
-  config.container_width  = 600    # px width of <container> and MSO ghost table (default 600)
+  config.container_width  = 600    # px width of <container> + MSO ghost table (default 600)
   config.on_parse_error   = :warn  # :ignore, :warn or :raise (default :warn)
+
+  # CSS inliner: :premailer (default), :roadie, :null, or a custom
+  # ActiveMail::Inliner::Base subclass/instance.
+  config.inliner = :premailer
+  # Set false if another inliner (e.g. premailer-rails) already runs on mailers;
+  # `config.inliner = :null` also fully short-circuits ActiveMail's interceptor.
+  config.register_inline_interceptor = true
+
+  # Design tokens (see below).
+  config.tokens.color :primary, '#2a9d8f'
+
+  # Custom components (see "Custom components").
+  config.register_component 'cta', Components::Cta
 end
 ```
 
 `on_parse_error` surfaces HTML the parser had to repair (unclosed/mismatched
 tags, broken attributes) instead of silently sending a different email than
-intended. Registered component tags never trigger it. Note: the parser knows
-HTML4 — HTML5-only tags (`<section>`, ...) are reported as unknown; register
-them as components or use `:ignore` if you rely on them.
+intended. Registered component tags never trigger it. The parser knows HTML4 —
+HTML5-only tags (`<section>`, …) are reported as unknown; register them as
+components or use `:ignore`.
 
-Per-render overrides:
+## Design tokens
+
+Tokens are the single source of truth. Declare them **once in Ruby**; ActiveMail
+bridges them to SCSS automatically (`$am-color-primary`, `$am-font-body`,
+`$am-spacing-md`, …) so a component's inline color always matches the stylesheet.
 
 ```ruby
-ActiveMail::Core.new(column_count: 24, container_width: 480).release_the_kraken(source)
+config.tokens.color   :primary,   '#2a9d8f'
+config.tokens.color   :secondary, '#264653'
+config.tokens.font    :heading,   'Georgia, serif'
+config.tokens.spacing :lg,        '32px'
+
+ActiveMail.tokens.color(:primary) # => "#2a9d8f"
+```
+
+Defaults are neutral (a calm teal `primary`, near-black `text`, white
+`background`, …) and fully overridable. Under Sprockets the SCSS bridge is a
+preprocessed partial; under Propshaft run `rake active_mail:tokens:export` to
+materialize a static `_active_mail_tokens.scss`.
+
+## Styling
+
+The framework stylesheet lives at `active_mail/active_mail` and is themed entirely
+by tokens — no hard-coded brand colors. It includes a fluid-hybrid grid, component
+hooks (`.button`, `.cta`, `.callout`, `.spacer`, …), utilities, and dark mode.
+
+Override at three levels, cheapest first:
+
+1. **Tokens** (Ruby) — covers most theming.
+2. **`bin/rails g active_mail:styles`** — eject the SCSS partials into your app to
+   edit them; your copies shadow the gem's.
+3. **`bin/rails g active_mail:views`** — eject the default layout + partials
+   (`app/views/layouts/active_mail/*`); a same-named file in your app wins by
+   Rails path precedence. Put your logo/header/footer here — those are the app's
+   identity, not the gem's.
+
+Dark mode ships on: a `<style>` block keys off `prefers-color-scheme: dark` (Apple
+Mail/iOS) and Outlook's `[data-ogsc]`, with surfaces derived from your tokens.
+
+## CSS inlining
+
+Email clients (Gmail mobile, Orange.fr) strip `<style>`, so critical CSS must be
+inlined. ActiveMail registers an ActionMailer interceptor that runs the configured
+inliner on every outgoing HTML part — your `<style>` enhancement block (media
+queries, dark mode) is preserved.
+
+```ruby
+config.inliner = :premailer   # default, hard dependency
+config.inliner = :roadie      # add `gem 'roadie'` yourself
+config.inliner = :null        # opt out (e.g. you run premailer-rails)
+config.inliner = MyInliner.new # any ActiveMail::Inliner::Base
 ```
 
 ## Components
 
 Every built-in tag and its rendered output. Tables omit
-`border/cellpadding/cellspacing/role` below for brevity — they are always
-present in the real output.
+`border/cellpadding/cellspacing/role` below for brevity — they are always present.
 
 ### `<container>`
 
@@ -100,16 +174,6 @@ media-query enhancement.
 <row><columns large="6">Hi</columns></row>
 ```
 
-```html
-<table class="row" style="width:100%;"><tbody><tr>
-  <!--[if mso | IE]><td width="300" valign="top"><![endif]-->
-  <th class="small-12 large-6 columns first last" style="display:inline-block;vertical-align:top;width:100%;max-width:300px;">
-    <table style="width:100%;"><tbody><tr><th style="font-weight:normal;text-align:left;">Hi</th></tr></tbody></table>
-  </th>
-  <!--[if mso | IE]></td><![endif]-->
-</tr></tbody></table>
-```
-
 Column widths are computed as `container_width × large / column_count`, capped
 at `container_width`, **with no gutter model**: two `large="6"` columns sit
 edge-to-edge (300px + 300px in a 600px container). Add padding inside your
@@ -119,18 +183,10 @@ columns for gutters, and keep the `large` sizes of a row summing to at most
 ### `<button>`
 
 Bulletproof button: the padding lives on the `<a>` so the whole control is
-clickable. Variant classes (`primary`, `expand`, ...) are preserved.
+clickable. Variant classes (`primary`, `expand`, …) are preserved.
 
 ```html
 <button href="#">Go</button>
-```
-
-```html
-<table class="button"><tbody><tr><td>
-  <table><tbody><tr><td>
-    <a href="#" style="display:inline-block;text-decoration:none;padding:12px 24px;">Go</a>
-  </td></tr></tbody></table>
-</td></tr></tbody></table>
 ```
 
 `<button class="expand">` adds a centered link and an `.expander` cell.
@@ -141,23 +197,10 @@ clickable. Variant classes (`primary`, `expand`, ...) are preserved.
 <menu><item href="#">Home</item></menu>
 ```
 
-```html
-<table class="menu"><tbody><tr><td>
-  <table><tbody><tr><th class="menu-item"><a href="#">Home</a></th></tr></tbody></table>
-</td></tr></tbody></table>
-```
-
 ### `<callout>`
 
 ```html
 <callout class="primary">Note</callout>
-```
-
-```html
-<table class="callout" style="width:100%;"><tbody><tr>
-  <th class="primary callout-inner">Note</th>
-  <th class="expander"></th>
-</tr></tbody></table>
 ```
 
 ### `<spacer>`
@@ -169,20 +212,10 @@ clickable. Variant classes (`primary`, `expand`, ...) are preserved.
 <spacer size="16"></spacer>
 ```
 
-```html
-<table class="spacer" style="width:100%;"><tbody><tr>
-  <td height="16" style="font-size:16px;line-height:16px;mso-line-height-rule:exactly;">&nbsp;</td>
-</tr></tbody></table>
-```
-
 ### `<block-grid>`
 
 ```html
 <block-grid up="4"></block-grid>
-```
-
-```html
-<table class="block-grid up-4" style="width:100%;"><tbody><tr></tr></tbody></table>
 ```
 
 ### `<wrapper>`, `<h-line>`, `<center>`
@@ -193,7 +226,7 @@ clickable. Variant classes (`primary`, `expand`, ...) are preserved.
 
 ### `<inky>`
 
-Renders a bare `<tr>` (mirrors inky.js), useful inside hand-written tables.
+Renders a bare `<tr>`, useful inside hand-written tables.
 
 ### `<raw>`
 
@@ -204,37 +237,49 @@ supported). Raw blocks cannot be nested.
 <raw><% liquid_or_mso_conditional %></raw>
 ```
 
-## Custom components
+### Token-driven built-ins: `<cta>` and `<info-box>`
 
-Register your own tag with a class that inherits from `ActiveMail::Components::Base`
-and implements `#transform(node, inner)`. You get the matched Nokogiri node
-(full DOM access) and the already-transformed inner HTML; return the replacement
-markup string.
+Brand-neutral, token-styled components shipped with the gem but **not registered
+by default** (so they never collide with your tags). Register them to use:
 
 ```ruby
-class Hr < ActiveMail::Components::Base
-  extend T::Sig
+config.register_component 'cta', ActiveMail::Components::Cta
+config.register_component 'info-box', ActiveMail::Components::InfoBox
+```
 
-  sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
+```html
+<cta href="https://example.com">Go</cta>
+<cta href="#" class="secondary">Also go</cta>
+```
+
+`<cta>` renders a bulletproof button using `tokens.color(:primary)` (or
+`:secondary` with `class="secondary"`); it raises if `href` is missing.
+
+## Custom components
+
+Register your own tag with a class that inherits from
+`ActiveMail::Components::Base` and implements `#transform(node, inner)`. You get
+the matched Nokogiri node (full DOM access) and the already-transformed inner
+HTML; return the replacement markup string. The generator scaffolds one:
+
+```bash
+bin/rails g active_mail:component Divider
+```
+
+```ruby
+class Divider < ActiveMail::Components::Base
   def transform(node, _inner)
     klass = combine_classes(node, 'divider')
     %(<table class="#{klass}" role="presentation" style="width:100%;"><tbody><tr><td></td></tr></tbody></table>)
   end
 end
 
-ActiveMail.configuration.register_component('hr-line', Hr)
+ActiveMail.configuration.register_component('divider', Divider)
 ```
 
-The `sig` is recommended (and required if your app runs `srb tc`); a plain
-`def transform(node, _inner)` without it also works at runtime.
-
-```html
-<hr-line class="muted"></hr-line>
-```
-
-Helper methods available from `Base`: `combine_classes`, `combine_attributes`,
-`pass_through_attributes`, `class?`, `target_attribute`, `column_count`,
-`container_width`.
+Helpers available from `Base`: `combine_classes`, `combine_attributes`,
+`pass_through_attributes`, `class?`, `target_attribute`, `escape_attr`,
+`style_attribute`, `column_count`, `container_width`.
 
 Per-instance overrides (including replacing a built-in tag) are also possible:
 
@@ -242,35 +287,69 @@ Per-instance overrides (including replacing a built-in tag) are also possible:
 ActiveMail::Core.new(components: { 'button' => MyButton }).release_the_kraken(source)
 ```
 
+## Generators
+
+| Generator | Purpose |
+|---|---|
+| `active_mail:install` | Initializer + mailer layout + stylesheet wiring (works zero-config). `--haml` / `--slim` supported. |
+| `active_mail:views` | Eject the default layout + partials for customization. |
+| `active_mail:styles` | Eject the SCSS framework partials for customization. |
+| `active_mail:component NAME` | Scaffold a component class + print its register snippet. |
+
+## Testing & quality
+
+An **opt-in** layer (never loaded by `require 'active_mail'`). Require it from your
+test suite.
+
+```ruby
+require 'active_mail/quality'
+
+# Minitest
+class MailerTest < ActiveSupport::TestCase
+  include ActiveMail::Quality::Minitest
+
+  test 'welcome email is sound' do
+    assert_email_quality(rendered_html)
+  end
+end
+
+# RSpec (matcher registers only when RSpec is loaded)
+expect(rendered_html).to be_a_valid_email
+```
+
+The Guard checks byte size (Gmail clips ~102 KB), `role="presentation"` on every
+table, `alt` on every image, and `lang` on full documents — all thresholds
+configurable:
+
+```ruby
+ActiveMail::Quality.configure do |c|
+  c.required_previews = %w[welcome_mailer/welcome]
+  c.guard = ActiveMail::Quality::Guard.new(max_bytes: 90_000)
+end
+```
+
+`rake active_mail:emails:render_all` renders every ActionMailer preview to disk
+for visual diffing and fails on any guard violation among `required_previews`.
+
 ## Email-client compatibility policy
 
-The generated markup targets the real-world client landscape as of 2026:
+Targets the real-world client landscape as of 2026:
 
-- **Outlook for Windows (Word engine)** — supported through its expected
-  lifetime (~2029). MSO ghost tables/cells and `mso-*` properties keep layouts
-  intact; the new Chromium-based Outlook is not yet the whole installed base.
+- **Outlook for Windows (Word engine)** — MSO ghost tables/cells and `mso-*`
+  properties keep layouts intact.
 - **Orange.fr (major FR webmail)** — degraded but functional: the markup never
-  *depends* on `!important`, `border-radius`, `background-image`, flex, or grid,
-  all of which Orange strips or ignores.
-- **Gmail mobile** — strips most `<style>` blocks, so all critical layout is
-  inline. Keep your enhancement CSS in a `<style>` block (inlined by your app's
-  premailer for the classes ActiveMail preserves).
-- **Accessibility** — `role="presentation"` on every layout table; provide
-  `alt` text and sufficient contrast in your own content.
+  *depends* on `!important`, `border-radius`, `background-image`, flex, or grid.
+- **Gmail mobile** — strips most `<style>`; critical layout is inlined, with
+  enhancement CSS left in a `<style>` block.
+- **Accessibility** — `role="presentation"` on every layout table; provide `alt`
+  text and sufficient contrast.
 
-The gem does not emit hard-coded colors, so app-side dark mode
-(`prefers-color-scheme`, `[data-ogsc]`) works unhindered.
+## Programmatic use
 
-## Migrating from 1.x
-
-- The rendered markup changed; re-record any email snapshots.
-- The `foundation_emails` runtime dependency was removed. Add it to your own
-  Gemfile if you still want Foundation's SCSS, or style the preserved class
-  hooks yourself.
-- Replace string-map custom components (`components: { tag: 'name' }`) with
-  `register_component` (or class-valued `components:`).
-
-See [`CHANGELOG.md`](CHANGELOG.md) for the full list.
+```ruby
+ActiveMail::Core.new.release_the_kraken('<container><row><columns>Hi</columns></row></container>')
+ActiveMail::Core.new(column_count: 24, container_width: 480).release_the_kraken(source)
+```
 
 ## Development
 
