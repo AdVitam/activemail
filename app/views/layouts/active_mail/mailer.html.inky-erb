@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="<%= I18n.locale %>" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,14 +15,16 @@
       </xml>
     </noscript>
     <![endif]-->
-    <style>
-      /* Enhancement-only CSS (media queries, dark mode). Critical layout is inline. */
-    </style>
+    <%= stylesheet_link_tag "active_mail/active_mail", media: "all" %>
   </head>
 
   <body style="margin:0;padding:0;word-spacing:normal;">
-    <div role="article" aria-roledescription="email" lang="en" style="width:100%;">
-      <%%= yield %>
+    <div role="article" aria-roledescription="email" lang="<%= I18n.locale %>" style="width:100%;">
+      <container>
+        <%= render "layouts/active_mail/head" %>
+        <%= yield %>
+        <%= render "layouts/active_mail/footer" %>
+      </container>
     </div>
   </body>
 </html>

@@ -1,0 +1,10 @@
+<%# Neutral footer. Hosts override this partial to add address/social/unsubscribe. %>
+<row>
+  <columns>
+    <spacer size="24"></spacer>
+    <h-line></h-line>
+    <p class="text-muted text-center">
+      <%= I18n.t("active_mail.footer.sent_with", default: "Sent with ActiveMail") %>
+    </p>
+  </columns>
+</row>

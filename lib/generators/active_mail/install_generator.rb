@@ -4,24 +4,43 @@ require 'rails/generators'
 
 module ActiveMail
   module Generators
+    # Scaffolds the host config: initializer and a mailer layout.
     class InstallGenerator < ::Rails::Generators::Base
-      desc 'Install an ActiveMail mailer layout'
+      desc 'Install ActiveMail: initializer and a mailer layout'
       source_root File.join(File.dirname(__FILE__), 'templates')
       argument :layout_name, type: :string, default: 'mailer', banner: 'layout_name'
 
-      class_option :haml, desc: 'Generate layout in Haml', type: :boolean
-      class_option :slim, desc: 'Generate layout in Slim', type: :boolean
+      class_option :haml, desc: 'Generate the layout in Haml', type: :boolean
+      class_option :slim, desc: 'Generate the layout in Slim', type: :boolean
 
+      def create_initializer
+        template 'initializer.rb', File.join('config', 'initializers', 'active_mail.rb')
+      end
+
+      # A plain mailer.html.erb would win over the generated inky layout; keep it.
       def preserve_original_mailer_layout
         return unless layout_name == 'mailer' && extension == 'erb'
 
-        original_mailer = File.join(layouts_base_dir, 'mailer.html.erb')
-        rename_filename = File.join(layouts_base_dir, "old_mailer_#{Time.now.to_i}.html.erb")
-        File.rename(original_mailer, rename_filename) if File.exist? original_mailer
+        original = File.join(layouts_base_dir, 'mailer.html.erb')
+        return unless File.exist?(File.join(destination_root, original))
+
+        rename_to = File.join(layouts_base_dir, "old_mailer_#{Time.now.to_i}.html.erb")
+        File.rename(File.join(destination_root, original), File.join(destination_root, rename_to))
       end
 
       def create_mailer_layout
-        template "mailer_layout.html.#{extension}", File.join(layouts_base_dir, "#{layout_name.underscore}.html.#{extension}")
+        template "mailer_layout.html.inky-#{extension}",
+                 File.join(layouts_base_dir, "#{layout_name.underscore}.html.inky-#{extension}")
+      end
+
+      def show_readme
+        say "\nActiveMail installed.", :green
+        say '  • config/initializers/active_mail.rb — configure tokens, inliner, components.'
+        say "  • app/views/layouts/#{layout_name.underscore}.html.inky-#{extension} — your mailer layout."
+        say "\nPoint your mailers at the layout, e.g. `layout \"#{layout_name.underscore}\"`, and"
+        say "name views *.html.inky-#{extension} to enable ActiveMail markup."
+        say "\nCustomize styling via Ruby tokens in the initializer (config.tokens.color/font/spacing),"
+        say 'or run `rails g active_mail:styles` to eject and edit the SCSS partials.'
       end
 
       private
@@ -31,10 +50,7 @@ module ActiveMail
       end
 
       def extension
-        %w[haml slim].each do |ext|
-          return ext if options.send(ext)
-        end
-        'erb'
+        %w[haml slim].find { |ext| options.send(ext) } || 'erb'
       end
     end
   end

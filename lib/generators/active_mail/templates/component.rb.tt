@@ -1,0 +1,19 @@
+# typed: false
+# frozen_string_literal: true
+
+module Components
+  # Custom ActiveMail component for the <<%= tag_name %>> tag.
+  # Register it in config/initializers/active_mail.rb:
+  #   config.register_component "<%= tag_name %>", Components::<%= class_name %>
+  class <%= class_name %> < ActiveMail::Components::Base
+    # `node` is the parsed <<%= tag_name %>> Nokogiri node, `inner` its rendered
+    # children. Return the bulletproof table HTML the tag expands to.
+    # Helpers: combine_classes, style_attribute, pass_through_attributes,
+    # escape_attr, TABLE_RESET, column_count, container_width.
+    # Sorbet users: add `sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }`.
+    def transform(node, inner)
+      classes = combine_classes(node, "<%= tag_name %>")
+      %(<table class="#{classes}" #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table>)
+    end
+  end
+end
