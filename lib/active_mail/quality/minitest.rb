@@ -5,7 +5,7 @@ require_relative '../quality'
 
 module ActiveMail
   module Quality
-    # Minitest assertions for email quality, mixed into host mailer tests (README).
+    # Minitest assertions for email quality, mixed into host mailer tests.
     module Minitest
       extend T::Sig
 

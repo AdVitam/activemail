@@ -17,34 +17,20 @@ module ActiveMail
         const :message, String
       end
 
+      # libxml2 code for a non-HTML4 tag; benign (HTML5/custom tags), not malformedness.
+      UNKNOWN_TAG_CODE = 801
       # Gmail clips messages past ~102KB.
       DEFAULT_MAX_BYTES = 102_400
-      # A full HTML document smaller than this carries no real layout (e.g. an
-      # attachment-only carrier body) and is suspect.
+      # A full HTML document smaller than this carries no real layout and is suspect.
       DEFAULT_MIN_FULL_DOC_BYTES = 1_024
 
-      sig do
-        params(
-          max_bytes: Integer,
-          require_table_role: T::Boolean,
-          require_img_alt: T::Boolean,
-          require_lang: T::Boolean,
-          min_full_doc_bytes: Integer
-        ).void
-      end
-      def initialize(
-        max_bytes: DEFAULT_MAX_BYTES,
-        require_table_role: true,
-        require_img_alt: true,
-        require_lang: true,
-        min_full_doc_bytes: DEFAULT_MIN_FULL_DOC_BYTES
-      )
+      # disable: rules to skip — :parse_error, :table_role, :img_alt, :lang, :min_full_doc_bytes.
+      sig { params(max_bytes: Integer, min_full_doc_bytes: Integer, disable: T::Array[Symbol]).void }
+      def initialize(max_bytes: DEFAULT_MAX_BYTES, min_full_doc_bytes: DEFAULT_MIN_FULL_DOC_BYTES, disable: [])
         # A non-positive threshold would silently disable (or invert) a check.
         @max_bytes = T.let(positive_threshold!(:max_bytes, max_bytes), Integer)
-        @require_table_role = T.let(require_table_role, T::Boolean)
-        @require_img_alt = T.let(require_img_alt, T::Boolean)
-        @require_lang = T.let(require_lang, T::Boolean)
         @min_full_doc_bytes = T.let(positive_threshold!(:min_full_doc_bytes, min_full_doc_bytes), Integer)
+        @disabled = T.let(disable.to_set, T::Set[Symbol])
       end
 
       sig { params(html: String).returns(T::Array[Violation]) }
@@ -53,6 +39,7 @@ module ActiveMail
         check_size(html, violations)
 
         doc = Nokogiri::HTML(html)
+        check_well_formed(doc, violations)
         check_table_roles(doc, violations)
         check_img_alts(doc, violations)
         check_full_document(html, doc, violations) if full_document?(html)
@@ -65,6 +52,11 @@ module ActiveMail
       end
 
       private
+
+      sig { params(rule: Symbol).returns(T::Boolean) }
+      def enabled?(rule)
+        !@disabled.include?(rule)
+      end
 
       sig { params(name: Symbol, value: Integer).returns(Integer) }
       def positive_threshold!(name, value)
@@ -83,52 +75,52 @@ module ActiveMail
       def check_size(html, violations)
         return if html.bytesize <= @max_bytes
 
-        violations << Violation.new(
-          rule: :max_bytes,
-          message: "HTML is #{html.bytesize} bytes, exceeds #{@max_bytes} (Gmail clipping)"
-        )
+        violations << Violation.new(rule: :max_bytes, message: "HTML is #{html.bytesize} bytes, exceeds #{@max_bytes} (Gmail clipping)")
+      end
+
+      # The Core surfaces libxml2 repairs on input; the validation layer must not
+      # silently bless malformed *output* (mismatched tags, bad entities) before send.
+      sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
+      def check_well_formed(doc, violations)
+        return unless enabled?(:parse_error)
+
+        errors = doc.errors.reject { |e| e.respond_to?(:code) && e.code == UNKNOWN_TAG_CODE }
+        return if errors.empty?
+
+        violations << Violation.new(rule: :parse_error, message: "malformed HTML: #{errors.first(3).map { |e| e.message.to_s.strip }.join('; ')}")
       end
 
       sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_table_roles(doc, violations)
-        return unless @require_table_role
+        return unless enabled?(:table_role)
 
         offenders = doc.css('table').count { |table| table['role'] != 'presentation' }
         return if offenders.zero?
 
-        violations << Violation.new(
-          rule: :table_role,
-          message: %(#{offenders} <table> missing role="presentation")
-        )
+        violations << Violation.new(rule: :table_role, message: %(#{offenders} <table> missing role="presentation"))
       end
 
       sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_img_alts(doc, violations)
-        return unless @require_img_alt
+        return unless enabled?(:img_alt)
 
         offenders = doc.css('img').count { |img| !img.key?('alt') }
         return if offenders.zero?
 
-        violations << Violation.new(
-          rule: :img_alt,
-          message: "#{offenders} <img> missing an alt attribute"
-        )
+        violations << Violation.new(rule: :img_alt, message: "#{offenders} <img> missing an alt attribute")
       end
 
       sig { params(html: String, doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_full_document(html, doc, violations)
-        if html.bytesize < @min_full_doc_bytes
-          violations << Violation.new(
-            rule: :min_full_doc_bytes,
-            message: "full HTML document is only #{html.bytesize} bytes, under #{@min_full_doc_bytes} (suspiciously small)"
-          )
+        if enabled?(:min_full_doc_bytes) && html.bytesize < @min_full_doc_bytes
+          violations << Violation.new(rule: :min_full_doc_bytes, message: "full document is only #{html.bytesize} bytes (under #{@min_full_doc_bytes})")
         end
         check_lang(doc, violations)
       end
 
       sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_lang(doc, violations)
-        return unless @require_lang
+        return unless enabled?(:lang)
 
         html_tag = doc.at_css('html')
         lang = html_tag && html_tag['lang']

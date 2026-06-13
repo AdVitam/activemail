@@ -67,6 +67,13 @@ module ActiveMail
       access(@spacings, name, value)
     end
 
+    # Strict read for code that must have the token (e.g. a component's inline
+    # color): raises rather than interpolating nil into the CSS.
+    sig { params(name: T.any(String, Symbol)).returns(String) }
+    def color!(name)
+      @colors.fetch(name.to_sym) { raise KeyError, "unknown color token #{name.inspect}" }
+    end
+
     # Frozen dup: mutating the returned hash must not bypass the DSL setters.
     sig { returns(TokenMap) }
     def colors

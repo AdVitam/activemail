@@ -46,6 +46,14 @@ class StyleMergeTest < ActiveMailTest
     assert_operator style.index('padding:12px 24px'), :<, style.index('padding:4px')
   end
 
+  def test_user_style_can_override_a_critical_layout_property
+    output = render('<columns style="max-width:300px">x</columns>')
+    style = Nokogiri::HTML.fragment(output).at_css('th.columns')['style']
+
+    # Author's max-width is emitted after the layout's, so it wins per CSS cascade.
+    assert_operator style.index('max-width:600px'), :<, style.index('max-width:300px')
+  end
+
   def test_menu_preserves_user_style
     output = render('<menu style="background:#000"></menu>')
     style = Nokogiri::HTML.fragment(output).at_css('table.menu')['style']

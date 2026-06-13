@@ -58,7 +58,7 @@ class GuardTest < QualityTest
   end
 
   def test_table_role_check_can_be_disabled
-    guard = ActiveMail::Quality::Guard.new(require_table_role: false)
+    guard = ActiveMail::Quality::Guard.new(disable: [:table_role])
     html = CLEAN_DOC.sub('role="presentation"', '')
 
     refute_includes guard.violations(html).map(&:rule), :table_role
@@ -77,7 +77,7 @@ class GuardTest < QualityTest
   end
 
   def test_img_alt_check_can_be_disabled
-    guard = ActiveMail::Quality::Guard.new(require_img_alt: false)
+    guard = ActiveMail::Quality::Guard.new(disable: [:img_alt])
     html = CLEAN_DOC.sub('alt="Logo"', '')
 
     refute_includes guard.violations(html).map(&:rule), :img_alt
@@ -96,10 +96,29 @@ class GuardTest < QualityTest
   end
 
   def test_lang_check_can_be_disabled
-    guard = ActiveMail::Quality::Guard.new(require_lang: false)
+    guard = ActiveMail::Quality::Guard.new(disable: [:lang])
     html = CLEAN_DOC.sub('<html lang="en">', '<html>')
 
     refute_includes guard.violations(html).map(&:rule), :lang
+  end
+
+  def test_malformed_html_violates_parse_error
+    html = %(<html lang="en"><head></head><body><b><i>oops</b></i>#{'x ' * 600}</body></html>)
+
+    assert_includes rules(html), :parse_error
+  end
+
+  def test_unknown_html5_tag_is_not_a_parse_error
+    html = %(<html lang="en"><head></head><body><section>#{'x ' * 600}</section></body></html>)
+
+    refute_includes rules(html), :parse_error
+  end
+
+  def test_parse_error_check_can_be_disabled
+    guard = ActiveMail::Quality::Guard.new(disable: [:parse_error])
+    html = '<html lang="en"><body><b><i>oops</b></i></body></html>'
+
+    refute_includes guard.violations(html).map(&:rule), :parse_error
   end
 
   def test_tiny_full_doc_violates_min_bytes

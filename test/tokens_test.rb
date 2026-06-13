@@ -27,6 +27,13 @@ class TokensTest < ActiveMailTest
     assert_raises(ArgumentError) { tokens.color(:primary, '   ') }
   end
 
+  def test_strict_color_reader_raises_on_unknown_key
+    tokens = ActiveMail::Tokens.new
+
+    assert_equal tokens.color(:primary), tokens.color!(:primary)
+    assert_raises(KeyError) { tokens.color!(:does_not_exist) }
+  end
+
   def test_setter_accepts_string_name
     tokens = ActiveMail::Tokens.new
     tokens.spacing('md', '20px')

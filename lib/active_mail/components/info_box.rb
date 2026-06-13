@@ -24,8 +24,8 @@ module ActiveMail
       sig { returns(String) }
       def cell_style
         tokens = ActiveMail.tokens
-        "background-color:#{tokens.color(:background)};border-left:5px solid #{tokens.color(:border)};" \
-          "color:#{tokens.color(:text)};padding:16px;"
+        "background-color:#{tokens.color!(:background)};border-left:5px solid #{tokens.color!(:border)};" \
+          "color:#{tokens.color!(:text)};padding:16px;"
       end
     end
   end

@@ -302,9 +302,9 @@ An **opt-in** layer (never loaded by `require 'active_mail'`). Require it from y
 test suite.
 
 ```ruby
-require 'active_mail/quality'
+# Minitest — require the assertions module explicitly:
+require 'active_mail/quality/minitest'
 
-# Minitest
 class MailerTest < ActiveSupport::TestCase
   include ActiveMail::Quality::Minitest
 
@@ -312,8 +312,12 @@ class MailerTest < ActiveSupport::TestCase
     assert_email_quality(rendered_html)
   end
 end
+```
 
-# RSpec (matcher registers only when RSpec is loaded)
+```ruby
+# RSpec — require the matcher (registers be_a_valid_email when RSpec is loaded):
+require 'active_mail/quality/rspec'
+
 expect(rendered_html).to be_a_valid_email
 ```
 

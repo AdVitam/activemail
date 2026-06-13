@@ -22,10 +22,7 @@ module ActiveMail
         return unless layout_name == 'mailer' && extension == 'erb'
 
         original = File.join(layouts_base_dir, 'mailer.html.erb')
-        return unless File.exist?(File.join(destination_root, original))
-
-        rename_to = File.join(layouts_base_dir, "old_mailer_#{Time.now.to_i}.html.erb")
-        File.rename(File.join(destination_root, original), File.join(destination_root, rename_to))
+        back_up_layout(original) if File.exist?(File.join(destination_root, original))
       end
 
       def create_mailer_layout
@@ -44,6 +41,12 @@ module ActiveMail
       end
 
       private
+
+      def back_up_layout(original)
+        backup = File.join(layouts_base_dir, "old_mailer_#{Time.now.strftime('%Y%m%d%H%M%S%L')}.html.erb")
+        File.rename(File.join(destination_root, original), File.join(destination_root, backup))
+        say "Renamed existing #{original} → #{backup} (it would shadow the new ActiveMail layout).", :yellow
+      end
 
       def layouts_base_dir
         File.join('app', 'views', 'layouts')

@@ -20,7 +20,7 @@ namespace :active_mail do
       require 'active_mail/quality/render_all'
 
       config = ActiveMail::Quality.config
-      output_root = defined?(Rails) ? Rails.root.join(config.output_dir) : Pathname(config.output_dir)
+      output_root = defined?(Rails) && Rails.respond_to?(:root) ? Rails.root.join(config.output_dir) : Pathname(config.output_dir)
       result = ActiveMail::Quality::RenderAll.new(output_root: output_root, config: config).call
       puts "Rendered #{result.rendered} email(s) into #{output_root}"
       # A green run on zero previews would silently verify nothing — make it visible.

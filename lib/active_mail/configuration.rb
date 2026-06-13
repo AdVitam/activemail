@@ -100,6 +100,7 @@ module ActiveMail
       @on_parse_error = T.let(:warn, Symbol)
       @tokens = T.let(nil, T.nilable(ActiveMail::Tokens))
       @inliner = T.let(:premailer, InlinerSetting)
+      @resolved_inliner = T.let(nil, T.nilable(ActiveMail::Inliner::Base))
       @register_inline_interceptor = T.let(true, T::Boolean)
     end
 
@@ -108,12 +109,14 @@ module ActiveMail
     def inliner=(value)
       resolved = value.is_a?(String) ? value.to_sym : value
       resolve_inliner(resolved) # raises on an invalid value, eagerly
+      @resolved_inliner = nil   # a new setting invalidates the memoized instance
       @inliner = resolved
     end
 
+    # Memoized so the lifecycle is consistent (one instance reused, not re-built per call).
     sig { returns(ActiveMail::Inliner::Base) }
     def resolved_inliner
-      resolve_inliner(@inliner)
+      @resolved_inliner ||= resolve_inliner(@inliner)
     end
 
     sig { params(value: T.untyped).returns(Symbol) }

@@ -100,6 +100,16 @@ class ConfigurationTest < ActiveMailTest
     assert_same instance, config.resolved_inliner
   end
 
+  def test_resolved_inliner_is_memoized_until_reassigned
+    config = ActiveMail::Configuration.new
+    config.inliner = :premailer
+
+    assert_same config.resolved_inliner, config.resolved_inliner
+
+    config.inliner = :null
+    assert_instance_of ActiveMail::Inliner::Null, config.resolved_inliner
+  end
+
   def test_resolved_inliner_instantiates_a_class
     config = ActiveMail::Configuration.new
     config.inliner = ActiveMail::Inliner::Null

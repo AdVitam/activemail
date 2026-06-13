@@ -15,7 +15,7 @@ module ActiveMail
         # A CTA without a link is an authoring bug — surface it at render time.
         raise ArgumentError, '<cta> requires an href attribute' if node.attr('href').to_s.strip.empty?
 
-        background = ActiveMail.tokens.color(class?(node, 'secondary') ? :secondary : :primary)
+        background = ActiveMail.tokens.color!(class?(node, 'secondary') ? :secondary : :primary)
         classes = combine_classes(node, 'cta')
         anchor = %(<a href="#{escape_attr(node.attr('href'))}"#{target_attribute(node)} style="#{link_style(background)}">#{inner}</a>)
         [
@@ -27,10 +27,10 @@ module ActiveMail
 
       private
 
-      sig { params(background: T.nilable(String)).returns(String) }
+      sig { params(background: String).returns(String) }
       def link_style(background)
         'display:inline-block;text-decoration:none;padding:12px 24px;' \
-          "background:#{background};color:#{ActiveMail.tokens.color(:button_text)};font-weight:bold;border-radius:4px;"
+          "background:#{background};color:#{ActiveMail.tokens.color!(:button_text)};font-weight:bold;border-radius:4px;"
       end
     end
   end
