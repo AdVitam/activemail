@@ -37,6 +37,33 @@ class MinitestQualityTest < QualityTest
     assert_raises(Minitest::Assertion) { assert_preview_quality(bad, 'welcome') }
   end
 
+  def test_assert_quality_for_all_previews_generates_a_runnable_test_per_preview
+    preview = build_preview(CLEAN)
+    klass = Class.new(Minitest::Test) { include ActiveMail::Quality::Minitest }
+
+    ActiveMail::Quality::PreviewRenderer.stub(:all, [[preview, 'welcome']]) do
+      klass.assert_quality_for_all_previews
+    end
+
+    generated = klass.instance_methods.find { |m| m.to_s.start_with?('test_') && m.to_s.include?('email_quality') }
+    assert generated, 'expected one generated quality test per preview'
+    klass.new(generated).send(generated) # clean HTML → passes without raising
+  end
+
+  def test_assert_quality_for_all_previews_skips_a_non_required_unrenderable_preview
+    raising = Object.new
+    raising.define_singleton_method(:preview_name) { 'fake' }
+    raising.define_singleton_method(:call) { |_email| raise 'boom' }
+    klass = Class.new(Minitest::Test) { include ActiveMail::Quality::Minitest }
+
+    ActiveMail::Quality::PreviewRenderer.stub(:all, [[raising, 'welcome']]) do
+      klass.assert_quality_for_all_previews
+    end
+
+    generated = klass.instance_methods.find { |m| m.to_s.include?('email_quality') }
+    klass.new(generated).send(generated) # not required → skipped, no failure
+  end
+
   private
 
   def build_preview(html)

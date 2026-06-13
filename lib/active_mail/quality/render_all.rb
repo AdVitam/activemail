@@ -37,12 +37,27 @@ module ActiveMail
         previews = PreviewRenderer.all
         rendered = render_all(previews, render_failures, guard_failures)
 
-        required = @config.required_previews
-        broken = (render_failures.keys & required) | (guard_failures.keys & required)
-        Result.new(discovered: previews.size, rendered: rendered, render_failures: render_failures, guard_failures: guard_failures, broken_required: broken)
+        Result.new(
+          discovered: previews.size, rendered: rendered, render_failures: render_failures,
+          guard_failures: guard_failures, broken_required: broken_required(previews, render_failures, guard_failures)
+        )
       end
 
       private
+
+      # A required preview that fails, OR is never discovered at all (typo / deleted), is broken.
+      sig do
+        params(
+          previews: T::Array[[T.untyped, String]],
+          render_failures: T::Hash[String, String],
+          guard_failures: T::Hash[String, T::Array[Guard::Violation]]
+        ).returns(T::Array[String])
+      end
+      def broken_required(previews, render_failures, guard_failures)
+        required = @config.required_previews
+        discovered = previews.map { |preview, email| "#{preview.preview_name}##{email}" }
+        ((render_failures.keys | guard_failures.keys) & required) | (required - discovered)
+      end
 
       sig do
         params(previews: T::Array[[T.untyped, String]], render_failures: T::Hash[String, String], guard_failures: T::Hash[String, T::Array[Guard::Violation]]).returns(Integer)

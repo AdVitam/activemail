@@ -20,6 +20,13 @@ class TokensTest < ActiveMailTest
     assert_equal '#123456', tokens.color(:primary)
   end
 
+  def test_rejects_blank_values
+    tokens = ActiveMail::Tokens.new
+
+    assert_raises(ArgumentError) { tokens.color(:primary, '') }
+    assert_raises(ArgumentError) { tokens.color(:primary, '   ') }
+  end
+
   def test_setter_accepts_string_name
     tokens = ActiveMail::Tokens.new
     tokens.spacing('md', '20px')

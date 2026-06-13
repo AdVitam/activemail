@@ -98,6 +98,8 @@ module ActiveMail
     def access(store, name, value)
       key = name.to_sym
       return store[key] if value.nil?
+      # Emitted verbatim into SCSS by #to_scss — reject blanks that would yield broken CSS.
+      raise ArgumentError, "token #{key} value must not be blank" if value.strip.empty?
 
       store[key] = value
     end

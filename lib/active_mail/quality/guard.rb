@@ -6,8 +6,7 @@ require 'sorbet-runtime'
 
 module ActiveMail
   module Quality
-    # Pure, framework-agnostic HTML email checker: feed it an HTML string, get a
-    # list of structured violations back. No Rails, no ActionMailer.
+    # Pure, framework-agnostic HTML email checker: HTML string in, violations out.
     class Guard
       extend T::Sig
 
@@ -40,11 +39,12 @@ module ActiveMail
         require_lang: true,
         min_full_doc_bytes: DEFAULT_MIN_FULL_DOC_BYTES
       )
-        @max_bytes = T.let(max_bytes, Integer)
+        # A non-positive threshold would silently disable (or invert) a check.
+        @max_bytes = T.let(positive_threshold!(:max_bytes, max_bytes), Integer)
         @require_table_role = T.let(require_table_role, T::Boolean)
         @require_img_alt = T.let(require_img_alt, T::Boolean)
         @require_lang = T.let(require_lang, T::Boolean)
-        @min_full_doc_bytes = T.let(min_full_doc_bytes, Integer)
+        @min_full_doc_bytes = T.let(positive_threshold!(:min_full_doc_bytes, min_full_doc_bytes), Integer)
       end
 
       sig { params(html: String).returns(T::Array[Violation]) }
@@ -65,6 +65,13 @@ module ActiveMail
       end
 
       private
+
+      sig { params(name: Symbol, value: Integer).returns(Integer) }
+      def positive_threshold!(name, value)
+        raise ArgumentError, "#{name} must be a positive integer, got #{value}" unless value.positive?
+
+        value
+      end
 
       # Mirrors how Core decides parse vs fragment: a full document carries <html.
       sig { params(html: String).returns(T::Boolean) }
@@ -125,9 +132,9 @@ module ActiveMail
 
         html_tag = doc.at_css('html')
         lang = html_tag && html_tag['lang']
-        return if lang && !lang.empty?
+        return if lang && !lang.strip.empty?
 
-        violations << Violation.new(rule: :lang, message: '<html> must declare a non-empty lang attribute')
+        violations << Violation.new(rule: :lang, message: '<html> must declare a non-blank lang attribute')
       end
     end
   end

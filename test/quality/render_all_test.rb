@@ -99,4 +99,13 @@ class RenderAllTest < QualityTest
 
     assert_includes result.broken_required, 'mailer#oops'
   end
+
+  def test_required_preview_never_discovered_marks_broken
+    preview = build_preview('mailer', welcome: CLEAN)
+    config = ActiveMail::Quality::Configuration.new
+    config.required_previews = ['mailer#ghost']
+    result = run_with_previews([preview], config)
+
+    assert_includes result.broken_required, 'mailer#ghost'
+  end
 end

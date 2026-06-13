@@ -19,6 +19,17 @@ class GuardTest < QualityTest
     @guard = ActiveMail::Quality::Guard.new
   end
 
+  def test_rejects_non_positive_thresholds
+    assert_raises(ArgumentError) { ActiveMail::Quality::Guard.new(max_bytes: 0) }
+    assert_raises(ArgumentError) { ActiveMail::Quality::Guard.new(min_full_doc_bytes: -1) }
+  end
+
+  def test_blank_lang_attribute_is_a_violation
+    html = %(<html lang="   "><head></head><body>#{'x ' * 600}</body></html>)
+
+    assert_includes rules(html), :lang
+  end
+
   def rules(html)
     @guard.violations(html).map(&:rule)
   end

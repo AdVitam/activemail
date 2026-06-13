@@ -75,9 +75,10 @@ class CoreTest < ActiveMailTest
   end
 
   def test_interim_th_literal_in_author_content_is_untouched
-    output = render('<p>inky-interim-th</p>')
+    literal = ActiveMail::Core::INTERIM_TH_TAG
+    output = render("<p>#{literal}</p>")
 
-    assert_includes output, '<p>inky-interim-th</p>'
+    assert_includes output, "<p>#{literal}</p>"
   end
 
   def test_newlines_in_content_are_preserved

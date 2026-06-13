@@ -5,9 +5,7 @@ require 'sorbet-runtime'
 
 module ActiveMail
   module Quality
-    # Renders ActionMailer previews to HTML strings (and to disk) for visual
-    # diffing and quality checks. Works on any host's previews — no app-specific
-    # preview list lives here.
+    # Renders ActionMailer previews to HTML (string or disk) for diffing/quality checks.
     module PreviewRenderer
       class << self
         extend T::Sig
@@ -39,10 +37,8 @@ module ActiveMail
           end
         end
 
-        # Extracts the text/html part from a Mail::Message (or MessageDelivery),
-        # mirroring the inline interceptor's part-finding logic. Returns '' for a
-        # plain-text-only message so the Guard surfaces missing HTML rather than
-        # validating plain text as if it were HTML.
+        # Returns '' for a plain-text-only message so the Guard surfaces missing
+        # HTML instead of validating plain text as if it were HTML.
         sig { params(message: T.untyped).returns(String) }
         def html_body(message)
           mail = message.respond_to?(:message) ? message.message : message

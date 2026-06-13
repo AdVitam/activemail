@@ -21,6 +21,16 @@ class TemplateHandlerTest < ActiveMailTest
     assert_instance_of ActiveMail::Rails::TemplateHandler, handler
   end
 
+  def test_composer_auto_registers_inky_variant_for_a_newly_registered_engine
+    ActionView::Template.register_template_handler(:am_fake, ->(_t, _s) { '"x"' })
+
+    assert_instance_of ActiveMail::Rails::TemplateHandler,
+                       ActionView::Template.registered_template_handler(:'inky-am_fake')
+  ensure
+    ActionView::Template.unregister_template_handler(:am_fake)
+    ActionView::Template.unregister_template_handler(:'inky-am_fake')
+  end
+
   def test_call_wraps_the_underlying_engine_output_with_inky
     handler = ActionView::Template.registered_template_handler(:inky)
     template = ActionView::Template.new('<container></container>', 'test', handler, locals: [], format: :html)
