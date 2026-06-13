@@ -4,8 +4,7 @@
 require 'sorbet-runtime'
 
 module ActiveMail
-  # Design-tokens registry — the single Ruby source of truth, bridged to SCSS
-  # via #to_scss. Neutral opinionated defaults; every entry is overridable.
+  # Design-tokens registry: the single Ruby source of truth, bridged to SCSS by #to_scss.
   class Tokens
     extend T::Sig
 

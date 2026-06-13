@@ -136,7 +136,7 @@ module ActiveMail
 
     sig { params(config: ActiveMail::Configuration, overrides: T.untyped).returns(T::Hash[String, ActiveMail::Components::Base]) }
     def build_components(config, overrides)
-      # Lookup is by node name (String); 1.x callers used Symbol keys.
+      # Lookup is by node name (String); a Symbol key would never match.
       overrides = (overrides || {}).transform_keys(&:to_s)
       overrides.each { |tag, klass| ActiveMail::Components.validate_component!(tag, klass) }
       DEFAULT_COMPONENTS.merge(config.components).merge(overrides).transform_values { |klass| klass.new(self) }

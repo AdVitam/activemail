@@ -190,6 +190,6 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
 
     content = file_content('app/mailers/components/social_links.rb')
     assert_includes content, 'config.register_component "social-links", Components::SocialLinks'
-    assert_includes content, '<social-links>'
+    assert_includes content, 'combine_classes(node, "social-links")'
   end
 end

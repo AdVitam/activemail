@@ -51,8 +51,10 @@ class ButtonTest < ActiveMailTest
 
   def test_every_table_is_presentation_role
     output = render('<button href="#">B</button>')
+    tables = output.scan('<table').size
 
-    assert_equal output.scan('<table').size, output.scan('role="presentation"').size
+    assert_operator tables, :>=, 1
+    assert_equal tables, output.scan('role="presentation"').size
   end
 
   def test_href_with_ampersand_and_angle_brackets_round_trips

@@ -16,7 +16,6 @@ module ActiveMail
           html_body(preview.call(email))
         end
 
-        # Renders a preview email and writes it to <output_root>/<preview>/<email>.html.
         sig { params(preview: T.untyped, email: String, output_root: T.any(String, Pathname)).returns(Pathname) }
         def render_to_disk(preview, email, output_root)
           dir = Pathname(output_root).join(preview.preview_name)
@@ -26,8 +25,7 @@ module ActiveMail
           path
         end
 
-        # Every [preview, email] pair the host exposes, or [] when ActionMailer
-        # previews are not loaded.
+        # [] when ActionMailer previews aren't loaded (host has none / previews disabled).
         sig { returns(T::Array[[T.untyped, String]]) }
         def all
           return [] unless defined?(ActionMailer::Preview)

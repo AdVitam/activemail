@@ -45,6 +45,18 @@ class InterceptorTest < ActiveMailTest
     assert_equal 'just text', message.body.to_s
   end
 
+  def test_inlining_error_is_reraised_with_an_activemail_breadcrumb
+    failing = Class.new(ActiveMail::Inliner::Base) { def inline(_html) = raise('boom') }
+    ActiveMail.configuration.inliner = failing.new
+    message = Mail.new do
+      content_type 'text/html; charset=UTF-8'
+      body HTML_BODY
+    end
+
+    error = assert_raises(RuntimeError) { ActiveMail::Inliner::Interceptor.delivering_email(message) }
+    assert_match(%r{\[ActiveMail/}, error.message)
+  end
+
   def test_null_inliner_is_a_no_op
     ActiveMail.configuration.inliner = :null
     message = Mail.new do

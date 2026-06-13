@@ -7,9 +7,7 @@ require_relative '../quality'
 
 module ActiveMail
   module Quality
-    # Drives the active_mail:emails:render_all rake task: renders every host
-    # preview to disk, runs the Guard on each, and reports. Kept out of the
-    # Rakefile so the task block stays thin and the logic is unit-testable.
+    # Render + guard every host preview; lives here (not the Rakefile) to stay unit-testable.
     class RenderAll
       extend T::Sig
 
@@ -79,8 +77,10 @@ module ActiveMail
       end
       def render_one(preview, email, failures, key)
         PreviewRenderer.render_to_disk(preview, email, @output_root)
+      rescue SystemCallError
+        raise # disk/permission failures are not template bugs — let them abort the run
       rescue StandardError => e
-        failures[key] = "#{e.class} #{e.message}"
+        failures[key] = "#{e.class} #{e.message} (#{e.backtrace&.first})"
         nil
       end
     end

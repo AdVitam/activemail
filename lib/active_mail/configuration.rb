@@ -145,7 +145,7 @@ module ActiveMail
     def components=(value)
       raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_hash'" unless value.respond_to?(:to_hash)
 
-      # Lookup is by node name (String); 1.x callers used Symbol keys.
+      # Lookup is by node name (String); a Symbol key would never match.
       normalized = value.to_hash.transform_keys(&:to_s)
       normalized.each { |tag, klass| ActiveMail::Components.validate_component!(tag, klass) }
       @components = normalized

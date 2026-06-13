@@ -323,7 +323,7 @@ configurable:
 
 ```ruby
 ActiveMail::Quality.configure do |c|
-  c.required_previews = %w[welcome_mailer/welcome]
+  c.required_previews = %w[welcome_mailer#welcome]
   c.guard = ActiveMail::Quality::Guard.new(max_bytes: 90_000)
 end
 ```

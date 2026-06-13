@@ -9,20 +9,19 @@ module ActiveMail
     class << self
       extend T::Sig
 
-      # Rejects 1.x-style string maps early instead of a NoMethodError downstream.
+      # A non-class (e.g. a tag-name string) would NoMethodError downstream; reject it here.
       sig { params(tag: T.any(String, Symbol), klass: T.untyped).void }
       def validate_component!(tag, klass)
         return if klass.is_a?(Class) && klass < Components::Base
 
         raise TypeError,
               "component for tag '#{tag}' must be a class inheriting from ActiveMail::Components::Base, " \
-              "got #{klass.inspect}. The 1.x string map (components: { button: 'tag-name' }) was " \
-              'replaced in 2.0 by ActiveMail.configuration.register_component(tag, ComponentClass).'
+              "got #{klass.inspect}. Register components with " \
+              'ActiveMail.configuration.register_component(tag, ComponentClass).'
       end
     end
 
-    # Public extension point: subclasses implement #transform(node, inner) and
-    # are registered via ActiveMail.configuration.register_component.
+    # Public extension point: subclass, implement #transform(node, inner), then register.
     class Base
       extend T::Sig
       extend T::Helpers
@@ -42,13 +41,14 @@ module ActiveMail
         @core = core
       end
 
-      sig { returns(::ActiveMail::Core) }
-      attr_reader :core
-
       sig { abstract.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner); end
 
       private
+
+      # Private: a component is a pure transformer; the engine handle stays internal.
+      sig { returns(::ActiveMail::Core) }
+      attr_reader :core
 
       sig { params(value: T.untyped).returns(String) }
       def escape_attr(value)

@@ -89,7 +89,7 @@ module ActiveMail
         )
       end
 
-      sig { params(doc: Nokogiri::HTML4::Document, violations: T::Array[Violation]).void }
+      sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_table_roles(doc, violations)
         return unless @require_table_role
 
@@ -102,7 +102,7 @@ module ActiveMail
         )
       end
 
-      sig { params(doc: Nokogiri::HTML4::Document, violations: T::Array[Violation]).void }
+      sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_img_alts(doc, violations)
         return unless @require_img_alt
 
@@ -115,7 +115,7 @@ module ActiveMail
         )
       end
 
-      sig { params(html: String, doc: Nokogiri::HTML4::Document, violations: T::Array[Violation]).void }
+      sig { params(html: String, doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_full_document(html, doc, violations)
         if html.bytesize < @min_full_doc_bytes
           violations << Violation.new(
@@ -126,7 +126,7 @@ module ActiveMail
         check_lang(doc, violations)
       end
 
-      sig { params(doc: Nokogiri::HTML4::Document, violations: T::Array[Violation]).void }
+      sig { params(doc: Nokogiri::XML::Document, violations: T::Array[Violation]).void }
       def check_lang(doc, violations)
         return unless @require_lang
 

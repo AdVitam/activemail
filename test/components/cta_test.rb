@@ -46,8 +46,10 @@ class CtaTest < ActiveMailTest
 
   def test_cta_is_bulletproof_presentation_tables
     output = render('<cta href="#">Go</cta>')
+    tables = output.scan('<table').size
 
-    assert_equal output.scan('<table').size, output.scan('role="presentation"').size
+    assert_operator tables, :>=, 1
+    assert_equal tables, output.scan('role="presentation"').size
   end
 
   def test_info_box_reads_border_token
