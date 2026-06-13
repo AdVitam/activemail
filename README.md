@@ -268,6 +268,10 @@ HTML; return the replacement markup string. The generator scaffolds one:
 bin/rails g active_mail:component Divider
 ```
 
+The generator namespaces the class as `Components::Divider` (under
+`app/mailers/components/`); registering by tag, the namespace is yours to choose.
+A minimal hand-written equivalent:
+
 ```ruby
 class Divider < ActiveMail::Components::Base
   def transform(node, _inner)

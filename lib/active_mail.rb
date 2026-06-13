@@ -136,6 +136,9 @@ module ActiveMail
 
     private
 
+    # Internal transpilation details, not public surface (column_count/container_width stay public).
+    private :component_instances, :transform_doc, :component_factory
+
     sig { params(config: ActiveMail::Configuration, overrides: T.untyped).returns(T::Hash[String, ActiveMail::Components::Base]) }
     def build_components(config, overrides)
       # Lookup is by node name (String); a Symbol key would never match.

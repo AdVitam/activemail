@@ -37,12 +37,12 @@ module ActiveMail
   end
 
   # Zero or negative dimensions blow up at transform time (Infinity ghost width).
+  # Reject non-integers rather than silently coercing ("abc"→0, 12.9→12).
   sig { params(name: Symbol, value: T.untyped).returns(Integer) }
   def self.assert_positive_dimension!(name, value)
-    int = value.to_i
-    raise ArgumentError, "#{name} must be a positive integer, got #{int}" unless int.positive?
+    raise ArgumentError, "#{name} must be a positive integer, got #{value.inspect}" unless value.is_a?(Integer) && value.positive?
 
-    int
+    value
   end
 
   class Configuration

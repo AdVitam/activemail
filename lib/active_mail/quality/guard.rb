@@ -16,7 +16,7 @@ module ActiveMail
         const :message, String
       end
 
-      DISABLEABLE = T.let(%i[parse_error table_role img_alt lang min_full_doc_bytes].freeze, T::Array[Symbol])
+      DISABLEABLE = T.let(%i[max_bytes parse_error table_role img_alt lang min_full_doc_bytes].freeze, T::Array[Symbol])
       # libxml2 code for a non-HTML4 tag; benign (HTML5/custom tags), not malformedness.
       UNKNOWN_TAG_CODE = 801
       # Gmail clips messages past ~102KB.
@@ -76,6 +76,7 @@ module ActiveMail
 
       sig { params(html: String, violations: T::Array[Violation]).void }
       def check_size(html, violations)
+        return unless enabled?(:max_bytes)
         return if html.bytesize <= @max_bytes
 
         violations << Violation.new(rule: :max_bytes, message: "HTML is #{html.bytesize} bytes, exceeds #{@max_bytes} (Gmail clipping)")

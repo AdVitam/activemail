@@ -103,10 +103,12 @@ class ConfigurationTest < ActiveMailTest
   def test_resolved_inliner_is_memoized_until_reassigned
     config = ActiveMail::Configuration.new
     config.inliner = :premailer
+    first = config.resolved_inliner
 
-    assert_same config.resolved_inliner, config.resolved_inliner
+    assert_same first, config.resolved_inliner
 
     config.inliner = :null
+    refute_same first, config.resolved_inliner
     assert_instance_of ActiveMail::Inliner::Null, config.resolved_inliner
   end
 
@@ -136,12 +138,15 @@ class ConfigurationTest < ActiveMailTest
 
   def test_tokens_is_memoized
     config = ActiveMail::Configuration.new
+    tokens = config.tokens
 
-    assert_same config.tokens, config.tokens
+    assert_same tokens, config.tokens
   end
 
   def test_top_level_tokens_delegates_to_configuration
-    assert_same ActiveMail.configuration.tokens, ActiveMail.tokens
+    tokens = ActiveMail.configuration.tokens
+
+    assert_same tokens, ActiveMail.tokens
   end
 end
 

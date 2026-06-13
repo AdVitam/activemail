@@ -53,8 +53,9 @@ class InterceptorTest < ActiveMailTest
       body HTML_BODY
     end
 
-    error = assert_raises(RuntimeError) { ActiveMail::Inliner::Interceptor.delivering_email(message) }
-    assert_match(%r{\[ActiveMail/}, error.message)
+    error = assert_raises(ActiveMail::Inliner::Error) { ActiveMail::Inliner::Interceptor.delivering_email(message) }
+    assert_instance_of RuntimeError, error.cause # original exception + backtrace preserved
+    assert_equal 'boom', error.cause.message
   end
 
   def test_null_inliner_is_a_no_op

@@ -80,7 +80,7 @@ module ActiveMail
       rescue SystemCallError
         raise # disk/permission failures are not template bugs — let them abort the run
       rescue StandardError => e
-        failures[key] = "#{e.class} #{e.message} (#{e.backtrace&.first})"
+        failures[key] = "#{e.class}: #{e.message}\n  #{e.backtrace&.first(5)&.join("\n  ")}"
         nil
       end
     end

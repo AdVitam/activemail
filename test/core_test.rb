@@ -30,6 +30,14 @@ class CoreTest < ActiveMailTest
     assert_includes output, 'Güten tag Marc-André'
   end
 
+  def test_handles_us_ascii_input
+    input = '<container><row><columns>plain ascii</columns></row></container>'.dup.force_encoding(Encoding::US_ASCII)
+    output = render(input)
+
+    assert_includes output, 'plain ascii'
+    assert_predicate output, :valid_encoding?
+  end
+
   def test_handles_multiple_root_nodes
     output = render('<row></row><row></row>')
 
@@ -67,11 +75,10 @@ class CoreTest < ActiveMailTest
 
   def test_component_with_missing_attributes_renders
     output = render('<menu><item>No href</item></menu>')
-    anchor = Nokogiri::HTML.fragment(output).at_css('th.menu-item a')
 
     assert_includes output, 'class="menu-item"'
     assert_includes output, 'No href'
-    assert_equal '', anchor['href']
+    refute_includes output, '<a' # no href → no broken anchor
   end
 
   def test_interim_th_literal_in_author_content_is_untouched

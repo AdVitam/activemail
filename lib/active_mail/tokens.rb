@@ -67,11 +67,21 @@ module ActiveMail
       access(@spacings, name, value)
     end
 
-    # Strict read for code that must have the token (e.g. a component's inline
-    # color): raises rather than interpolating nil into the CSS.
+    # Strict reads for code that must have the token (e.g. a component's inline
+    # color): raise rather than interpolating nil into the CSS.
     sig { params(name: T.any(String, Symbol)).returns(String) }
     def color!(name)
-      @colors.fetch(name.to_sym) { raise KeyError, "unknown color token #{name.inspect}" }
+      fetch!(@colors, :color, name)
+    end
+
+    sig { params(name: T.any(String, Symbol)).returns(String) }
+    def font!(name)
+      fetch!(@fonts, :font, name)
+    end
+
+    sig { params(name: T.any(String, Symbol)).returns(String) }
+    def spacing!(name)
+      fetch!(@spacings, :spacing, name)
     end
 
     # Frozen dup: mutating the returned hash must not bypass the DSL setters.
@@ -99,6 +109,11 @@ module ActiveMail
     end
 
     private
+
+    sig { params(store: TokenMap, kind: Symbol, name: T.any(String, Symbol)).returns(String) }
+    def fetch!(store, kind, name)
+      store.fetch(name.to_sym) { raise KeyError, "unknown #{kind} token #{name.inspect}" }
+    end
 
     sig { params(store: TokenMap, name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
     def access(store, name, value)

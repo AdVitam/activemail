@@ -7,7 +7,7 @@ module ActiveMail
   module Quality
     module Rspec
       # Standalone matcher object — testable without booting RSpec. The
-      # RSpec::Matchers.define registration below merely delegates to it.
+      # be_a_valid_email helper below just returns it (no RSpec::Matchers.define DSL).
       class ValidEmailMatcher
         extend T::Sig
 

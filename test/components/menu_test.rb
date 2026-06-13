@@ -22,6 +22,13 @@ class MenuTest < ActiveMailTest
     assert_includes output, 'target="_blank"'
   end
 
+  def test_item_without_href_emits_no_broken_anchor
+    output = render('<menu><item>Label</item></menu>')
+
+    assert_includes output, 'class="menu-item"'
+    refute_includes output, '<a'
+  end
+
   def test_menu_merges_classes
     output = render('<menu class="vertical"></menu>')
 

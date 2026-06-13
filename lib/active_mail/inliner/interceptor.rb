@@ -18,8 +18,9 @@ module ActiveMail
           html_parts(message).each do |part|
             part.body = inliner.inline(part.body.to_s)
           rescue StandardError => e
-            # Surface which inliner failed; do not swallow — a silently non-inlined mail is worse.
-            raise e, "[ActiveMail/#{inliner.class}] CSS inlining failed: #{e.message}"
+            # Surface which inliner failed; do not swallow (a silently non-inlined
+            # mail is worse). Ruby sets e as #cause, preserving the original backtrace.
+            raise ActiveMail::Inliner::Error, "[#{inliner.class}] CSS inlining failed: #{e.message}"
           end
         end
 
