@@ -1,6 +1,6 @@
-# Inky
+# ActiveMail
 
-Inky is an HTML-based templating language that converts simple, semantic tags
+ActiveMail is an HTML-based templating language that converts simple, semantic tags
 into the verbose, bulletproof table markup that email clients require.
 
 Write this:
@@ -14,7 +14,7 @@ Write this:
 </container>
 ```
 
-and Inky produces a fluid-hybrid, Outlook-safe table layout with MSO ghost
+and ActiveMail produces a fluid-hybrid, Outlook-safe table layout with MSO ghost
 tables, `role="presentation"` on every table, and inline styles — markup that
 renders consistently from Apple Mail to Outlook (Word engine) to Gmail mobile.
 
@@ -27,27 +27,27 @@ renders consistently from Apple Mail to Outlook (Word engine) to Gmail mobile.
 
 ```ruby
 # Gemfile
-gem 'inky-rb', require: 'inky'
+gem 'activemail'
 ```
 
 ```bash
 bundle install
 ```
 
-Inky registers ActionView template handlers automatically. Name a mailer view
+ActiveMail registers ActionView template handlers automatically. Name a mailer view
 `welcome.html.inky` (or compose with another engine: `welcome.html.inky-erb`,
 `.inky-slim`, `.inky-haml`) and it is transpiled on render.
 
 For programmatic use:
 
 ```ruby
-Inky::Core.new.release_the_kraken('<container><row><columns>Hi</columns></row></container>')
+ActiveMail::Core.new.release_the_kraken('<container><row><columns>Hi</columns></row></container>')
 ```
 
 ## Configuration
 
 ```ruby
-Inky.configure do |config|
+ActiveMail.configure do |config|
   config.template_engine  = :erb   # underlying engine for `.html.inky` (default :erb)
   config.column_count     = 12     # grid columns (default 12)
   config.container_width  = 600    # px width of <container> and MSO ghost table (default 600)
@@ -64,7 +64,7 @@ them as components or use `:ignore` if you rely on them.
 Per-render overrides:
 
 ```ruby
-Inky::Core.new(column_count: 24, container_width: 480).release_the_kraken(source)
+ActiveMail::Core.new(column_count: 24, container_width: 480).release_the_kraken(source)
 ```
 
 ## Components
@@ -206,13 +206,13 @@ supported). Raw blocks cannot be nested.
 
 ## Custom components
 
-Register your own tag with a class that inherits from `Inky::Components::Base`
+Register your own tag with a class that inherits from `ActiveMail::Components::Base`
 and implements `#transform(node, inner)`. You get the matched Nokogiri node
 (full DOM access) and the already-transformed inner HTML; return the replacement
 markup string.
 
 ```ruby
-class Hr < Inky::Components::Base
+class Hr < ActiveMail::Components::Base
   extend T::Sig
 
   sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
@@ -222,7 +222,7 @@ class Hr < Inky::Components::Base
   end
 end
 
-Inky.configuration.register_component('hr-line', Hr)
+ActiveMail.configuration.register_component('hr-line', Hr)
 ```
 
 The `sig` is recommended (and required if your app runs `srb tc`); a plain
@@ -239,7 +239,7 @@ Helper methods available from `Base`: `combine_classes`, `combine_attributes`,
 Per-instance overrides (including replacing a built-in tag) are also possible:
 
 ```ruby
-Inky::Core.new(components: { 'button' => MyButton }).release_the_kraken(source)
+ActiveMail::Core.new(components: { 'button' => MyButton }).release_the_kraken(source)
 ```
 
 ## Email-client compatibility policy
@@ -254,7 +254,7 @@ The generated markup targets the real-world client landscape as of 2026:
   all of which Orange strips or ignores.
 - **Gmail mobile** — strips most `<style>` blocks, so all critical layout is
   inline. Keep your enhancement CSS in a `<style>` block (inlined by your app's
-  premailer for the classes Inky preserves).
+  premailer for the classes ActiveMail preserves).
 - **Accessibility** — `role="presentation"` on every layout table; provide
   `alt` text and sufficient contrast in your own content.
 

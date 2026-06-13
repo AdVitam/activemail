@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class MenuTest < InkyTest
+class MenuTest < ActiveMailTest
   def test_menu_with_item
     assert_renders(
       '<menu><item href="http://zurb.com">Item</item></menu>',

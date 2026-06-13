@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
-require 'inky'
+require 'active_mail'
 
-module InkyTestHelpers
+module ActiveMailTestHelpers
   # Normalize generated and expected HTML so comparisons ignore insignificant
   # whitespace, attribute ordering, and class ordering.
   def reformat_html(html)
@@ -23,7 +23,7 @@ module InkyTestHelpers
   end
 
   def render(input, **options)
-    Inky::Core.new(options).release_the_kraken(input)
+    ActiveMail::Core.new(options).release_the_kraken(input)
   end
 
   def assert_renders(input, expected, **)
@@ -31,15 +31,15 @@ module InkyTestHelpers
   end
 end
 
-class InkyTest < Minitest::Test
-  include InkyTestHelpers
+class ActiveMailTest < Minitest::Test
+  include ActiveMailTestHelpers
 
   def setup
-    @default_config = Inky.configuration
-    Inky.configuration = Inky::Configuration.new
+    @default_config = ActiveMail.configuration
+    ActiveMail.configuration = ActiveMail::Configuration.new
   end
 
   def teardown
-    Inky.configuration = @default_config
+    ActiveMail.configuration = @default_config
   end
 end

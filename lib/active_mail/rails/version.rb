@@ -3,8 +3,8 @@
 
 require_relative '../version'
 
-module Inky
+module ActiveMail
   module Rails
-    VERSION = Inky::VERSION
+    VERSION = ActiveMail::VERSION
   end
 end

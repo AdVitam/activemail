@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class ContainerTest < InkyTest
+class ContainerTest < ActiveMailTest
   def test_wraps_in_fluid_hybrid_table_with_mso_ghost_table
     assert_renders(
       '<container></container>',
@@ -21,7 +21,7 @@ class ContainerTest < InkyTest
   end
 
   def test_honours_configured_container_width
-    Inky.configuration.container_width = 700
+    ActiveMail.configuration.container_width = 700
     output = render('<container></container>')
 
     assert_includes output, 'max-width:700px'

@@ -4,7 +4,7 @@ require 'test_helper'
 
 # A duplicated style attribute makes HTML parsers drop one of the two: either
 # the author styling or the critical fluid-hybrid layout CSS.
-class StyleMergeTest < InkyTest
+class StyleMergeTest < ActiveMailTest
   def test_columns_merge_user_style_after_layout_style
     output = render('<columns style="background:#fff">x</columns>')
     style = Nokogiri::HTML.fragment(output).at_css('th.columns')['style']

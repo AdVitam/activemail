@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class GridTest < InkyTest
+class GridTest < ActiveMailTest
   def test_row_renders_a_presentation_table
     assert_renders(
       '<row></row>',
@@ -28,7 +28,7 @@ class GridTest < InkyTest
   end
 
   def test_column_count_from_global_configuration
-    Inky.configure { |config| config.column_count = 5 }
+    ActiveMail.configure { |config| config.column_count = 5 }
     output = render('<columns>One</columns>')
 
     assert_includes output, 'small-5 large-5'

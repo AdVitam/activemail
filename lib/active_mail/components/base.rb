@@ -4,7 +4,7 @@
 require 'cgi/escape'
 require 'sorbet-runtime'
 
-module Inky
+module ActiveMail
   module Components
     class << self
       extend T::Sig
@@ -15,14 +15,14 @@ module Inky
         return if klass.is_a?(Class) && klass < Components::Base
 
         raise TypeError,
-              "component for tag '#{tag}' must be a class inheriting from Inky::Components::Base, " \
+              "component for tag '#{tag}' must be a class inheriting from ActiveMail::Components::Base, " \
               "got #{klass.inspect}. The 1.x string map (components: { button: 'tag-name' }) was " \
-              'replaced in 2.0 by Inky.configuration.register_component(tag, ComponentClass).'
+              'replaced in 2.0 by ActiveMail.configuration.register_component(tag, ComponentClass).'
       end
     end
 
     # Public extension point: subclasses implement #transform(node, inner) and
-    # are registered via Inky.configuration.register_component.
+    # are registered via ActiveMail.configuration.register_component.
     class Base
       extend T::Sig
       extend T::Helpers
@@ -37,12 +37,12 @@ module Inky
       # Layout tables: presentation role (a11y) and zeroed legacy spacing.
       TABLE_RESET = 'role="presentation" border="0" cellpadding="0" cellspacing="0"'
 
-      sig { params(core: ::Inky::Core).void }
+      sig { params(core: ::ActiveMail::Core).void }
       def initialize(core)
         @core = core
       end
 
-      sig { returns(::Inky::Core) }
+      sig { returns(::ActiveMail::Core) }
       attr_reader :core
 
       sig { abstract.params(node: Nokogiri::XML::Node, inner: String).returns(String) }

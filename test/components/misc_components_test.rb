@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class CalloutTest < InkyTest
+class CalloutTest < ActiveMailTest
   def test_basic_callout
     assert_renders(
       '<callout>Callout</callout>',
@@ -22,7 +22,7 @@ class CalloutTest < InkyTest
   end
 end
 
-class SpacerTest < InkyTest
+class SpacerTest < ActiveMailTest
   def test_basic_spacer
     assert_renders(
       '<spacer size="10"></spacer>',
@@ -82,7 +82,7 @@ class SpacerTest < InkyTest
   end
 end
 
-class HLineTest < InkyTest
+class HLineTest < ActiveMailTest
   def test_basic_h_line
     assert_renders(
       '<h-line></h-line>',
@@ -97,7 +97,7 @@ class HLineTest < InkyTest
   end
 end
 
-class WrapperTest < InkyTest
+class WrapperTest < ActiveMailTest
   def test_basic_wrapper
     assert_renders(
       '<wrapper class="header"></wrapper>',
@@ -106,7 +106,7 @@ class WrapperTest < InkyTest
   end
 end
 
-class BlockGridTest < InkyTest
+class BlockGridTest < ActiveMailTest
   def test_basic_block_grid
     assert_renders(
       '<block-grid up="4"></block-grid>',
@@ -128,7 +128,7 @@ class BlockGridTest < InkyTest
   end
 end
 
-class CenterTest < InkyTest
+class CenterTest < ActiveMailTest
   def test_centers_child
     assert_renders(
       '<center><div></div></center>',
@@ -149,7 +149,7 @@ class CenterTest < InkyTest
   end
 end
 
-class InkyComponentTest < InkyTest
+class InkyComponentTest < ActiveMailTest
   def test_inky_tag_renders_a_bare_tr
     assert_renders('<inky></inky>', '<tr></tr>')
   end

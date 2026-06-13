@@ -3,9 +3,9 @@
 
 require 'sorbet-runtime'
 
-module Inky
+module ActiveMail
   # Surfaces libxml2 recover-mode repairs that would otherwise silently change
-  # the rendered email, honoring Inky.configuration.on_parse_error.
+  # the rendered email, honoring ActiveMail.configuration.on_parse_error.
   class ParseErrorReporter
     extend T::Sig
 
@@ -20,16 +20,16 @@ module Inky
 
     sig { params(errors: T::Array[Nokogiri::XML::SyntaxError]).void }
     def call(errors)
-      mode = ::Inky.configuration.on_parse_error
+      mode = ::ActiveMail.configuration.on_parse_error
       return if mode == :ignore
 
       relevant = errors.reject { |error| known_tag_error?(error) }
       return if relevant.empty?
 
       messages = relevant.map { |error| error.message.to_s.strip }.join('; ')
-      raise Inky::ParseError, messages if mode == :raise
+      raise ActiveMail::ParseError, messages if mode == :raise
 
-      Kernel.warn("[inky-rb] HTML parse issues: #{messages}")
+      Kernel.warn("[activemail] HTML parse issues: #{messages}")
     end
 
     private

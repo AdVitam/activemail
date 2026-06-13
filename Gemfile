@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-# Specify the gem's runtime dependencies in inky.gemspec
+# Specify the gem's runtime dependencies in activemail.gemspec
 gemspec
 
 gem 'minitest', '~> 5.20'

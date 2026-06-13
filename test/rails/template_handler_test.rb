@@ -6,19 +6,19 @@ require 'tmpdir'
 require 'uri'
 require 'action_view'
 require 'action_view/base'
-require 'inky/rails/template_handler'
+require 'active_mail/rails/template_handler'
 
-class TemplateHandlerTest < InkyTest
+class TemplateHandlerTest < ActiveMailTest
   def test_inky_handler_is_registered
     handler = ActionView::Template.registered_template_handler(:inky)
 
-    assert_instance_of Inky::Rails::TemplateHandler, handler
+    assert_instance_of ActiveMail::Rails::TemplateHandler, handler
   end
 
   def test_composed_handlers_are_registered_for_existing_engines
     handler = ActionView::Template.registered_template_handler(:'inky-erb')
 
-    assert_instance_of Inky::Rails::TemplateHandler, handler
+    assert_instance_of ActiveMail::Rails::TemplateHandler, handler
   end
 
   def test_call_wraps_the_underlying_engine_output_with_inky
@@ -26,18 +26,18 @@ class TemplateHandlerTest < InkyTest
     template = ActionView::Template.new('<container></container>', 'test', handler, locals: [], format: :html)
     compiled = handler.call(template, '<container></container>')
 
-    assert_includes compiled, 'Inky::Core.new.release_the_kraken'
+    assert_includes compiled, 'ActiveMail::Core.new.release_the_kraken'
   end
 
   def test_engine_handler_raises_for_unknown_engine
-    Inky.configuration.template_engine = :does_not_exist
-    handler = Inky::Rails::TemplateHandler.new
+    ActiveMail.configuration.template_engine = :does_not_exist
+    handler = ActiveMail::Rails::TemplateHandler.new
 
     assert_raises(RuntimeError) { handler.engine_handler }
   end
 
   def test_initialize_raises_when_compose_with_does_not_resolve
-    assert_raises(ArgumentError) { Inky::Rails::TemplateHandler.new(:does_not_exist) }
+    assert_raises(ArgumentError) { ActiveMail::Rails::TemplateHandler.new(:does_not_exist) }
   end
 
   def test_renders_an_inky_template_through_action_view
@@ -54,7 +54,7 @@ class TemplateHandlerTest < InkyTest
   end
 
   def test_output_is_html_safe_when_active_support_is_loaded
-    output = Inky::Core.new.release_the_kraken('<row></row>')
+    output = ActiveMail::Core.new.release_the_kraken('<row></row>')
 
     assert_predicate output, :html_safe?
   end

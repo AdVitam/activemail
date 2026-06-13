@@ -3,7 +3,7 @@
 
 require_relative 'base'
 
-module Inky
+module ActiveMail
   module Components
     class Columns < Base
       extend T::Sig
@@ -61,10 +61,10 @@ module Inky
         # Neutralize the client default th rendering (bold, centered).
         content_style = 'font-weight:normal;text-align:left;'
         [
-          %(<#{::Inky::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}>),
+          %(<#{::ActiveMail::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}>),
           %(<table #{TABLE_RESET} style="width:100%;"><tbody><tr>),
           %(<th style="#{content_style}">#{inner}</th>#{expander}),
-          %(</tr></tbody></table></#{::Inky::Core::INTERIM_TH_TAG}>)
+          %(</tr></tbody></table></#{::ActiveMail::Core::INTERIM_TH_TAG}>)
         ].join
       end
     end

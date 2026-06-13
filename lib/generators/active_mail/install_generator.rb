@@ -2,10 +2,10 @@
 
 require 'rails/generators'
 
-module Inky
+module ActiveMail
   module Generators
     class InstallGenerator < ::Rails::Generators::Base
-      desc 'Install an Inky mailer layout'
+      desc 'Install an ActiveMail mailer layout'
       source_root File.join(File.dirname(__FILE__), 'templates')
       argument :layout_name, type: :string, default: 'mailer', banner: 'layout_name'
 

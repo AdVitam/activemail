@@ -3,7 +3,7 @@
 
 require_relative 'base'
 
-module Inky
+module ActiveMail
   module Components
     class Wrapper < Base
       extend T::Sig

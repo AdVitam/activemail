@@ -3,7 +3,7 @@
 
 require_relative 'base'
 
-module Inky
+module ActiveMail
   module Components
     class Button < Base
       extend T::Sig

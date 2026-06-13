@@ -3,7 +3,7 @@
 
 require_relative 'base'
 
-module Inky
+module ActiveMail
   module Components
     # The <inky> tag is a marker that renders a bare <tr>, mirroring inky.js.
     class Inky < Base

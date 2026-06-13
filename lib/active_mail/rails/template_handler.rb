@@ -3,7 +3,7 @@
 
 require 'sorbet-runtime'
 
-module Inky
+module ActiveMail
   module Rails
     class TemplateHandler
       extend T::Sig
@@ -24,7 +24,7 @@ module Inky
       def engine_handler
         return @engine_handler if @engine_handler
 
-        type = ::Inky.configuration.template_engine
+        type = ::ActiveMail.configuration.template_engine
         ActionView::Template.registered_template_handler(type) ||
           raise("No template handler found for #{type}")
       end
@@ -37,7 +37,7 @@ module Inky
           else
             engine_handler.call(template)
           end
-        "Inky::Core.new.release_the_kraken(begin; #{compiled_source};end)"
+        "ActiveMail::Core.new.release_the_kraken(begin; #{compiled_source};end)"
       end
 
       module Composer
@@ -46,7 +46,7 @@ module Inky
         sig { params(ext: T.untyped, args: T.untyped).returns(T.untyped) }
         def register_template_handler(ext, *args)
           super
-          super(:"inky-#{ext}", Inky::Rails::TemplateHandler.new(ext))
+          super(:"inky-#{ext}", ActiveMail::Rails::TemplateHandler.new(ext))
         end
       end
     end
@@ -55,8 +55,8 @@ end
 
 ActiveSupport.on_load(:action_view) do
   ActionView::Template.template_handler_extensions.each do |ext|
-    ActionView::Template.register_template_handler :"inky-#{ext}", Inky::Rails::TemplateHandler.new(ext)
+    ActionView::Template.register_template_handler :"inky-#{ext}", ActiveMail::Rails::TemplateHandler.new(ext)
   end
-  ActionView::Template.register_template_handler :inky, Inky::Rails::TemplateHandler.new
-  ActionView::Template.singleton_class.send :prepend, Inky::Rails::TemplateHandler::Composer
+  ActionView::Template.register_template_handler :inky, ActiveMail::Rails::TemplateHandler.new
+  ActionView::Template.singleton_class.send :prepend, ActiveMail::Rails::TemplateHandler::Composer
 end

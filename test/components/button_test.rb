@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class ButtonTest < InkyTest
+class ButtonTest < ActiveMailTest
   def test_simple_button_is_bulletproof
     assert_renders(
       '<button href="http://zurb.com">Button</button>',

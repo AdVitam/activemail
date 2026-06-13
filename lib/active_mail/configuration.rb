@@ -3,24 +3,24 @@
 
 require 'sorbet-runtime'
 
-module Inky
+module ActiveMail
   extend T::Sig
 
-  ComponentMap = T.type_alias { T::Hash[String, T.class_of(Inky::Components::Base)] }
+  ComponentMap = T.type_alias { T::Hash[String, T.class_of(ActiveMail::Components::Base)] }
 
-  sig { returns(Inky::Configuration) }
+  sig { returns(ActiveMail::Configuration) }
   def self.configuration
-    @configuration ||= T.let(Configuration.new, T.nilable(Inky::Configuration))
+    @configuration ||= T.let(Configuration.new, T.nilable(ActiveMail::Configuration))
   end
 
-  sig { params(config: T.untyped).returns(Inky::Configuration) }
+  sig { params(config: T.untyped).returns(ActiveMail::Configuration) }
   def self.configuration=(config)
-    raise TypeError, 'Not an Inky::Configuration' unless config.is_a?(Configuration)
+    raise TypeError, 'Not an ActiveMail::Configuration' unless config.is_a?(Configuration)
 
     @configuration = config
   end
 
-  sig { params(block: T.proc.params(config: Inky::Configuration).void).void }
+  sig { params(block: T.proc.params(config: ActiveMail::Configuration).void).void }
   def self.configure(&block)
     block.call(configuration)
   end
@@ -52,7 +52,7 @@ module Inky
     attr_reader :container_width
 
     # Mutating the returned hash would bypass validate_component!.
-    sig { returns(Inky::ComponentMap) }
+    sig { returns(ActiveMail::ComponentMap) }
     def components
       @components.dup.freeze
     end
@@ -62,7 +62,7 @@ module Inky
       @template_engine = T.let(:erb, Symbol)
       @column_count = T.let(12, Integer)
       @container_width = T.let(600, Integer)
-      @components = T.let({}, Inky::ComponentMap)
+      @components = T.let({}, ActiveMail::ComponentMap)
       @on_parse_error = T.let(:warn, Symbol)
     end
 
@@ -91,19 +91,19 @@ module Inky
       @container_width = positive_integer!(:container_width, value)
     end
 
-    sig { params(value: T.untyped).returns(Inky::ComponentMap) }
+    sig { params(value: T.untyped).returns(ActiveMail::ComponentMap) }
     def components=(value)
       raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_hash'" unless value.respond_to?(:to_hash)
 
       # Lookup is by node name (String); 1.x callers used Symbol keys.
       normalized = value.to_hash.transform_keys(&:to_s)
-      normalized.each { |tag, klass| Inky::Components.validate_component!(tag, klass) }
+      normalized.each { |tag, klass| ActiveMail::Components.validate_component!(tag, klass) }
       @components = normalized
     end
 
-    sig { params(tag: T.any(String, Symbol), component_class: T.class_of(Inky::Components::Base)).void }
+    sig { params(tag: T.any(String, Symbol), component_class: T.class_of(ActiveMail::Components::Base)).void }
     def register_component(tag, component_class)
-      Inky::Components.validate_component!(tag, component_class)
+      ActiveMail::Components.validate_component!(tag, component_class)
 
       @components = @components.merge(tag.to_s => component_class)
     end
@@ -114,7 +114,7 @@ module Inky
     def positive_integer!(name, value)
       raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_int'" unless value.respond_to?(:to_int)
 
-      Inky.assert_positive_dimension!(name, value.to_int)
+      ActiveMail.assert_positive_dimension!(name, value.to_int)
     end
   end
 end

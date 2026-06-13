@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class CoreTest < InkyTest
+class CoreTest < ActiveMailTest
   def test_handles_binary_input
     output = render('<container/>'.b)
 
@@ -49,7 +49,7 @@ class CoreTest < InkyTest
   end
 
   def test_unclosed_component_tag_is_still_transformed
-    Inky.configuration.on_parse_error = :ignore
+    ActiveMail.configuration.on_parse_error = :ignore
     output = render('<row><columns>One')
 
     assert_includes output, 'class="row"'
@@ -58,7 +58,7 @@ class CoreTest < InkyTest
   end
 
   def test_mismatched_nesting_does_not_raise
-    Inky.configuration.on_parse_error = :ignore
+    ActiveMail.configuration.on_parse_error = :ignore
     output = render('<container><b><i>x</b></i></container>')
 
     assert_includes output, 'class="container"'
@@ -100,7 +100,7 @@ class CoreTest < InkyTest
   end
 end
 
-class RawTest < InkyTest
+class RawTest < ActiveMailTest
   def test_single_line_raw_passes_through_untouched
     input = "<div><raw><<LCG Default='246996'>></raw></div>"
     output = render(input)
