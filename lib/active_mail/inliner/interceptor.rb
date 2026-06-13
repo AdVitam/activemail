@@ -14,7 +14,7 @@ module ActiveMail
         sig { params(message: T.untyped).void }
         def delivering_email(message)
           inliner = ActiveMail.configuration.resolved_inliner
-          return if inliner.is_a?(ActiveMail::Inliner::Null)
+          return if inliner.noop?
 
           html_parts(message).each do |part|
             part.body = inliner.inline(part.body.to_s)

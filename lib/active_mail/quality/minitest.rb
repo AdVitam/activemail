@@ -5,12 +5,7 @@ require_relative '../quality'
 
 module ActiveMail
   module Quality
-    # Minitest assertions for email quality. Host mailer tests `include` this:
-    #
-    #   class MailerQualityTest < ActiveSupport::TestCase
-    #     include ActiveMail::Quality::Minitest
-    #     assert_quality_for_all_previews
-    #   end
+    # Minitest assertions for email quality, mixed into host mailer tests (README).
     module Minitest
       extend T::Sig
 

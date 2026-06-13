@@ -22,14 +22,15 @@ namespace :active_mail do
       result = ActiveMail::Quality::RenderAll.new(output_root: output_root, config: config).call
 
       puts "Rendered #{result.rendered} email(s) into #{output_root}"
+      # A green run on zero previews would silently verify nothing — make it visible.
+      warn '[activemail] WARNING: no mailer previews were discovered — nothing was checked.' if result.discovered.zero?
       result.render_failures.each { |key, error| puts "  render failed: #{key}: #{error}" }
       result.guard_failures.each do |key, violations|
         puts "  guard failed: #{key}"
         violations.each { |v| puts "    - [#{v.rule}] #{v.message}" }
       end
 
-      broken = result.broken_required
-      abort "\n#{broken.size} required preview(s) failed: #{broken.join(', ')}" if broken.any?
+      abort "\n#{result.broken_required.size} required preview(s) failed: #{result.broken_required.join(', ')}" if result.broken_required.any?
     end
   end
 end

@@ -103,23 +103,17 @@ module ActiveMail
       @register_inline_interceptor = T.let(true, T::Boolean)
     end
 
+    # Validates eagerly (like sibling setters): a typo fails at boot, not silently mid-delivery.
     sig { params(value: T.any(Symbol, String, ActiveMail::Inliner::Base, T.class_of(ActiveMail::Inliner::Base))).returns(InlinerSetting) }
     def inliner=(value)
-      @inliner = value.is_a?(String) ? value.to_sym : value
+      resolved = value.is_a?(String) ? value.to_sym : value
+      resolve_inliner(resolved) # raises on an invalid value, eagerly
+      @inliner = resolved
     end
 
-    # Resolves to an instance: a Base instance passes through, a Base subclass is
-    # instantiated, a Symbol maps via INLINERS; anything else raises.
     sig { returns(ActiveMail::Inliner::Base) }
     def resolved_inliner
-      value = @inliner
-      return value if value.is_a?(ActiveMail::Inliner::Base)
-      return value.new if value.is_a?(Class) && value < ActiveMail::Inliner::Base
-
-      klass = value.is_a?(Symbol) ? INLINERS[value] : nil
-      raise ArgumentError, "unknown inliner #{value.inspect}, expected one of #{INLINERS.keys.inspect}, an Inliner::Base subclass, or an instance" unless klass
-
-      klass.new
+      resolve_inliner(@inliner)
     end
 
     sig { params(value: T.untyped).returns(Symbol) }
@@ -165,6 +159,16 @@ module ActiveMail
     end
 
     private
+
+    # Single source for both eager validation (in the setter) and resolution.
+    sig { params(value: InlinerSetting).returns(ActiveMail::Inliner::Base) }
+    def resolve_inliner(value)
+      return value if value.is_a?(ActiveMail::Inliner::Base)
+      return value.new if value.is_a?(Class) && value < ActiveMail::Inliner::Base
+      return T.must(INLINERS[value]).new if value.is_a?(Symbol) && INLINERS.key?(value)
+
+      raise ArgumentError, "unknown inliner #{value.inspect}, expected one of #{INLINERS.keys.inspect}, an Inliner::Base subclass, or an instance"
+    end
 
     sig { params(name: Symbol, value: T.untyped).returns(Integer) }
     def positive_integer!(name, value)

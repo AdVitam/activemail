@@ -39,6 +39,20 @@ class RenderAllTest < QualityTest
     end
   end
 
+  def test_reports_discovered_count
+    preview = build_preview('mailer', welcome: CLEAN, goodbye: CLEAN)
+    result = run_with_previews([preview], ActiveMail::Quality::Configuration.new)
+
+    assert_equal 2, result.discovered
+  end
+
+  def test_discovered_is_zero_when_no_previews
+    result = run_with_previews([], ActiveMail::Quality::Configuration.new)
+
+    assert_equal 0, result.discovered
+    assert_equal 0, result.rendered
+  end
+
   def test_renders_and_writes_clean_previews
     preview = build_preview('mailer', welcome: CLEAN)
     config = ActiveMail::Quality::Configuration.new

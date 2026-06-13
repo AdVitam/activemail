@@ -31,6 +31,17 @@ module ActiveMailTestHelpers
   end
 end
 
+# Shared fixture: a minimal custom component used across several test files.
+class CustomComponent < ActiveMail::Components::Base
+  extend T::Sig
+
+  sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
+  def transform(node, inner)
+    klass = combine_classes(node, 'custom')
+    %(<div class="#{klass}">#{inner}</div>)
+  end
+end
+
 class ActiveMailTest < Minitest::Test
   include ActiveMailTestHelpers
 

@@ -157,5 +157,4 @@ end
 if defined?(Rails::Engine)
   require 'active_mail/rails/engine'
   require 'active_mail/rails/template_handler'
-  require 'active_mail/rails/version'
 end

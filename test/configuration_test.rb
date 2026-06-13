@@ -114,11 +114,10 @@ class ConfigurationTest < ActiveMailTest
     assert_instance_of ActiveMail::Inliner::Null, config.resolved_inliner
   end
 
-  def test_resolved_inliner_rejects_unknown_symbol
+  def test_inliner_setter_rejects_unknown_symbol_eagerly
     config = ActiveMail::Configuration.new
-    config.inliner = :nope
 
-    assert_raises(ArgumentError) { config.resolved_inliner }
+    assert_raises(ArgumentError) { config.inliner = :nope }
   end
 
   def test_register_inline_interceptor_defaults_true
@@ -133,16 +132,6 @@ class ConfigurationTest < ActiveMailTest
 
   def test_top_level_tokens_delegates_to_configuration
     assert_same ActiveMail.configuration.tokens, ActiveMail.tokens
-  end
-end
-
-class CustomComponent < ActiveMail::Components::Base
-  extend T::Sig
-
-  sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
-  def transform(node, inner)
-    klass = combine_classes(node, 'custom')
-    %(<div class="#{klass}">#{inner}</div>)
   end
 end
 

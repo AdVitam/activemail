@@ -13,8 +13,6 @@ module ActiveMail
         extend T::Sig
 
         # preview and message are external/dynamic ActionMailer & Mail objects.
-
-        # Renders a single preview email to its text/html body.
         sig { params(preview: T.untyped, email: String).returns(String) }
         def render(preview, email)
           html_body(preview.call(email))

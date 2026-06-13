@@ -14,6 +14,7 @@ module ActiveMail
       extend T::Sig
 
       class Result < T::Struct
+        const :discovered, Integer
         const :rendered, Integer
         const :render_failures, T::Hash[String, String]
         const :guard_failures, T::Hash[String, T::Array[Guard::Violation]]
@@ -33,20 +34,21 @@ module ActiveMail
 
         render_failures = {}
         guard_failures = {}
-        rendered = render_all(render_failures, guard_failures)
+        previews = PreviewRenderer.all
+        rendered = render_all(previews, render_failures, guard_failures)
 
         required = @config.required_previews
         broken = (render_failures.keys & required) | (guard_failures.keys & required)
-        Result.new(rendered: rendered, render_failures: render_failures, guard_failures: guard_failures, broken_required: broken)
+        Result.new(discovered: previews.size, rendered: rendered, render_failures: render_failures, guard_failures: guard_failures, broken_required: broken)
       end
 
       private
 
       sig do
-        params(render_failures: T::Hash[String, String], guard_failures: T::Hash[String, T::Array[Guard::Violation]]).returns(Integer)
+        params(previews: T::Array[[T.untyped, String]], render_failures: T::Hash[String, String], guard_failures: T::Hash[String, T::Array[Guard::Violation]]).returns(Integer)
       end
-      def render_all(render_failures, guard_failures)
-        PreviewRenderer.all.count do |preview, email|
+      def render_all(previews, render_failures, guard_failures)
+        previews.count do |preview, email|
           key = "#{preview.preview_name}##{email}"
           path = render_one(preview, email, render_failures, key)
           next false unless path

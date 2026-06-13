@@ -8,4 +8,9 @@ class NullInlinerTest < ActiveMailTest
 
     assert_equal html, ActiveMail::Inliner::Null.new.inline(html)
   end
+
+  def test_is_a_noop
+    assert ActiveMail::Inliner::Null.new.noop?
+    refute ActiveMail::Inliner::Premailer.new.noop?
+  end
 end
