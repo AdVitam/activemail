@@ -75,6 +75,65 @@ class ConfigurationTest < ActiveMailTest
 
     assert_equal 16, ActiveMail.configuration.column_count
   end
+
+  def test_default_inliner_is_premailer
+    assert_instance_of ActiveMail::Inliner::Premailer, ActiveMail::Configuration.new.resolved_inliner
+  end
+
+  def test_resolved_inliner_maps_symbols
+    config = ActiveMail::Configuration.new
+
+    config.inliner = :null
+
+    assert_instance_of ActiveMail::Inliner::Null, config.resolved_inliner
+
+    config.inliner = :premailer
+
+    assert_instance_of ActiveMail::Inliner::Premailer, config.resolved_inliner
+  end
+
+  def test_resolved_inliner_passes_instance_through
+    config = ActiveMail::Configuration.new
+    instance = ActiveMail::Inliner::Null.new
+    config.inliner = instance
+
+    assert_same instance, config.resolved_inliner
+  end
+
+  def test_resolved_inliner_instantiates_a_class
+    config = ActiveMail::Configuration.new
+    config.inliner = ActiveMail::Inliner::Null
+
+    assert_instance_of ActiveMail::Inliner::Null, config.resolved_inliner
+  end
+
+  def test_inliner_setter_coerces_string_to_symbol
+    config = ActiveMail::Configuration.new
+    config.inliner = 'null'
+
+    assert_instance_of ActiveMail::Inliner::Null, config.resolved_inliner
+  end
+
+  def test_resolved_inliner_rejects_unknown_symbol
+    config = ActiveMail::Configuration.new
+    config.inliner = :nope
+
+    assert_raises(ArgumentError) { config.resolved_inliner }
+  end
+
+  def test_register_inline_interceptor_defaults_true
+    assert ActiveMail::Configuration.new.register_inline_interceptor
+  end
+
+  def test_tokens_is_memoized
+    config = ActiveMail::Configuration.new
+
+    assert_same config.tokens, config.tokens
+  end
+
+  def test_top_level_tokens_delegates_to_configuration
+    assert_same ActiveMail.configuration.tokens, ActiveMail.tokens
+  end
 end
 
 class CustomComponent < ActiveMail::Components::Base

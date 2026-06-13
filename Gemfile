@@ -12,3 +12,7 @@ gem 'rubocop', '~> 1.60', require: false
 gem 'sorbet', '>= 0.5', require: false
 gem 'sorbet-static-and-runtime', '>= 0.5', require: false
 gem 'tapioca', '>= 0.13', require: false
+
+group :test do
+  gem 'roadie', '>= 5.0', require: false
+end

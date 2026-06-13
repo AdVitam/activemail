@@ -3,6 +3,12 @@
 
 require 'sorbet-runtime'
 
+require_relative 'tokens'
+require_relative 'inliner/base'
+require_relative 'inliner/premailer'
+require_relative 'inliner/roadie'
+require_relative 'inliner/null'
+
 module ActiveMail
   extend T::Sig
 
@@ -11,6 +17,11 @@ module ActiveMail
   sig { returns(ActiveMail::Configuration) }
   def self.configuration
     @configuration ||= T.let(Configuration.new, T.nilable(ActiveMail::Configuration))
+  end
+
+  sig { returns(ActiveMail::Tokens) }
+  def self.tokens
+    configuration.tokens
   end
 
   sig { params(config: T.untyped).returns(ActiveMail::Configuration) }
@@ -39,6 +50,24 @@ module ActiveMail
 
     ON_PARSE_ERROR_MODES = T.let(%i[ignore warn raise].freeze, T::Array[Symbol])
 
+    INLINERS = T.let(
+      {
+        premailer: ActiveMail::Inliner::Premailer,
+        roadie: ActiveMail::Inliner::Roadie,
+        null: ActiveMail::Inliner::Null
+      }.freeze,
+      T::Hash[Symbol, T.class_of(ActiveMail::Inliner::Base)]
+    )
+
+    InlinerSetting = T.type_alias { T.any(Symbol, ActiveMail::Inliner::Base, T.class_of(ActiveMail::Inliner::Base)) }
+
+    sig { returns(InlinerSetting) }
+    attr_reader :inliner
+
+    # Lets a host already running another inliner (e.g. premailer-rails) opt out.
+    sig { returns(T::Boolean) }
+    attr_accessor :register_inline_interceptor
+
     sig { returns(Symbol) }
     attr_reader :template_engine
 
@@ -57,6 +86,11 @@ module ActiveMail
       @components.dup.freeze
     end
 
+    sig { returns(ActiveMail::Tokens) }
+    def tokens
+      @tokens ||= T.let(ActiveMail::Tokens.new, T.nilable(ActiveMail::Tokens))
+    end
+
     sig { void }
     def initialize
       @template_engine = T.let(:erb, Symbol)
@@ -64,6 +98,28 @@ module ActiveMail
       @container_width = T.let(600, Integer)
       @components = T.let({}, ActiveMail::ComponentMap)
       @on_parse_error = T.let(:warn, Symbol)
+      @tokens = T.let(nil, T.nilable(ActiveMail::Tokens))
+      @inliner = T.let(:premailer, InlinerSetting)
+      @register_inline_interceptor = T.let(true, T::Boolean)
+    end
+
+    sig { params(value: T.any(Symbol, String, ActiveMail::Inliner::Base, T.class_of(ActiveMail::Inliner::Base))).returns(InlinerSetting) }
+    def inliner=(value)
+      @inliner = value.is_a?(String) ? value.to_sym : value
+    end
+
+    # Resolves to an instance: a Base instance passes through, a Base subclass is
+    # instantiated, a Symbol maps via INLINERS; anything else raises.
+    sig { returns(ActiveMail::Inliner::Base) }
+    def resolved_inliner
+      value = @inliner
+      return value if value.is_a?(ActiveMail::Inliner::Base)
+      return value.new if value.is_a?(Class) && value < ActiveMail::Inliner::Base
+
+      klass = value.is_a?(Symbol) ? INLINERS[value] : nil
+      raise ArgumentError, "unknown inliner #{value.inspect}, expected one of #{INLINERS.keys.inspect}, an Inliner::Base subclass, or an instance" unless klass
+
+      klass.new
     end
 
     sig { params(value: T.untyped).returns(Symbol) }

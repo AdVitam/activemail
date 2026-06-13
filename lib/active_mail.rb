@@ -19,7 +19,10 @@ require_relative 'active_mail/components/callout'
 require_relative 'active_mail/components/spacer'
 require_relative 'active_mail/components/h_line'
 require_relative 'active_mail/components/wrapper'
+require_relative 'active_mail/components/cta'
+require_relative 'active_mail/components/info_box'
 require_relative 'active_mail/configuration'
+require_relative 'active_mail/inliner/interceptor'
 require_relative 'active_mail/parse_error_reporter'
 
 module ActiveMail

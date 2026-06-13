@@ -9,19 +9,15 @@ Gem::Specification.new do |s|
   s.version     = ActiveMail::VERSION
   s.summary     = 'Opinionated, plug & play responsive email toolkit for Rails.'
   s.description = <<~DESC
-    ActiveMail turns simple, semantic tags (<container>, <row>, <columns>, <button>...)
-    into the bulletproof, MSO-safe table markup email clients require, and ships a
-    batteries-included Rails layer on top — a themeable SCSS framework, dark mode, design
-    tokens, a pluggable CSS-inlining adapter (premailer/roadie) and generators — so a
-    responsive, accessible email renders out of the box, every default overridable.
+    ActiveMail turns simple, semantic tags into the bulletproof, MSO-safe table markup
+    email clients require, with a batteries-included Rails layer on top — themeable SCSS,
+    dark mode, design tokens, a pluggable CSS-inliner (premailer/roadie) and generators.
   DESC
   s.authors  = ['Advitam']
   s.email    = ['tech@advitam.fr']
   s.homepage = 'https://github.com/AdVitam/activemail'
   s.licenses = ['MIT']
-
   s.required_ruby_version = '>= 3.2'
-
   s.metadata = {
     'source_code_uri' => s.homepage,
     'changelog_uri' => "#{s.homepage}/blob/master/CHANGELOG.md",
@@ -33,5 +29,6 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_dependency 'nokogiri', '>= 1.16'
+  s.add_dependency 'premailer', '>= 1.21'
   s.add_dependency 'sorbet-runtime', '>= 0.5'
 end

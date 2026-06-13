@@ -1,0 +1,58 @@
+// Background on both inner cell and link so the whole bulletproof button
+// (table.button > td > table > td > a) is filled and clickable.
+.button table td {
+  background: $am-button-primary-bg;
+}
+
+.button a {
+  color: $am-button-color;
+  background: $am-button-primary-bg;
+  font-family: $am-font-family;
+  font-weight: bold;
+}
+
+.button.secondary table td,
+.button.secondary a {
+  background: $am-button-secondary-bg;
+}
+
+// Progressive enhancement only — some clients strip border-radius.
+.button.radius table td,
+.button.radius a {
+  border-radius: $am-button-radius;
+}
+
+// CTA mirrors the bulletproof button; colors are also inlined by the component.
+.cta table td {
+  background: $am-button-primary-bg;
+}
+
+.cta a {
+  color: $am-button-color;
+  background: $am-button-primary-bg;
+  font-family: $am-font-family;
+  font-weight: bold;
+}
+
+.cta.secondary table td,
+.cta.secondary a {
+  background: $am-button-secondary-bg;
+}
+
+.info-box td {
+  background-color: $am-background;
+  border-left: 5px solid $am-border;
+  color: $am-text;
+  padding: $am-spacing-md;
+}
+
+.callout-inner {
+  background-color: $am-background;
+  color: $am-text;
+  padding: $am-spacing-md;
+}
+
+// Spacer hook — height is set inline per instance; this is a styling anchor.
+.spacer {
+  width: 100%;
+}

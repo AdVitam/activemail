@@ -1,0 +1,23 @@
+// Semantic aliases mapped from the $am-* token vars. All !default so a host
+// app can pre-declare any value before importing the framework.
+@import "active_mail/active_mail_tokens";
+
+// Typography
+$am-font-family: $am-font-body !default;
+$am-heading-font-family: $am-font-heading !default;
+
+// Palette
+$am-text: $am-color-text !default;
+$am-background: $am-color-background !default;
+$am-muted: $am-color-muted !default;
+$am-border: $am-color-border !default;
+
+// Buttons
+$am-button-primary-bg: $am-color-primary !default;
+$am-button-secondary-bg: $am-color-secondary !default;
+$am-button-color: $am-color-button-text !default;
+$am-button-radius: 4px !default;
+
+// Grid — the gem emits no gutters; we provide them via column padding.
+$am-container-width: 600px !default;
+$am-gutter: $am-spacing-sm !default;

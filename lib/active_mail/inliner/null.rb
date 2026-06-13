@@ -1,0 +1,18 @@
+# typed: strict
+# frozen_string_literal: true
+
+require_relative 'base'
+
+module ActiveMail
+  module Inliner
+    # Opt-out / test adapter: returns the HTML untouched.
+    class Null < Base
+      extend T::Sig
+
+      sig { override.params(html: String).returns(String) }
+      def inline(html)
+        html
+      end
+    end
+  end
+end

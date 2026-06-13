@@ -22,7 +22,7 @@ Style/FrozenStringLiteralComment:
 Metrics/BlockLength:
   Exclude:
     - 'test/**/*'
-    - 'inky.gemspec'
+    - 'activemail.gemspec'
 
 # Test files: autofix only, relaxed metrics.
 Metrics/ClassLength:
