@@ -1,5 +1,4 @@
-// Semantic aliases mapped from the $am-* token vars. All !default so a host
-// app can pre-declare any value before importing the framework.
+// All !default so a host app can pre-declare any value before importing the framework.
 @import "activemail/activemail_tokens";
 
 // Typography
@@ -16,10 +15,19 @@ $am-border: $am-color-border !default;
 $am-button-primary-bg: $am-color-primary !default;
 $am-button-secondary-bg: $am-color-secondary !default;
 $am-button-color: $am-color-button-text !default;
-$am-button-radius: 4px !default;
+// Secondary falls back to filled-button defaults; override *-secondary-* for an outline variant.
+$am-button-secondary-color: $am-color-button-text !default;
+$am-button-secondary-border: transparent !default;
+$am-button-radius: $am-radius-button !default;
 
-// Grid — the gem emits no gutters; we provide them via column padding.
-// Width follows config.container_width via the token bridge, so the SCSS grid
-// stays aligned with the transpiled markup (ghost tables, column max-width).
+// Info box
+$am-info-box-bg: $am-background !default;
+$am-info-box-border: $am-border !default;
+$am-info-box-text: $am-text !default;
+$am-box-radius: $am-radius-box !default;
+
+// Grid — the gem emits no gutters; we provide them via column padding. Width
+// follows config.container_width via the token bridge so the SCSS grid stays
+// aligned with the transpiled markup (ghost tables, column max-width).
 $am-container-width: $am-grid-container-width !default;
 $am-gutter: $am-spacing-sm !default;

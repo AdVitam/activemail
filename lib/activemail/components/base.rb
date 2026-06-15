@@ -36,6 +36,8 @@ module ActiveMail
       # Layout tables: presentation role (a11y) and zeroed legacy spacing.
       TABLE_RESET = 'role="presentation" border="0" cellpadding="0" cellspacing="0"'
 
+      BUTTON_PADDING = 'padding:12px 24px;'
+
       sig { params(core: ::ActiveMail::Core).void }
       def initialize(core)
         @core = core
@@ -103,6 +105,19 @@ module ActiveMail
       sig { params(node: Nokogiri::XML::Node).returns(String) }
       def target_attribute(node)
         node.attributes['target'] ? %( target="#{escape_attr(node.attributes['target'])}") : ''
+      end
+
+      # Outlook-safe nested-table structure kept in one place for <button> and <cta>.
+      sig do
+        params(outer_classes: String, inner: String, cell_style: String, outer_extra: String).returns(String)
+      end
+      def bulletproof_button_table(outer_classes:, inner:, cell_style: '', outer_extra: '')
+        cell = cell_style.empty? ? '<td>' : %(<td style="#{cell_style}">)
+        [
+          %(<table class="#{outer_classes}" #{TABLE_RESET}><tbody><tr><td>),
+          %(<table #{TABLE_RESET}><tbody><tr>#{cell}#{inner}</td></tr></tbody></table>),
+          %(</td>#{outer_extra}</tr></tbody></table>)
+        ].join
       end
 
       sig { returns(Integer) }

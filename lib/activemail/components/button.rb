@@ -14,13 +14,14 @@ module ActiveMail
         inner = anchor(node, inner, expand) if node.attr('href')
         inner = "<center>#{inner}</center>" if expand
 
-        classes = combine_classes(node, 'button')
         expander = expand ? '<td class="expander"></td>' : ''
-        [
-          %(<table class="#{classes}" #{TABLE_RESET}><tbody><tr><td>),
-          %(<table #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table>),
-          %(</td>#{expander}</tr></tbody></table>)
-        ].join
+        # CSS-driven by design: colors come from .button rules, not inline tokens —
+        # a distinct robustness model from <cta>, which inlines its palette.
+        bulletproof_button_table(
+          outer_classes: combine_classes(node, 'button'),
+          inner: inner,
+          outer_extra: expander
+        )
       end
 
       private
@@ -30,7 +31,7 @@ module ActiveMail
         target = target_attribute(node)
         extra = expand ? ' align="center" class="float-center"' : ''
         # Padding on the <a> makes the whole button a clickable target.
-        link_style = 'display:inline-block;text-decoration:none;padding:12px 24px;'
+        link_style = "display:inline-block;text-decoration:none;#{BUTTON_PADDING}"
         attrs = %(#{pass_through_attributes(node)}href="#{escape_attr(node.attr('href'))}"#{target}#{extra})
         %(<a #{attrs}#{style_attribute(node, link_style)}>#{inner}</a>)
       end

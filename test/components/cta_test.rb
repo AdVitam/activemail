@@ -35,6 +35,34 @@ class CtaTest < ActiveMailTest
     assert_includes output, '#00cc33'
   end
 
+  def test_cta_radius_comes_from_token
+    ActiveMail.tokens.radius(:button, '9px')
+    output = render('<cta href="#">Go</cta>')
+
+    assert_includes output, 'border-radius:9px'
+    refute_includes output, 'border-radius:4px'
+  end
+
+  def test_cta_default_secondary_has_no_outline
+    output = render('<cta class="secondary" href="#">Go</cta>')
+
+    refute_includes output, 'border:1px solid'
+  end
+
+  def test_cta_secondary_outline_is_token_driven
+    ActiveMail.tokens.load(
+      color: { secondary: '#ffffff', secondary_text: '#0f4447', secondary_border: 'rgba(15, 68, 71, 0.6)' }
+    )
+    output = render('<cta class="secondary" href="#">Go</cta>')
+
+    assert_includes output, 'background:#ffffff'
+    assert_includes output, 'color:#0f4447'
+    assert_includes output, 'border:1px solid rgba(15, 68, 71, 0.6)'
+    # Border on the cell only — never doubled on the nested anchor.
+    assert_equal 1, output.scan('border:1px solid').size
+    refute_includes Nokogiri::HTML.fragment(output).at_css('a')['style'].to_s, 'border:1px solid'
+  end
+
   def test_cta_secondary_keeps_secondary_class
     output = render('<cta class="secondary" href="#">Go</cta>')
     outer = Nokogiri::HTML.fragment(output).at_css('table')

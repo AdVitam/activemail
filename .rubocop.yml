@@ -26,6 +26,10 @@ Metrics/BlockLength:
 
 # Test files: autofix only, relaxed metrics.
 Metrics/ClassLength:
+  # Declarative data literals (token tables) are length, not complexity.
+  CountAsOne:
+    - array
+    - hash
   Exclude:
     - 'test/**/*'
 

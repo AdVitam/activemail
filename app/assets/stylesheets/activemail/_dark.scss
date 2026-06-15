@@ -45,12 +45,14 @@ $am-dark-link: $am-color-primary !default;
     color: $am-color-button-text !important;
   }
 
-  // Keep the secondary variant's color — the primary rule above would erase it.
+  // Restore the secondary fill AND text — the primary rule above forces button-text,
+  // which would be unreadable on an outline (light) secondary fill.
   .button.secondary table td,
   .button.secondary a,
   .cta.secondary table td,
   .cta.secondary a {
     background: $am-color-secondary !important;
+    color: $am-button-secondary-color !important;
   }
 
   // Panels keep their inline background unless overridden here, which would
@@ -111,6 +113,7 @@ $am-dark-link: $am-color-primary !default;
   [data-ogsc] .cta.secondary table td,
   [data-ogsc] .cta.secondary a {
     background: $am-color-secondary !important;
+    color: $am-button-secondary-color !important;
   }
 
   [data-ogsc] .callout-inner,
