@@ -5,6 +5,30 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-15
+
+### Added
+
+- `radius` token group (`button`/`box`) and `Tokens#radius`/`#radius!` accessors.
+- `Tokens#button_style(variant)` resolver and the `Tokens::ButtonStyle` value
+  object: button variants (incl. an **outline** secondary) are now token-driven —
+  set `<variant>_text`/`<variant>_border` colors instead of forking the component.
+- Box-scoped `info_box_background`/`info_box_border`/`info_box_text` tokens
+  (falling back to the page palette) plus a box `border-radius`.
+- `Tokens#load(group: {...})` bulk-loader and a single `Tokens#to_h` snapshot.
+
+### Changed
+
+- `<button>` and `<cta>` share a `bulletproof_button_table` scaffold; `<cta>`
+  drops its hardcoded `4px` radius in favor of the `radius` token.
+- The corner radius is now applied by default on `.button`/`.cta` (the opt-in
+  `.radius` class is gone); `.button.secondary`/`.cta.secondary` mirror the
+  secondary color/border tokens.
+
+### Removed
+
+- `Tokens#colors`/`#fonts`/`#spacings` readers — use `Tokens#to_h` instead.
+
 ## [1.0.2] - 2026-06-15
 
 ### Fixed
