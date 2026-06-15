@@ -4,6 +4,8 @@
 require 'nokogiri'
 require 'sorbet-runtime'
 
+require_relative '../libxml'
+
 module ActiveMail
   module Quality
     class Guard
@@ -17,8 +19,6 @@ module ActiveMail
       end
 
       DISABLEABLE = T.let(%i[max_bytes parse_error table_role img_alt lang min_full_doc_bytes].freeze, T::Array[Symbol])
-      # libxml2 code for a non-HTML4 tag; benign (HTML5/custom tags), not malformedness.
-      UNKNOWN_TAG_CODE = 801
       # Gmail clips messages past ~102KB.
       DEFAULT_MAX_BYTES = 102_400
       # A full HTML document smaller than this carries no real layout and is suspect.
@@ -88,7 +88,7 @@ module ActiveMail
       def check_well_formed(doc, violations)
         return unless enabled?(:parse_error)
 
-        errors = doc.errors.reject { |e| e.respond_to?(:code) && e.code == UNKNOWN_TAG_CODE }
+        errors = doc.errors.reject { |e| e.respond_to?(:code) && e.code == LIBXML_UNKNOWN_TAG_CODE }
         return if errors.empty?
 
         violations << Violation.new(rule: :parse_error, message: "malformed HTML: #{errors.first(3).map { |e| e.message.to_s.strip }.join('; ')}")

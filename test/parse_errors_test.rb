@@ -55,7 +55,7 @@ class ParseErrorsTest < ActiveMailTest
   # bump changes it, this fails before users drown in false warnings.
   def test_unknown_tag_filter_matches_pinned_libxml2_message_format
     error = Nokogiri::HTML.fragment('<row></row>').errors
-                          .find { |e| e.code == ActiveMail::ParseErrorReporter::UNKNOWN_TAG_ERROR_CODE }
+                          .find { |e| e.code == ActiveMail::LIBXML_UNKNOWN_TAG_CODE }
 
     refute_nil error
     assert_silent { ActiveMail::ParseErrorReporter.new(['row']).call([error]) }

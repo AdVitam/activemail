@@ -7,7 +7,6 @@ require_relative 'guard'
 
 module ActiveMail
   module Quality
-    # Opt-in config for the quality layer.
     class Configuration
       extend T::Sig
 

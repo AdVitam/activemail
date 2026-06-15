@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require 'fileutils'
+require 'pathname'
 require 'sorbet-runtime'
 
 module ActiveMail
@@ -13,6 +15,13 @@ module ActiveMail
         sig { params(preview: T.untyped, email: String).returns(String) }
         def render(preview, email)
           html_body(preview.call(email))
+        end
+
+        # The single source for the "preview_name#email" key format (config keys,
+        # render_all, the Minitest helper).
+        sig { params(preview: T.untyped, email: String).returns(String) }
+        def key(preview, email)
+          "#{preview.preview_name}##{email}"
         end
 
         sig { params(preview: T.untyped, email: String, output_root: T.any(String, Pathname)).returns(Pathname) }

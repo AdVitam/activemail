@@ -5,7 +5,6 @@ require 'sorbet-runtime'
 
 module ActiveMail
   module Inliner
-    # ActionMailer delivery interceptor: inlines CSS into outgoing HTML parts.
     class Interceptor
       class << self
         extend T::Sig

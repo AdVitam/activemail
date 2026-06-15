@@ -143,6 +143,14 @@ class ConfigurationTest < ActiveMailTest
     assert ActiveMail::Configuration.new.register_inline_interceptor
   end
 
+  def test_register_inline_interceptor_rejects_non_boolean
+    config = ActiveMail::Configuration.new
+
+    assert_raises(TypeError) { config.register_inline_interceptor = 'yes' }
+    config.register_inline_interceptor = false
+    refute config.register_inline_interceptor
+  end
+
   def test_tokens_is_memoized
     config = ActiveMail::Configuration.new
     tokens = config.tokens

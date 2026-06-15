@@ -4,8 +4,6 @@ require 'rails/generators'
 
 module ActiveMail
   module Generators
-    # Ejects the framework SCSS partials into the host app, where they shadow the
-    # gem's copies (same `active_mail/` import path) and can be customized.
     class StylesGenerator < ::Rails::Generators::Base
       desc 'Copy ActiveMail framework SCSS partials into the host app for customization'
       source_root File.expand_path('../../../app/assets/stylesheets/active_mail', __dir__)

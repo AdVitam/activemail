@@ -79,11 +79,7 @@ module ActiveMail
     ON_PARSE_ERROR_MODES = T.let(%i[ignore warn raise].freeze, T::Array[Symbol])
 
     INLINERS = T.let(
-      {
-        premailer: ActiveMail::Inliner::Premailer,
-        roadie: ActiveMail::Inliner::Roadie,
-        null: ActiveMail::Inliner::Null
-      }.freeze,
+      { premailer: ActiveMail::Inliner::Premailer, roadie: ActiveMail::Inliner::Roadie, null: ActiveMail::Inliner::Null }.freeze,
       T::Hash[Symbol, T.class_of(ActiveMail::Inliner::Base)]
     )
 
@@ -94,7 +90,14 @@ module ActiveMail
 
     # Lets a host already running another inliner (e.g. premailer-rails) opt out.
     sig { returns(T::Boolean) }
-    attr_accessor :register_inline_interceptor
+    attr_reader :register_inline_interceptor
+
+    sig { params(value: T.untyped).void }
+    def register_inline_interceptor=(value)
+      raise TypeError, 'register_inline_interceptor must be true or false' unless [true, false].include?(value)
+
+      @register_inline_interceptor = value
+    end
 
     sig { returns(Symbol) }
     attr_reader :template_engine

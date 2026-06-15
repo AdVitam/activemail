@@ -20,8 +20,10 @@ module ActiveMail
       sig { void }
       def require_roadie!
         require 'roadie'
-      rescue LoadError => e
-        raise LoadError, "ActiveMail::Inliner::Roadie requires the 'roadie' gem. Add it to your Gemfile. (#{e.message})"
+      rescue LoadError
+        # Unify on Inliner::Error (LoadError is not a StandardError, so the
+        # interceptor's rescue would otherwise miss it); the LoadError is #cause.
+        raise ActiveMail::Inliner::Error, "ActiveMail::Inliner::Roadie requires the 'roadie' gem. Add it to your Gemfile."
       end
     end
   end

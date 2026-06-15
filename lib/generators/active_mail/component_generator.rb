@@ -5,7 +5,6 @@ require 'rails/generators/named_base'
 
 module ActiveMail
   module Generators
-    # Scaffolds a host component class and prints the register_component snippet.
     class ComponentGenerator < ::Rails::Generators::NamedBase
       desc 'Scaffold an ActiveMail component class (rails g active_mail:component Cta)'
       source_root File.join(File.dirname(__FILE__), 'templates')

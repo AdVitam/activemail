@@ -3,19 +3,18 @@
 
 require 'sorbet-runtime'
 
+require_relative 'libxml'
+
 module ActiveMail
   # Surfaces libxml2 recover-mode repairs that would otherwise silently change
   # the rendered email, honoring ActiveMail.configuration.on_parse_error.
   class ParseErrorReporter
     extend T::Sig
 
-    # libxml2 XML_HTML_UNKNOWN_TAG: raised for every non-HTML4 tag, including
-    # legitimate registered component tags.
-    UNKNOWN_TAG_ERROR_CODE = 801
-
     sig { params(known_tags: T::Array[String]).void }
     def initialize(known_tags)
-      @known_tags = T.let(known_tags, T::Array[String])
+      # dup.freeze: the caller's array stays decoupled and cannot be mutated under us.
+      @known_tags = T.let(known_tags.dup.freeze, T::Array[String])
     end
 
     sig { params(errors: T::Array[Nokogiri::XML::SyntaxError]).void }
@@ -36,7 +35,7 @@ module ActiveMail
 
     sig { params(error: Nokogiri::XML::SyntaxError).returns(T::Boolean) }
     def known_tag_error?(error)
-      return false unless error.code == UNKNOWN_TAG_ERROR_CODE
+      return false unless error.code == LIBXML_UNKNOWN_TAG_CODE
 
       # Fragile by necessity: the 801 error does not carry the tag name, only
       # the libxml2 message text does. Locked by test against the pinned

@@ -53,7 +53,7 @@ module ActiveMail
       end
       def broken_required(previews, render_failures, guard_failures)
         required = @config.required_previews
-        discovered = previews.map { |preview, email| "#{preview.preview_name}##{email}" }
+        discovered = previews.map { |preview, email| PreviewRenderer.key(preview, email) }
         ((render_failures.keys | guard_failures.keys) & required) | (required - discovered)
       end
 
@@ -62,7 +62,7 @@ module ActiveMail
       end
       def render_all(previews, render_failures, guard_failures)
         previews.count do |preview, email|
-          key = "#{preview.preview_name}##{email}"
+          key = PreviewRenderer.key(preview, email)
           path = render_one(preview, email, render_failures, key)
           next false unless path
 

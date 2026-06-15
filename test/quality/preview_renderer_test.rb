@@ -21,6 +21,12 @@ class PreviewRendererTest < QualityTest
     end
   end
 
+  def test_key_builds_the_preview_name_hash_email_format
+    preview = FakePreview.new(Mail.new)
+
+    assert_equal 'fake_mailer#welcome', ActiveMail::Quality::PreviewRenderer.key(preview, 'welcome')
+  end
+
   def test_extracts_html_part_from_multipart_message
     message = Mail.new do
       text_part { body 'plain text' }

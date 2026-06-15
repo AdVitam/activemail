@@ -8,7 +8,6 @@ module ActiveMail
     module Minitest
       extend T::Sig
 
-      # On failure, flunks listing every violation rather than swallowing them.
       sig { params(html: String, guard: Guard).void }
       def assert_email_quality(html, guard: ActiveMail::Quality.guard)
         violations = guard.violations(html)
@@ -17,7 +16,6 @@ module ActiveMail
                               "email quality violations:\n#{violations.map { |v| "  - [#{v.rule}] #{v.message}" }.join("\n")}"
       end
 
-      # Renders a preview email and asserts its quality.
       sig { params(preview: T.untyped, email: String, guard: Guard).void }
       def assert_preview_quality(preview, email, guard: ActiveMail::Quality.guard)
         assert_email_quality(PreviewRenderer.render(preview, email), guard: guard)
@@ -35,7 +33,7 @@ module ActiveMail
           # A silent no-test run would look like everything passed.
           Kernel.warn('[activemail] assert_quality_for_all_previews: no previews discovered.') if previews.empty?
           previews.each do |preview, email|
-            key = "#{preview.preview_name}##{email}"
+            key = PreviewRenderer.key(preview, email)
             T.unsafe(self).define_method("test_#{key.gsub(/\W/, '_')}_email_quality") do
               html = T.unsafe(self).send(:render_preview_or_skip, preview, email, key, required)
               T.unsafe(self).assert_email_quality(html, guard: guard)

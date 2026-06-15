@@ -4,7 +4,6 @@ require 'rails/generators'
 
 module ActiveMail
   module Generators
-    # Scaffolds the host config: initializer and a mailer layout.
     class InstallGenerator < ::Rails::Generators::Base
       desc 'Install ActiveMail: initializer and a mailer layout'
       source_root File.join(File.dirname(__FILE__), 'templates')
