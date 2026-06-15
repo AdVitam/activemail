@@ -95,7 +95,9 @@ module ActiveMail
       sig { params(node: Nokogiri::XML::Node, extra_classes: T.nilable(String)).returns(String) }
       def combine_attributes(node, extra_classes = nil)
         classes = combine_classes(node, extra_classes)
-        [pass_through_attributes(node), %(class="#{classes}")].join
+        # Escape like the other attribute paths: a literal " in the class would
+        # otherwise reopen the attribute.
+        [pass_through_attributes(node), %(class="#{escape_attr(classes)}")].join
       end
 
       sig { params(node: Nokogiri::XML::Node).returns(String) }

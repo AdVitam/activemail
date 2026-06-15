@@ -11,7 +11,12 @@ module ActiveMail
 
         sig { params(message: T.untyped).void }
         def delivering_email(message)
-          inliner = ActiveMail.configuration.resolved_inliner
+          config = ActiveMail.configuration
+          # Runtime check: an engine initializer runs before the host's, so a
+          # boot-time flag read would always see the default.
+          return unless config.register_inline_interceptor
+
+          inliner = config.resolved_inliner
           return if inliner.noop?
 
           html_parts(message).each do |part|
@@ -25,18 +30,20 @@ module ActiveMail
 
         private
 
-        # Handles both multipart messages (html part nested anywhere) and a
-        # single-part message whose own content-type is text/html.
+        # The html part(s) to inline: a single text/html message, or every text/html
+        # part of a multipart message. Attachments are never inlined.
         sig { params(message: T.untyped).returns(T::Array[T.untyped]) }
         def html_parts(message)
-          return collect_html_parts(message.all_parts) if message.multipart?
+          return message.all_parts.select { |part| html_body_part?(part) } if message.multipart?
 
-          message.mime_type == 'text/html' ? [message] : []
+          html_body_part?(message) ? [message] : []
         end
 
-        sig { params(parts: T::Array[T.untyped]).returns(T::Array[T.untyped]) }
-        def collect_html_parts(parts)
-          parts.select { |part| part.respond_to?(:mime_type) && part.mime_type == 'text/html' }
+        sig { params(part: T.untyped).returns(T::Boolean) }
+        def html_body_part?(part)
+          return false unless part.respond_to?(:mime_type) && part.mime_type == 'text/html'
+
+          !(part.respond_to?(:attachment?) && part.attachment?)
         end
       end
     end

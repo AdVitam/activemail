@@ -58,6 +58,34 @@ class InterceptorTest < ActiveMailTest
     assert_equal 'boom', error.cause.message
   end
 
+  def test_register_inline_interceptor_false_is_a_no_op_at_runtime
+    ActiveMail.configuration.register_inline_interceptor = false
+    message = Mail.new do
+      content_type 'text/html; charset=UTF-8'
+      body HTML_BODY
+    end
+
+    ActiveMail::Inliner::Interceptor.delivering_email(message)
+
+    assert_equal HTML_BODY, message.body.to_s
+  end
+
+  def test_html_attachment_is_not_inlined
+    message = Mail.new do
+      html_part do
+        content_type 'text/html; charset=UTF-8'
+        body HTML_BODY
+      end
+      add_file(filename: 'report.html', content: HTML_BODY)
+    end
+    # Force the attachment's content-type to text/html so only attachment? distinguishes it.
+    message.attachments['report.html'].content_type = 'text/html; charset=UTF-8'
+
+    ActiveMail::Inliner::Interceptor.delivering_email(message)
+
+    refute_match(/style="/, message.attachments['report.html'].body.to_s)
+  end
+
   def test_null_inliner_is_a_no_op
     ActiveMail.configuration.inliner = :null
     message = Mail.new do

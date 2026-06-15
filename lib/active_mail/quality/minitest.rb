@@ -32,9 +32,10 @@ module ActiveMail
           previews = PreviewRenderer.all
           # A silent no-test run would look like everything passed.
           Kernel.warn('[activemail] assert_quality_for_all_previews: no previews discovered.') if previews.empty?
-          previews.each do |preview, email|
+          previews.each_with_index do |(preview, email), i|
             key = PreviewRenderer.key(preview, email)
-            T.unsafe(self).define_method("test_#{key.gsub(/\W/, '_')}_email_quality") do
+            # Index prefix: distinct keys can normalize to the same method name.
+            T.unsafe(self).define_method("test_#{i}_#{key.gsub(/\W/, '_')}_email_quality") do
               html = T.unsafe(self).send(:render_preview_or_skip, preview, email, key, required)
               T.unsafe(self).assert_email_quality(html, guard: guard)
             end

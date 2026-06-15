@@ -17,11 +17,10 @@ module ActiveMail
       end
 
       initializer 'active_mail.register_interceptor' do
-        next unless ActiveMail.configuration.register_inline_interceptor
-
         ActiveSupport.on_load(:action_mailer) do
           require 'active_mail/inliner/interceptor'
-          # config.inliner = :null also short-circuits the interceptor at runtime.
+          # The interceptor honors config.register_inline_interceptor (and inliner =
+          # :null) at delivery time — a boot-time check would precede host config.
           register_interceptor ActiveMail::Inliner::Interceptor
         end
       end

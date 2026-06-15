@@ -6,7 +6,8 @@ require 'fileutils'
 namespace :active_mail do
   namespace :tokens do
     desc 'Export design tokens to a static SCSS partial (for Propshaft apps that cannot preprocess .scss.erb)'
-    task :export, [:path] do |_task, args|
+    # :environment so the host initializer's config.tokens overrides are loaded.
+    task :export, [:path] => :environment do |_task, args|
       path = args[:path] || 'app/assets/stylesheets/active_mail/_active_mail_tokens.scss'
       FileUtils.mkdir_p(File.dirname(path))
       File.write(path, ActiveMail.tokens.to_scss)
