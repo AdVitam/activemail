@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-06-15
+
+### Fixed
+
+- Moved the framework styles helper to `app/helpers/active_mail/` so the host
+  application's Zeitwerk loader resolves it to `ActiveMail::StylesHelper`. Under
+  the previous `app/helpers/activemail/` path the default inflector expected
+  `Activemail::StylesHelper`, making the engine's `helper ActiveMail::StylesHelper`
+  raise `NameError` at boot in any mounting app.
+
 ## [1.0.1] - 2026-06-15
 
 ### Changed

@@ -9,7 +9,7 @@ require 'action_view'
 require 'action_view/base'
 require 'activemail/rails/template_handler'
 require 'activemail/rails/compiled_stylesheet'
-require File.expand_path('../../app/helpers/activemail/styles_helper', __dir__)
+require File.expand_path('../../app/helpers/active_mail/styles_helper', __dir__)
 require 'rails/generators'
 require 'rails/generators/test_case'
 
