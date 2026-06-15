@@ -45,7 +45,7 @@ module ActiveMail
         check_well_formed(doc, violations)
         check_table_roles(doc, violations)
         check_img_alts(doc, violations)
-        check_full_document(html, doc, violations) if full_document?(html)
+        check_full_document(html, doc, violations) if ::ActiveMail.full_document?(html)
         violations
       end
 
@@ -66,12 +66,6 @@ module ActiveMail
         raise ArgumentError, "#{name} must be a positive integer, got #{value}" unless value.positive?
 
         value
-      end
-
-      # Mirrors how Core decides parse vs fragment: a full document carries <html.
-      sig { params(html: String).returns(T::Boolean) }
-      def full_document?(html)
-        !(html =~ /<html/i).nil?
       end
 
       sig { params(html: String, violations: T::Array[Violation]).void }

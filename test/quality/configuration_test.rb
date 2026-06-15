@@ -14,6 +14,15 @@ class QualityConfigurationTest < QualityTest
     assert_empty @config.required_previews
   end
 
+  # Defaults are set by direct ivar assignment; guard against a future default the
+  # validating setters would reject (output_dir must be non-blank, guard a Guard).
+  def test_defaults_satisfy_their_own_validation
+    config = ActiveMail::Quality::Configuration.new
+
+    assert_kind_of ActiveMail::Quality::Guard, config.guard
+    refute_empty config.output_dir.strip
+  end
+
   def test_output_dir_rejects_blank
     assert_raises(ArgumentError) { @config.output_dir = '' }
     assert_raises(ArgumentError) { @config.output_dir = '   ' }

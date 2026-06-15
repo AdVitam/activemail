@@ -4,12 +4,8 @@
 require 'sorbet-runtime'
 
 module ActiveMail
-  # Reads a compiled CSS asset's bytes from the host's asset pipeline.
-  #
-  # Sprockets and Propshaft expose incompatible lookup APIs and neither returns a
-  # plain string, so both are probed by duck-type. The bytes are needed at delivery
-  # time to inline the framework CSS (see StylesHelper) — a digest URL is useless
-  # to the Premailer adapter, which can't fetch it.
+  # Reads a compiled CSS asset's bytes (Sprockets or Propshaft, by duck-type) — the
+  # bytes, not a digest URL, are what the Premailer adapter needs to inline.
   module CompiledStylesheet
     class << self
       extend T::Sig

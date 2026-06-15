@@ -1,4 +1,4 @@
-<%# Top vertical spacer. Hosts override this partial to add a logo/banner. %>
+<%# Header slot — hosts override this partial to add a logo/banner. %>
 <row>
   <columns>
     <spacer size="16"></spacer>

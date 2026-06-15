@@ -73,7 +73,7 @@ module ActiveMail
     sig { params(html_string: Object).returns(String) }
     def release_the_kraken(html_string)
       raws, str = extract_raws(normalize_input(html_string))
-      parse_cmd = str =~ /<html/i ? :parse : :fragment
+      parse_cmd = ::ActiveMail.full_document?(str) ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)
       ParseErrorReporter.new(component_instances.keys).call(html.errors)
       transform_doc(html)

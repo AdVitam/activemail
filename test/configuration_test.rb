@@ -143,6 +143,19 @@ class ConfigurationTest < ActiveMailTest
     assert ActiveMail::Configuration.new.register_inline_interceptor
   end
 
+  # The defaults are set by direct ivar assignment (bypassing the validating
+  # setters); this guards against a future default that those setters would reject.
+  def test_defaults_satisfy_their_own_validation
+    config = ActiveMail::Configuration.new
+
+    assert_kind_of ActiveMail::Inliner::Base, config.resolved_inliner
+    assert_includes ActiveMail::Configuration::ON_PARSE_ERROR_MODES, config.on_parse_error
+    assert_operator config.column_count, :>, 0
+    assert_operator config.container_width, :>, 0
+    assert_includes [true, false], config.register_inline_interceptor
+    assert_respond_to config.template_engine, :to_sym
+  end
+
   def test_register_inline_interceptor_rejects_non_boolean
     config = ActiveMail::Configuration.new
 

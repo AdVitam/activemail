@@ -36,6 +36,12 @@ module ActiveMail
     block.call(configuration)
   end
 
+  # Parse mode (and the Guard's same decision): a full document carries <html.
+  sig { params(html: String).returns(T::Boolean) }
+  def self.full_document?(html)
+    html.match?(/<html/i)
+  end
+
   # Route warnings to the app logger when present (Sentry breadcrumbs, log
   # aggregation), else $stderr — which is often dropped in production.
   sig { params(message: String).void }
