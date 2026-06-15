@@ -1,12 +1,15 @@
 // Background on both inner cell and link so the whole bulletproof button
-// (table.button > td > table > td > a) is filled and clickable.
-.button table td {
+// (table.button > td > table > td > a) is filled and clickable. Radius is applied
+// by default (progressive enhancement — clients that don't support it just ignore it),
+// keeping CSS-driven <button> consistent with the always-rounded <cta> component.
+.button table td,
+.button a {
   background: $am-button-primary-bg;
+  border-radius: $am-button-radius;
 }
 
 .button a {
   color: $am-button-color;
-  background: $am-button-primary-bg;
   font-family: $am-font-family;
   font-weight: bold;
 }
@@ -14,22 +17,19 @@
 .button.secondary table td,
 .button.secondary a {
   background: $am-button-secondary-bg;
-}
-
-// Progressive enhancement only — some clients strip border-radius.
-.button.radius table td,
-.button.radius a {
-  border-radius: $am-button-radius;
+  color: $am-button-secondary-color;
+  border: 1px solid $am-button-secondary-border;
 }
 
 // CTA mirrors the bulletproof button; colors are also inlined by the component.
-.cta table td {
+.cta table td,
+.cta a {
   background: $am-button-primary-bg;
+  border-radius: $am-button-radius;
 }
 
 .cta a {
   color: $am-button-color;
-  background: $am-button-primary-bg;
   font-family: $am-font-family;
   font-weight: bold;
 }
@@ -37,12 +37,15 @@
 .cta.secondary table td,
 .cta.secondary a {
   background: $am-button-secondary-bg;
+  color: $am-button-secondary-color;
+  border: 1px solid $am-button-secondary-border;
 }
 
 .info-box td {
-  background-color: $am-background;
-  border-left: 5px solid $am-border;
-  color: $am-text;
+  background-color: $am-info-box-bg;
+  border-left: 5px solid $am-info-box-border;
+  border-radius: $am-box-radius;
+  color: $am-info-box-text;
   padding: $am-spacing-md;
 }
 

@@ -11,7 +11,7 @@ namespace :activemail do
       path = args[:path] || 'app/assets/stylesheets/activemail/_activemail_tokens.scss'
       FileUtils.mkdir_p(File.dirname(path))
       File.write(path, ActiveMail.scss_variables)
-      puts "Wrote #{ActiveMail.tokens.colors.size + ActiveMail.tokens.fonts.size + ActiveMail.tokens.spacings.size} tokens to #{path}"
+      puts "Wrote #{ActiveMail.tokens.to_h.values.sum(&:size)} tokens to #{path}"
     end
   end
 

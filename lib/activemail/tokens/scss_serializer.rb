@@ -1,0 +1,23 @@
+# typed: strict
+# frozen_string_literal: true
+
+require 'sorbet-runtime'
+
+module ActiveMail
+  class Tokens
+    # Ruby → SCSS bridge for the token stores. Each token becomes a `$am-<group>-<name>`
+    # !default var (underscores → dashes) so a host app can pre-declare overrides upstream.
+    # Values are emitted verbatim (trusted, app-controlled input) — not escaped.
+    module ScssSerializer
+      extend T::Sig
+
+      sig { params(stores: T::Hash[Symbol, T::Hash[Symbol, String]]).returns(String) }
+      def self.call(stores)
+        lines = stores.flat_map do |group, store|
+          store.map { |name, value| "$am-#{group}-#{name.to_s.tr('_', '-')}: #{value} !default;" }
+        end
+        "#{lines.join("\n")}\n"
+      end
+    end
+  end
+end

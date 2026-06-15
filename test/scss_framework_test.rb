@@ -31,4 +31,21 @@ class ScssFrameworkTest < ActiveMailTest
   def test_settings_pull_from_the_token_bridge
     assert_includes read('_settings.scss'), 'activemail_tokens'
   end
+
+  def test_button_radius_is_token_driven_and_always_on
+    settings = read('_settings.scss')
+    components = read('_components.scss')
+
+    assert_includes settings, '$am-button-radius: $am-radius-button !default;'
+    # Radius lives on the base rule, not an opt-in .radius selector.
+    assert_match(/\.button table td,\s*\.button a \{[^}]*border-radius: \$am-button-radius;/m, components)
+    refute_match(/\.button\.radius/, components)
+  end
+
+  def test_secondary_and_info_box_mirror_their_tokens
+    components = read('_components.scss')
+
+    assert_match(/\.button\.secondary[^{]*\{[^}]*border: 1px solid \$am-button-secondary-border;/m, components)
+    assert_match(/\.info-box td \{[^}]*border-radius: \$am-box-radius;/m, components)
+  end
 end

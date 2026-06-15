@@ -2,9 +2,13 @@
 # frozen_string_literal: true
 
 require 'sorbet-runtime'
+require_relative 'tokens/button_style'
+require_relative 'tokens/scss_serializer'
 
 module ActiveMail
   # Design-tokens registry: the single Ruby source of truth, bridged to SCSS by #to_scss.
+  # Groups (color/font/spacing/radius) share one storage + emission path so adding a
+  # group costs a single GROUPS entry (Open/Closed) — no per-group duplication.
   class Tokens
     extend T::Sig
 
@@ -44,96 +48,122 @@ module ActiveMail
       TokenMap
     )
 
+    DEFAULT_RADII = T.let(
+      {
+        button: '4px',
+        box: '4px'
+      }.freeze,
+      TokenMap
+    )
+
+    # The group registry: drives initialization and SCSS emission. Add a group here
+    # and it gets storage, accessors-backing, and a $am-<group>-* bridge for free.
+    GROUPS = T.let(
+      {
+        color: DEFAULT_COLORS,
+        font: DEFAULT_FONTS,
+        spacing: DEFAULT_SPACINGS,
+        radius: DEFAULT_RADII
+      }.freeze,
+      T::Hash[Symbol, TokenMap]
+    )
+
     sig { void }
     def initialize
-      @colors = T.let(DEFAULT_COLORS.dup, TokenMap)
-      @fonts = T.let(DEFAULT_FONTS.dup, TokenMap)
-      @spacings = T.let(DEFAULT_SPACINGS.dup, TokenMap)
+      @stores = T.let(GROUPS.transform_values(&:dup), T::Hash[Symbol, TokenMap])
     end
 
     # value given → set, omitted → get. Open registry: any key is accepted (define
-    # custom tokens for custom components); color!/font!/spacing! fail loud on read.
+    # custom tokens for custom components); the bang readers fail loud on read.
     sig { params(name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
     def color(name, value = nil)
-      access(@colors, name, value)
+      access(:color, name, value)
     end
 
     sig { params(name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
     def font(name, value = nil)
-      access(@fonts, name, value)
+      access(:font, name, value)
     end
 
     sig { params(name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
     def spacing(name, value = nil)
-      access(@spacings, name, value)
+      access(:spacing, name, value)
+    end
+
+    sig { params(name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
+    def radius(name, value = nil)
+      access(:radius, name, value)
     end
 
     # Strict reads for code that must have the token (e.g. a component's inline
     # color): raise rather than interpolating nil into the CSS.
     sig { params(name: T.any(String, Symbol)).returns(String) }
     def color!(name)
-      fetch!(@colors, :color, name)
+      fetch!(:color, name)
     end
 
     sig { params(name: T.any(String, Symbol)).returns(String) }
     def font!(name)
-      fetch!(@fonts, :font, name)
+      fetch!(:font, name)
     end
 
     sig { params(name: T.any(String, Symbol)).returns(String) }
     def spacing!(name)
-      fetch!(@spacings, :spacing, name)
+      fetch!(:spacing, name)
     end
 
-    # Frozen dup: mutating the returned hash must not bypass the DSL setters.
-    sig { returns(TokenMap) }
-    def colors
-      @colors.dup.freeze
+    sig { params(name: T.any(String, Symbol)).returns(String) }
+    def radius!(name)
+      fetch!(:radius, name)
     end
 
-    sig { returns(TokenMap) }
-    def fonts
-      @fonts.dup.freeze
+    # Frozen snapshot of every group: mutating the result can't bypass the DSL setters.
+    sig { returns(T::Hash[Symbol, TokenMap]) }
+    def to_h
+      @stores.transform_values { |store| store.dup.freeze }.freeze
     end
 
-    sig { returns(TokenMap) }
-    def spacings
-      @spacings.dup.freeze
+    # Bulk-load tokens grouped by family — `tokens.load(color: {...}, radius: {...})`.
+    # Lets a host app configure everything in one block instead of line-by-line.
+    sig { params(groups: TokenMap).void }
+    def load(**groups)
+      groups.each do |group, values|
+        values.each { |name, value| access(group, name, value) }
+      end
     end
 
-    # SCSS bridge: !default lets power-users pre-declare overrides upstream.
-    # Values are emitted verbatim (trusted, app-controlled input) — not escaped.
+    # Resolves a button variant (:primary/:secondary/…) to inline-ready values.
+    sig { params(variant: T.any(String, Symbol)).returns(ButtonStyle) }
+    def button_style(variant)
+      ButtonStyle.from(self, variant)
+    end
+
     sig { returns(String) }
     def to_scss
-      lines = scss_lines('color', @colors) + scss_lines('font', @fonts) + scss_lines('spacing', @spacings)
-      "#{lines.join("\n")}\n"
+      ScssSerializer.call(@stores)
     end
 
     private
 
-    sig { params(store: TokenMap, kind: Symbol, name: T.any(String, Symbol)).returns(String) }
-    def fetch!(store, kind, name)
-      store.fetch(name.to_sym) { raise KeyError, "unknown #{kind} token #{name.inspect}" }
+    sig { params(group: Symbol).returns(TokenMap) }
+    def store_for(group)
+      @stores.fetch(group) { raise KeyError, "unknown token group #{group.inspect}" }
     end
 
-    sig { params(store: TokenMap, name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
-    def access(store, name, value)
+    sig { params(group: Symbol, name: T.any(String, Symbol)).returns(String) }
+    def fetch!(group, name)
+      store_for(group).fetch(name.to_sym) { raise KeyError, "unknown #{group} token #{name.inspect}" }
+    end
+
+    sig { params(group: Symbol, name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
+    def access(group, name, value)
+      store = store_for(group)
       key = name.to_sym
       return store[key] if value.nil?
       # Emitted verbatim into SCSS by #to_scss — reject blanks that would yield broken CSS.
       raise ArgumentError, "token #{key} value must not be blank" if value.strip.empty?
 
       store[key] = value
-    end
-
-    sig { params(group: String, store: TokenMap).returns(T::Array[String]) }
-    def scss_lines(group, store)
-      store.map { |name, value| "$am-#{group}-#{scss_name(name)}: #{value} !default;" }
-    end
-
-    sig { params(name: Symbol).returns(String) }
-    def scss_name(name)
-      name.to_s.tr('_', '-')
     end
   end
 end
