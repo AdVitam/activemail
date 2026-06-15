@@ -4,7 +4,7 @@ require 'test_helper'
 require 'minitest/mock'
 require 'tmpdir'
 require 'rake'
-require 'active_mail/quality'
+require 'activemail/quality'
 
 # The CI contract lives in the rake wrapper: abort (non-zero exit) when a
 # required preview is broken. RenderAll is unit-tested; this guards the glue.
@@ -14,7 +14,7 @@ class RenderAllRakeTest < ActiveMailTest
     @saved_app = Rake.application
     Rake.application = Rake::Application.new
     Rake::Task.define_task(:environment)
-    load File.expand_path('../../lib/tasks/active_mail.rake', __dir__)
+    load File.expand_path('../../lib/tasks/activemail.rake', __dir__)
   end
 
   def teardown
@@ -36,7 +36,7 @@ class RenderAllRakeTest < ActiveMailTest
   def test_aborts_when_a_required_preview_is_broken
     capture_io do
       stub_render_all(broken: ['mailer#welcome']) do
-        assert_raises(SystemExit) { Rake::Task['active_mail:emails:render_all'].invoke }
+        assert_raises(SystemExit) { Rake::Task['activemail:emails:render_all'].invoke }
       end
     end
   end
@@ -44,7 +44,7 @@ class RenderAllRakeTest < ActiveMailTest
   def test_does_not_abort_when_nothing_required_is_broken
     capture_io do
       stub_render_all(broken: []) do
-        Rake::Task['active_mail:emails:render_all'].invoke
+        Rake::Task['activemail:emails:render_all'].invoke
       end
     end
   end
@@ -52,7 +52,7 @@ class RenderAllRakeTest < ActiveMailTest
   def test_tokens_export_writes_the_scss_partial_creating_dirs
     Dir.mktmpdir do |dir|
       path = File.join(dir, 'nested', '_tokens.scss')
-      capture_io { Rake::Task['active_mail:tokens:export'].invoke(path) }
+      capture_io { Rake::Task['activemail:tokens:export'].invoke(path) }
 
       written = File.read(path)
       assert_includes written, '$am-color-primary:'

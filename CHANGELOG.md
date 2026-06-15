@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Simplified the gem description and README; removed legacy branding.
+- Unified the namespace to `ActiveMail` (gem name = require path = entry file =
+  namespace). Plain `require 'activemail'` now loads everything, so the
+  `require: 'active_mail'` workaround is no longer needed.
 
 ## [1.0.0] - 2026-06-13
 

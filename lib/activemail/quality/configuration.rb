@@ -48,7 +48,7 @@ module ActiveMail
       sig { void }
       def initialize
         @guard = T.let(Guard.new, Guard)
-        @output_dir = T.let('tmp/active_mail_previews', String)
+        @output_dir = T.let('tmp/activemail_previews', String)
         @required_previews = T.let([], T::Array[String])
       end
     end

@@ -1,11 +1,11 @@
 // ActiveMail email framework entry point. Critical styles are inlined by the
 // configured CSS inliner (Gmail mobile strips <style>); only media-query and
 // dark-mode enhancements stay in the <head>.
-@import "active_mail/settings";
-@import "active_mail/grid";
-@import "active_mail/components";
-@import "active_mail/utilities";
-@import "active_mail/dark";
+@import "activemail/settings";
+@import "activemail/grid";
+@import "activemail/components";
+@import "activemail/utilities";
+@import "activemail/dark";
 
 body,
 table,

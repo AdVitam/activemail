@@ -27,6 +27,6 @@ ActiveMail.configure do |config|
   # config.tokens.spacing :lg, "32px"
 
   # Register components (built-ins like ActiveMail::Components::Cta, or your own
-  # Components::* from `rails g active_mail:component`).
+  # Components::* from `rails g activemail:component`).
   # config.register_component "cta", ActiveMail::Components::Cta
 end

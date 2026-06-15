@@ -10,7 +10,7 @@ class QualityConfigurationTest < QualityTest
 
   def test_defaults
     assert_kind_of ActiveMail::Quality::Guard, @config.guard
-    assert_equal 'tmp/active_mail_previews', @config.output_dir
+    assert_equal 'tmp/activemail_previews', @config.output_dir
     assert_empty @config.required_previews
   end
 

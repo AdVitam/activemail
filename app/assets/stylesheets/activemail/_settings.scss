@@ -1,6 +1,6 @@
 // Semantic aliases mapped from the $am-* token vars. All !default so a host
 // app can pre-declare any value before importing the framework.
-@import "active_mail/active_mail_tokens";
+@import "activemail/activemail_tokens";
 
 // Typography
 $am-font-family: $am-font-body !default;

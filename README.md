@@ -7,10 +7,7 @@ tokens, automatic CSS inlining, generators, and test-time quality guards — so 
 responsive, accessible email renders **out of the box**, with every default
 overridable.
 
-> A fork and modernization of the now-unmaintained `inky-rb`.
-
-> Not affiliated with Rails core. The name echoes the `Active*` family by
-> convention only.
+A fork and modernization of the now-unmaintained `inky-rb`. Not affiliated with Rails core.
 
 Write this:
 
@@ -45,12 +42,12 @@ renders consistently from Apple Mail to Outlook (Word engine) to Gmail mobile.
 
 ```ruby
 # Gemfile
-gem 'activemail'
+gem 'activemail', '~> 1.0'
 ```
 
 ```bash
 bundle install
-bin/rails g active_mail:install
+bin/rails g activemail:install
 ```
 
 The generator drops a commented initializer, a mailer layout, and wires the
@@ -63,7 +60,7 @@ render. CSS is inlined automatically before delivery.
 ## Configuration
 
 ```ruby
-# config/initializers/active_mail.rb
+# config/initializers/activemail.rb
 ActiveMail.configure do |config|
   config.template_engine  = :erb   # underlying engine for `.html.inky` (default :erb)
   config.column_count     = 12     # grid columns (default 12)
@@ -110,22 +107,22 @@ ActiveMail.tokens.color(:primary) # => "#2a9d8f"
 
 Defaults are neutral (a calm teal `primary`, near-black `text`, white
 `background`, …) and fully overridable. Under Sprockets the SCSS bridge is a
-preprocessed partial; under Propshaft run `rake active_mail:tokens:export` to
-materialize a static `_active_mail_tokens.scss`.
+preprocessed partial; under Propshaft run `rake activemail:tokens:export` to
+materialize a static `_activemail_tokens.scss`.
 
 ## Styling
 
-The framework stylesheet lives at `active_mail/active_mail` and is themed entirely
+The framework stylesheet lives at `activemail/activemail` and is themed entirely
 by tokens — no hard-coded brand colors. It includes a fluid-hybrid grid, component
 hooks (`.button`, `.cta`, `.callout`, `.spacer`, …), utilities, and dark mode.
 
 Override at three levels, cheapest first:
 
 1. **Tokens** (Ruby) — covers most theming.
-2. **`bin/rails g active_mail:styles`** — eject the SCSS partials into your app to
+2. **`bin/rails g activemail:styles`** — eject the SCSS partials into your app to
    edit them; your copies shadow the gem's.
-3. **`bin/rails g active_mail:views`** — eject the default layout + partials
-   (`app/views/layouts/active_mail/*`); a same-named file in your app wins by
+3. **`bin/rails g activemail:views`** — eject the default layout + partials
+   (`app/views/layouts/activemail/*`); a same-named file in your app wins by
    Rails path precedence. Put your logo/header/footer here — those are the app's
    identity, not the gem's.
 
@@ -267,7 +264,7 @@ the matched Nokogiri node (full DOM access) and the already-transformed inner
 HTML; return the replacement markup string. The generator scaffolds one:
 
 ```bash
-bin/rails g active_mail:component Divider
+bin/rails g activemail:component Divider
 ```
 
 The generator namespaces the class as `Components::Divider` (under
@@ -299,19 +296,19 @@ ActiveMail::Core.new(components: { 'button' => MyButton }).release_the_kraken(so
 
 | Generator | Purpose |
 |---|---|
-| `active_mail:install` | Initializer + mailer layout + stylesheet wiring (works zero-config). `--haml` / `--slim` supported. |
-| `active_mail:views` | Eject the default layout + partials for customization. |
-| `active_mail:styles` | Eject the SCSS framework partials for customization. |
-| `active_mail:component NAME` | Scaffold a component class + print its register snippet. |
+| `activemail:install` | Initializer + mailer layout + stylesheet wiring (works zero-config). `--haml` / `--slim` supported. |
+| `activemail:views` | Eject the default layout + partials for customization. |
+| `activemail:styles` | Eject the SCSS framework partials for customization. |
+| `activemail:component NAME` | Scaffold a component class + print its register snippet. |
 
 ## Testing & quality
 
-An **opt-in** layer (never loaded by `require 'active_mail'`). Require it from your
+An **opt-in** layer (never loaded by `require 'activemail'`). Require it from your
 test suite.
 
 ```ruby
 # Minitest — require the assertions module explicitly:
-require 'active_mail/quality/minitest'
+require 'activemail/quality/minitest'
 
 class MailerTest < ActiveSupport::TestCase
   include ActiveMail::Quality::Minitest
@@ -324,7 +321,7 @@ end
 
 ```ruby
 # RSpec — require the matcher (registers be_a_valid_email when RSpec is loaded):
-require 'active_mail/quality/rspec'
+require 'activemail/quality/rspec'
 
 expect(rendered_html).to be_a_valid_email
 ```
@@ -340,7 +337,7 @@ ActiveMail::Quality.configure do |c|
 end
 ```
 
-`rake active_mail:emails:render_all` renders every ActionMailer preview to disk
+`rake activemail:emails:render_all` renders every ActionMailer preview to disk
 for visual diffing and fails on any guard violation among `required_previews`.
 
 ## Email-client compatibility policy

@@ -2,7 +2,7 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'active_mail/version'
+require 'activemail/version'
 
 Gem::Specification.new do |s|
   s.name        = 'activemail'

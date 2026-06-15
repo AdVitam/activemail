@@ -4,7 +4,7 @@
     <spacer size="24"></spacer>
     <h-line></h-line>
     <p class="text-muted text-center">
-      <%= I18n.t("active_mail.footer.sent_with", default: "Sent with ActiveMail") %>
+      <%= I18n.t("activemail.footer.sent_with", default: "Sent with ActiveMail") %>
     </p>
   </columns>
 </row>

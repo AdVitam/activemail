@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
-require 'active_mail'
+require 'activemail'
 
 module ActiveMailTestHelpers
   # Normalize generated and expected HTML so comparisons ignore insignificant

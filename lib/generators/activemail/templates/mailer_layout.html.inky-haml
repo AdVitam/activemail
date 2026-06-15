@@ -8,9 +8,9 @@
     %meta{name: "supported-color-schemes", content: "light dark"}
     :plain
       <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
-    = active_mail_inline_styles
-    -# Fallback for when active_mail_inline_styles cannot read the compiled asset.
-    = stylesheet_link_tag "active_mail/active_mail", media: "all"
+    = activemail_inline_styles
+    -# Fallback for when activemail_inline_styles cannot read the compiled asset.
+    = stylesheet_link_tag "activemail/activemail", media: "all"
   %body{style: "margin:0;padding:0;word-spacing:normal;"}
     %div{role: "article", "aria-roledescription" => "email", lang: I18n.locale, style: "width:100%;"}
       %container

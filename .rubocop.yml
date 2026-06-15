@@ -6,7 +6,7 @@ AllCops:
     - 'sorbet/**/*'
     - 'vendor/**/*'
     - 'tmp/**/*'
-    - 'lib/generators/active_mail/templates/**/*'
+    - 'lib/generators/activemail/templates/**/*'
 
 Layout/LineLength:
   Max: 160

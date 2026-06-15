@@ -6,7 +6,7 @@ require 'tmpdir'
 require 'uri'
 require 'action_view'
 require 'action_view/base'
-require 'active_mail/rails/template_handler'
+require 'activemail/rails/template_handler'
 
 class TemplateHandlerTest < ActiveMailTest
   def test_inky_handler_is_registered

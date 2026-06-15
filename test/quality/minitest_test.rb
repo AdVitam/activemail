@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'quality_test_helper'
-require 'active_mail/quality/minitest'
+require 'activemail/quality/minitest'
 
 class MinitestQualityTest < QualityTest
   include ActiveMail::Quality::Minitest

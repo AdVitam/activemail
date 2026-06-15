@@ -13,7 +13,7 @@ module ActiveMail
       class_option :slim, desc: 'Generate the layout in Slim', type: :boolean
 
       def create_initializer
-        template 'initializer.rb', File.join('config', 'initializers', 'active_mail.rb')
+        template 'initializer.rb', File.join('config', 'initializers', 'activemail.rb')
       end
 
       # A plain mailer.html.erb would win over the generated inky layout; keep it.
@@ -31,12 +31,12 @@ module ActiveMail
 
       def show_readme
         say "\nActiveMail installed.", :green
-        say '  • config/initializers/active_mail.rb — configure tokens, inliner, components.'
+        say '  • config/initializers/activemail.rb — configure tokens, inliner, components.'
         say "  • app/views/layouts/#{layout_name.underscore}.html.inky-#{extension} — your mailer layout."
         say "\nPoint your mailers at the layout, e.g. `layout \"#{layout_name.underscore}\"`, and"
         say "name views *.html.inky-#{extension} to enable ActiveMail markup."
         say "\nCustomize styling via Ruby tokens in the initializer (config.tokens.color/font/spacing),"
-        say 'or run `rails g active_mail:styles` to eject and edit the SCSS partials.'
+        say 'or run `rails g activemail:styles` to eject and edit the SCSS partials.'
       end
 
       private
