@@ -2,13 +2,13 @@
 
 require 'test_helper'
 require 'tmpdir'
-require 'active_mail/rails/compiled_stylesheet'
+require 'activemail/rails/compiled_stylesheet'
 
 # CompiledStylesheet probes whichever pipeline the host runs (Sprockets or
 # Propshaft) by duck-type; both shapes and the miss path are covered with fakes so
 # the test needs no Rails boot.
 class CompiledStylesheetTest < ActiveMailTest
-  LOGICAL = 'active_mail/active_mail.css'
+  LOGICAL = 'activemail/activemail.css'
   CSS = '.container{max-width:600px}'
 
   def teardown
@@ -24,7 +24,7 @@ class CompiledStylesheetTest < ActiveMailTest
 
   def test_reads_propshaft_source
     Dir.mktmpdir do |dir|
-      path = File.join(dir, 'active_mail.css')
+      path = File.join(dir, 'activemail.css')
       File.write(path, CSS)
       stub_rails(propshaft_assets(path))
 

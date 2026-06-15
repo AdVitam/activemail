@@ -9,7 +9,7 @@ require_relative 'quality/preview_renderer'
 
 module ActiveMail
   # Opt-in email-quality layer. Host apps require this explicitly from their test
-  # suite; `require 'active_mail'` must NOT pull it in.
+  # suite; `require 'activemail'` must NOT pull it in.
   module Quality
     extend T::Sig
 

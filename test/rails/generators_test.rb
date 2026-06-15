@@ -7,16 +7,16 @@ require 'tmpdir'
 require 'uri'
 require 'action_view'
 require 'action_view/base'
-require 'active_mail/rails/template_handler'
-require 'active_mail/rails/compiled_stylesheet'
-require File.expand_path('../../app/helpers/active_mail/styles_helper', __dir__)
+require 'activemail/rails/template_handler'
+require 'activemail/rails/compiled_stylesheet'
+require File.expand_path('../../app/helpers/activemail/styles_helper', __dir__)
 require 'rails/generators'
 require 'rails/generators/test_case'
 
-require 'generators/active_mail/install_generator'
-require 'generators/active_mail/views_generator'
-require 'generators/active_mail/styles_generator'
-require 'generators/active_mail/component_generator'
+require 'generators/activemail/install_generator'
+require 'generators/activemail/views_generator'
+require 'generators/activemail/styles_generator'
+require 'generators/activemail/component_generator'
 
 module ActiveMailGeneratorTestHelpers
   def file_content(relative)
@@ -32,32 +32,32 @@ class InstallGeneratorTest < Rails::Generators::TestCase
   include ActiveMailGeneratorTestHelpers
 
   tests ActiveMail::Generators::InstallGenerator
-  destination File.join(Dir.tmpdir, 'active_mail_install')
+  destination File.join(Dir.tmpdir, 'activemail_install')
   setup :prepare_destination
 
   def test_creates_initializer_and_layout
     run_generator
 
-    assert_generated 'config/initializers/active_mail.rb'
+    assert_generated 'config/initializers/activemail.rb'
     assert_generated 'app/views/layouts/mailer.html.inky-erb'
 
-    assert_includes file_content('config/initializers/active_mail.rb'), 'ActiveMail.configure do |config|'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'stylesheet_link_tag "active_mail/active_mail"'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'active_mail_inline_styles'
+    assert_includes file_content('config/initializers/activemail.rb'), 'ActiveMail.configure do |config|'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'stylesheet_link_tag "activemail/activemail"'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'activemail_inline_styles'
     assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), '<container>'
   end
 
   def test_does_not_create_a_host_stylesheet_entry
     run_generator
 
-    refute File.exist?(File.join(destination_root, 'app/assets/stylesheets/active_mail.scss'))
+    refute File.exist?(File.join(destination_root, 'app/assets/stylesheets/activemail.scss'))
   end
 
   def test_haml_option_generates_haml_layout
     run_generator ['mailer', '--haml']
 
     assert_generated 'app/views/layouts/mailer.html.inky-haml'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'stylesheet_link_tag "active_mail/active_mail"'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'stylesheet_link_tag "activemail/activemail"'
   end
 
   def test_slim_option_generates_slim_layout
@@ -108,15 +108,15 @@ class ViewsGeneratorTest < Rails::Generators::TestCase
   include ActiveMailGeneratorTestHelpers
 
   tests ActiveMail::Generators::ViewsGenerator
-  destination File.join(Dir.tmpdir, 'active_mail_views')
+  destination File.join(Dir.tmpdir, 'activemail_views')
   setup :prepare_destination
 
   def test_ejects_default_layout_and_partials
     run_generator
 
-    assert_generated 'app/views/layouts/active_mail/mailer.html.inky-erb'
-    assert_generated 'app/views/layouts/active_mail/_head.html.inky-erb'
-    assert_generated 'app/views/layouts/active_mail/_footer.html.inky-erb'
+    assert_generated 'app/views/layouts/activemail/mailer.html.inky-erb'
+    assert_generated 'app/views/layouts/activemail/_head.html.inky-erb'
+    assert_generated 'app/views/layouts/activemail/_footer.html.inky-erb'
   end
 end
 
@@ -124,21 +124,21 @@ class StylesGeneratorTest < Rails::Generators::TestCase
   include ActiveMailGeneratorTestHelpers
 
   tests ActiveMail::Generators::StylesGenerator
-  destination File.join(Dir.tmpdir, 'active_mail_styles')
+  destination File.join(Dir.tmpdir, 'activemail_styles')
   setup :prepare_destination
 
   def test_ejects_framework_scss_partials
     run_generator
 
-    assert_generated 'app/assets/stylesheets/active_mail/active_mail.scss'
-    assert_generated 'app/assets/stylesheets/active_mail/_grid.scss'
-    assert_generated 'app/assets/stylesheets/active_mail/_components.scss'
+    assert_generated 'app/assets/stylesheets/activemail/activemail.scss'
+    assert_generated 'app/assets/stylesheets/activemail/_grid.scss'
+    assert_generated 'app/assets/stylesheets/activemail/_components.scss'
   end
 
   def test_does_not_eject_the_erb_token_bridge
     run_generator
 
-    refute File.exist?(File.join(destination_root, 'app/assets/stylesheets/active_mail/_active_mail_tokens.scss.erb'))
+    refute File.exist?(File.join(destination_root, 'app/assets/stylesheets/activemail/_activemail_tokens.scss.erb'))
   end
 end
 
@@ -159,7 +159,7 @@ class EngineDefaultLayoutTest < ActiveMailTest
       # A real app auto-includes the engine's app/helpers into mailer views.
       view.extend(ActiveMail::StylesHelper)
 
-      html = view.render(template: 'mailers/sample', layout: 'layouts/active_mail/mailer')
+      html = view.render(template: 'mailers/sample', layout: 'layouts/activemail/mailer')
 
       assert_includes html, 'BODY_CONTENT'
       # _head emits a <spacer size="24">, _footer an <h-line>; both expand to tables.
@@ -175,7 +175,7 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
   include ActiveMailGeneratorTestHelpers
 
   tests ActiveMail::Generators::ComponentGenerator
-  destination File.join(Dir.tmpdir, 'active_mail_component')
+  destination File.join(Dir.tmpdir, 'activemail_component')
   setup :prepare_destination
 
   def test_scaffolds_a_component_class

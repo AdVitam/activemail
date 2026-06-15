@@ -16,19 +16,19 @@
     </noscript>
     <![endif]-->
     <%# Embedded so the Premailer adapter (HTML-string only) can inline the framework CSS. %>
-    <%= active_mail_inline_styles %>
-    <%# Fallback for when active_mail_inline_styles cannot read the compiled asset %>
+    <%= activemail_inline_styles %>
+    <%# Fallback for when activemail_inline_styles cannot read the compiled asset %>
     <%# (CDN-only host, compile=false without precompile); redundant otherwise, as the %>
     <%# embed's rules are idempotent once inlined. %>
-    <%= stylesheet_link_tag "active_mail/active_mail", media: "all" %>
+    <%= stylesheet_link_tag "activemail/activemail", media: "all" %>
   </head>
 
   <body style="margin:0;padding:0;word-spacing:normal;">
     <div role="article" aria-roledescription="email" lang="<%= I18n.locale %>" style="width:100%;">
       <container>
-        <%= render "layouts/active_mail/head" %>
+        <%= render "layouts/activemail/head" %>
         <%= yield %>
-        <%= render "layouts/active_mail/footer" %>
+        <%= render "layouts/activemail/footer" %>
       </container>
     </div>
   </body>

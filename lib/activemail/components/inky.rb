@@ -5,7 +5,7 @@ require_relative 'base'
 
 module ActiveMail
   module Components
-    # Renders a bare <tr> (mirrors inky.js).
+    # Renders a bare <tr>, useful inside hand-written tables.
     class Inky < Base
       extend T::Sig
 

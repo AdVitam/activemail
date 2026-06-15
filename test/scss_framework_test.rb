@@ -7,17 +7,17 @@ require 'test_helper'
 # (gutter overflow, collapse selector, container_width) is proven by the
 # render-validation harness in scss_render_harness_test.rb.
 class ScssFrameworkTest < ActiveMailTest
-  SCSS_DIR = File.expand_path('../app/assets/stylesheets/active_mail', __dir__)
+  SCSS_DIR = File.expand_path('../app/assets/stylesheets/activemail', __dir__)
 
   def read(partial)
     File.read(File.join(SCSS_DIR, partial))
   end
 
   def test_entry_imports_every_partial
-    entry = read('active_mail.scss')
+    entry = read('activemail.scss')
 
     %w[settings grid components utilities dark].each do |partial|
-      assert_includes entry, %(@import "active_mail/#{partial}"), "active_mail.scss must import #{partial}"
+      assert_includes entry, %(@import "activemail/#{partial}"), "activemail.scss must import #{partial}"
     end
   end
 
@@ -29,6 +29,6 @@ class ScssFrameworkTest < ActiveMailTest
   end
 
   def test_settings_pull_from_the_token_bridge
-    assert_includes read('_settings.scss'), 'active_mail_tokens'
+    assert_includes read('_settings.scss'), 'activemail_tokens'
   end
 end

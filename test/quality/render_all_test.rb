@@ -3,7 +3,7 @@
 require_relative 'quality_test_helper'
 require 'tmpdir'
 require 'mail'
-require 'active_mail/quality/render_all'
+require 'activemail/quality/render_all'
 
 class RenderAllTest < QualityTest
   CLEAN = <<~HTML.freeze

@@ -9,9 +9,9 @@ require 'tmpdir'
 require 'uri'
 require 'action_view'
 require 'action_view/base'
-require 'active_mail/rails/template_handler'
-require 'active_mail/rails/compiled_stylesheet'
-require File.expand_path('../app/helpers/active_mail/styles_helper', __dir__)
+require 'activemail/rails/template_handler'
+require 'activemail/rails/compiled_stylesheet'
+require File.expand_path('../app/helpers/activemail/styles_helper', __dir__)
 
 # Render-validation harness: compiles the shipped framework SCSS and validates the
 # *rendered + inlined* output, so the styling/inlining regressions (gutter
@@ -108,7 +108,7 @@ class ScssRenderHarnessTest < ActiveMailTest
         view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
         view.extend(ActiveMail::StylesHelper)
 
-        view.render(template: 'mailers/sample', layout: 'layouts/active_mail/mailer')
+        view.render(template: 'mailers/sample', layout: 'layouts/activemail/mailer')
       end
     end
   end

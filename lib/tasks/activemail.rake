@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'active_mail'
+require 'activemail'
 require 'fileutils'
 
-namespace :active_mail do
+namespace :activemail do
   namespace :tokens do
     desc 'Export design tokens to a static SCSS partial (for Propshaft apps that cannot preprocess .scss.erb)'
     # :environment so the host initializer's config.tokens overrides are loaded.
     task :export, [:path] => :environment do |_task, args|
-      path = args[:path] || 'app/assets/stylesheets/active_mail/_active_mail_tokens.scss'
+      path = args[:path] || 'app/assets/stylesheets/activemail/_activemail_tokens.scss'
       FileUtils.mkdir_p(File.dirname(path))
       File.write(path, ActiveMail.scss_variables)
       puts "Wrote #{ActiveMail.tokens.colors.size + ActiveMail.tokens.fonts.size + ActiveMail.tokens.spacings.size} tokens to #{path}"
@@ -18,7 +18,7 @@ namespace :active_mail do
   namespace :emails do
     desc 'Render every host mailer preview to disk and run the quality guard on each'
     task render_all: :environment do
-      require 'active_mail/quality/render_all'
+      require 'activemail/quality/render_all'
 
       config = ActiveMail::Quality.config
       output_root = defined?(Rails) && Rails.respond_to?(:root) ? Rails.root.join(config.output_dir) : Pathname(config.output_dir)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'quality_test_helper'
-require 'active_mail/quality/rspec'
+require 'activemail/quality/rspec'
 
 # Tests the matcher object directly — no RSpec boot required.
 class RspecMatcherTest < QualityTest

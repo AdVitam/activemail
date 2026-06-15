@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 module Components
-  # Register in config/initializers/active_mail.rb:
+  # Register in config/initializers/activemail.rb:
   #   config.register_component "<%= tag_name %>", Components::<%= class_name %>
   class <%= class_name %> < ActiveMail::Components::Base
     def transform(node, inner)
