@@ -26,8 +26,8 @@ $am-info-box-border: $am-border !default;
 $am-info-box-text: $am-text !default;
 $am-box-radius: $am-radius-box !default;
 
-// Grid
-// Width follows config.container_width via the token bridge so the SCSS grid stays
+// Grid — the gem emits no gutters; we provide them via column padding. Width
+// follows config.container_width via the token bridge so the SCSS grid stays
 // aligned with the transpiled markup (ghost tables, column max-width).
 $am-container-width: $am-grid-container-width !default;
 $am-gutter: $am-spacing-sm !default;

@@ -10,7 +10,7 @@ module ActiveMail
     module ScssSerializer
       extend T::Sig
 
-      sig { params(stores: T::Hash[Symbol, T::Hash[Symbol, String]]).returns(String) }
+      sig { params(stores: T::Hash[Symbol, TokenMap]).returns(String) }
       def self.call(stores)
         lines = stores.flat_map do |group, store|
           store.map { |name, value| "$am-#{group}-#{name.to_s.tr('_', '-')}: #{value} !default;" }
