@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, master, main]
+  pull_request:
+
+jobs:
+  test:
+    name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.2', '3.3', '3.4']
+        rails: ['7.1', '8.0', '8.1']
+        include:
+          - ruby: '4.0'
+            rails: '8.1'
+    env:
+      RAILS_VERSION: "~> ${{ matrix.rails }}.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Run tests
+        run: bundle exec rake test
+
+  lint:
+    name: Rubocop and Sorbet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+          bundler-cache: true
+      - name: Rubocop
+        run: bundle exec rubocop
+      - name: Sorbet
+        run: bundle exec srb tc

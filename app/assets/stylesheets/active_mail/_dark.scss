@@ -1,0 +1,123 @@
+// Dark mode: prefers-color-scheme (Apple Mail/iOS) + [data-ogsc] (Outlook
+// Android). Colors derived from tokens — pure black/white crush contrast.
+
+$am-dark-bg: mix($am-color-text, $am-color-background, 96%) !default;
+$am-dark-surface: mix($am-color-text, $am-color-background, 92%) !default;
+$am-dark-panel: mix($am-color-text, $am-color-background, 82%) !default;
+$am-dark-text: mix($am-color-background, $am-color-text, 88%) !default;
+$am-dark-muted: $am-color-muted !default;
+$am-dark-link: $am-color-primary !default;
+
+@mixin am-dark-rules {
+  .body,
+  body {
+    background-color: $am-dark-bg !important;
+  }
+
+  .container,
+  .wrapper-inner {
+    background-color: $am-dark-surface !important;
+  }
+
+  body,
+  p,
+  li,
+  td,
+  th,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: $am-dark-text !important;
+  }
+
+  a {
+    color: $am-dark-link !important;
+  }
+
+  .button table td,
+  .button a,
+  .cta table td,
+  .cta a {
+    background: $am-color-primary !important;
+    color: $am-color-button-text !important;
+  }
+
+  // Keep the secondary variant's color — the primary rule above would erase it.
+  .button.secondary table td,
+  .button.secondary a,
+  .cta.secondary table td,
+  .cta.secondary a {
+    background: $am-color-secondary !important;
+  }
+
+  // Panels keep their inline background unless overridden here, which would
+  // otherwise leave dark text on a dark background.
+  .callout-inner,
+  .info-box,
+  .info-box td {
+    background-color: $am-dark-panel !important;
+    border-left-color: $am-dark-muted !important;
+    color: $am-dark-text !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @include am-dark-rules;
+}
+
+// Always-true feature query: inliners drop bare [data-ogsc] rules (no element
+// matches) but preserve conditioned media queries.
+@media screen and (max-width: 9999px) {
+  [data-ogsc] .body,
+  body[data-ogsc] {
+    background-color: $am-dark-bg !important;
+  }
+
+  [data-ogsc] .container,
+  [data-ogsc] .wrapper-inner {
+    background-color: $am-dark-surface !important;
+  }
+
+  [data-ogsc] p,
+  [data-ogsc] li,
+  [data-ogsc] td,
+  [data-ogsc] th,
+  [data-ogsc] h1,
+  [data-ogsc] h2,
+  [data-ogsc] h3,
+  [data-ogsc] h4,
+  [data-ogsc] h5,
+  [data-ogsc] h6 {
+    color: $am-dark-text !important;
+  }
+
+  [data-ogsc] a {
+    color: $am-dark-link !important;
+  }
+
+  [data-ogsc] .button table td,
+  [data-ogsc] .button a,
+  [data-ogsc] .cta table td,
+  [data-ogsc] .cta a {
+    background: $am-color-primary !important;
+    color: $am-color-button-text !important;
+  }
+
+  [data-ogsc] .button.secondary table td,
+  [data-ogsc] .button.secondary a,
+  [data-ogsc] .cta.secondary table td,
+  [data-ogsc] .cta.secondary a {
+    background: $am-color-secondary !important;
+  }
+
+  [data-ogsc] .callout-inner,
+  [data-ogsc] .info-box,
+  [data-ogsc] .info-box td {
+    background-color: $am-dark-panel !important;
+    border-left-color: $am-dark-muted !important;
+    color: $am-dark-text !important;
+  }
+}

@@ -1,0 +1,71 @@
+# frozen_string_literal: true
+
+require 'test_helper'
+require 'tmpdir'
+# ActionView 7.1 references URI without requiring it (NameError on Ruby 3.3+ outside a full Rails app).
+require 'uri'
+require 'action_view'
+require 'action_view/base'
+require 'active_mail/rails/template_handler'
+
+class TemplateHandlerTest < ActiveMailTest
+  def test_inky_handler_is_registered
+    handler = ActionView::Template.registered_template_handler(:inky)
+
+    assert_instance_of ActiveMail::Rails::TemplateHandler, handler
+  end
+
+  def test_composed_handlers_are_registered_for_existing_engines
+    handler = ActionView::Template.registered_template_handler(:'inky-erb')
+
+    assert_instance_of ActiveMail::Rails::TemplateHandler, handler
+  end
+
+  def test_composer_auto_registers_inky_variant_for_a_newly_registered_engine
+    ActionView::Template.register_template_handler(:am_fake, ->(_t, _s) { '"x"' })
+
+    assert_instance_of ActiveMail::Rails::TemplateHandler,
+                       ActionView::Template.registered_template_handler(:'inky-am_fake')
+  ensure
+    ActionView::Template.unregister_template_handler(:am_fake)
+    ActionView::Template.unregister_template_handler(:'inky-am_fake')
+  end
+
+  def test_call_wraps_the_underlying_engine_output_with_inky
+    handler = ActionView::Template.registered_template_handler(:inky)
+    template = ActionView::Template.new('<container></container>', 'test', handler, locals: [], format: :html)
+    compiled = handler.call(template, '<container></container>')
+
+    assert_includes compiled, 'ActiveMail::Core.new.release_the_kraken'
+  end
+
+  def test_engine_handler_raises_for_unknown_engine
+    ActiveMail.configuration.template_engine = :does_not_exist
+    handler = ActiveMail::Rails::TemplateHandler.new
+
+    assert_raises(RuntimeError) { handler.engine_handler }
+  end
+
+  def test_initialize_raises_when_compose_with_does_not_resolve
+    assert_raises(ArgumentError) { ActiveMail::Rails::TemplateHandler.new(:does_not_exist) }
+  end
+
+  def test_renders_an_inky_template_through_action_view
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, 'mail.html.inky'), "<container><row><columns><%= 'Hello' %></columns></row></container>")
+      lookup = ActionView::LookupContext.new([dir])
+      view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
+      html = view.render(template: 'mail')
+
+      assert_includes html, 'class="container"'
+      assert_includes html, 'Hello'
+      assert_includes html, 'role="presentation"'
+    end
+  end
+
+  def test_output_is_html_safe_when_active_support_is_loaded
+    output = ActiveMail::Core.new.release_the_kraken('<row></row>')
+
+    assert_predicate output, :html_safe?
+  end
+end

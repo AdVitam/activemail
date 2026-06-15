@@ -1,0 +1,47 @@
+// Alignment and visibility utilities.
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-muted {
+  color: $am-muted;
+}
+
+.float-center {
+  margin: 0 auto;
+  float: none;
+  text-align: center;
+}
+
+// Shown only on large screens. Hidden by default (mobile-first); the media
+// query below reveals it as an enhancement.
+.show-for-large {
+  display: none;
+  font-size: 0;
+  max-height: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+@media only screen and (min-width: 596px) {
+  .show-for-large {
+    display: block !important;
+    font-size: inherit;
+    max-height: none;
+    line-height: inherit;
+    overflow: visible;
+  }
+
+  .hide-for-large {
+    display: none !important;
+  }
+}

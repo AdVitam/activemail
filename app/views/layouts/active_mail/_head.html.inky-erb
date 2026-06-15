@@ -1,0 +1,6 @@
+<%# Header slot — hosts override this partial to add a logo/banner. %>
+<row>
+  <columns>
+    <spacer size="16"></spacer>
+  </columns>
+</row>

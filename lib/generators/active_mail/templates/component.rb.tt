@@ -1,0 +1,13 @@
+# typed: false
+# frozen_string_literal: true
+
+module Components
+  # Register in config/initializers/active_mail.rb:
+  #   config.register_component "<%= tag_name %>", Components::<%= class_name %>
+  class <%= class_name %> < ActiveMail::Components::Base
+    def transform(node, inner)
+      classes = combine_classes(node, "<%= tag_name %>")
+      %(<table class="#{classes}" #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table>)
+    end
+  end
+end

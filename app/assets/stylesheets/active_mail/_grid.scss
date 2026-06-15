@@ -1,0 +1,49 @@
+// Gutters are unconditional padding (inlined by the CSS inliner): the gem emits
+// none, and they must not depend on media queries (stripped by Gmail mobile).
+
+.container {
+  width: 100%;
+  max-width: $am-container-width;
+  margin: 0 auto;
+}
+
+.body {
+  width: 100%;
+}
+
+.row {
+  width: 100%;
+}
+
+// Gutters: half on each side, outer edges collapsed via first/last so content
+// stays flush with the container.
+// box-sizing keeps the gutter inside the inline max-width — without it a 300px
+// 2-col cell + 8px padding becomes 316px and the row overflows ~616px, wrapping
+// in clients that honor inline padding.
+.columns {
+  box-sizing: border-box;
+  padding-left: $am-gutter;
+  padding-right: $am-gutter;
+}
+
+.columns.first {
+  padding-left: 0;
+}
+
+.columns.last {
+  padding-right: 0;
+}
+
+// A single full-width column carries no side gutter.
+.columns.first.last {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+// Collapse removes gutters on demand (e.g. edge-to-edge images). Columns are not
+// direct children of .row — the real markup nests them as <th class="columns">
+// under tbody > tr — so this must be a descendant selector, not a child one.
+.row.collapse .columns {
+  padding-left: 0;
+  padding-right: 0;
+}
