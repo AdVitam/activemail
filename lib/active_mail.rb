@@ -109,8 +109,9 @@ module ActiveMail
     def extract_raws(string)
       raws = []
       i = 0
-      # Captures everything between non-nested raw tags, across lines.
-      regex = %r{(?:\n *)?< *raw *>([\s\S]*?)</ *raw *>(?: *\n)?}i
+      # Only the tags + content, across lines: surrounding whitespace is left in
+      # place (true pass-through; eating adjacent newlines corrupts <pre>/inline text).
+      regex = %r{< *raw *>([\s\S]*?)</ *raw *>}i
       str = string
       while (raw = str.match(regex))
         raws[i] = T.must(raw[1])

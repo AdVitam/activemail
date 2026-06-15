@@ -158,6 +158,13 @@ class RawTest < ActiveMailTest
     assert_includes output, payload
   end
 
+  def test_raw_preserves_surrounding_whitespace
+    output = render("<pre>a\n<raw>b</raw>\nc</pre>")
+
+    assert_includes output, "a\n", 'newline before <raw> must survive'
+    assert_includes output, "\nc", 'newline after </raw> must survive'
+  end
+
   def test_multiple_raw_blocks
     output = render('<div><raw><a></raw><button href="#">b</button><raw><c></raw></div>')
 
