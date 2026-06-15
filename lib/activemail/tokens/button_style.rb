@@ -5,8 +5,7 @@ require 'sorbet-runtime'
 
 module ActiveMail
   class Tokens
-    # Resolved appearance of a button variant — consumed by the Cta component and
-    # mirrored by the .cta/.button SCSS. `border` nil means "no outline".
+    # `border` nil means "no outline".
     class ButtonStyle < T::Struct
       extend T::Sig
 
@@ -15,8 +14,7 @@ module ActiveMail
       const :radius, String
       const :border, T.nilable(String)
 
-      # Resolves a variant (:primary/:secondary/…) from a token registry. color
-      # falls back to :button_text; border is opt-in (a "<variant>_border" token).
+      # color falls back to :button_text; border is opt-in (a "<variant>_border" token).
       sig { params(tokens: ActiveMail::Tokens, variant: T.any(String, Symbol)).returns(ButtonStyle) }
       def self.from(tokens, variant)
         new(

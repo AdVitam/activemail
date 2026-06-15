@@ -10,7 +10,7 @@ module ActiveMail
     class Cta < Base
       extend T::Sig
 
-      sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
+      sig { override.overridable.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         # A CTA without a link is an authoring bug — surface it at render time.
         raise ArgumentError, '<cta> requires an href attribute' if node.attr('href').to_s.strip.empty?

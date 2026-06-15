@@ -36,7 +36,6 @@ module ActiveMail
       # Layout tables: presentation role (a11y) and zeroed legacy spacing.
       TABLE_RESET = 'role="presentation" border="0" cellpadding="0" cellspacing="0"'
 
-      # Click-target padding shared by <button> and <cta> anchors.
       BUTTON_PADDING = 'padding:12px 24px;'
 
       sig { params(core: ::ActiveMail::Core).void }
@@ -108,9 +107,7 @@ module ActiveMail
         node.attributes['target'] ? %( target="#{escape_attr(node.attributes['target'])}") : ''
       end
 
-      # Shared bulletproof-button scaffold (nested presentation tables + cell).
-      # Both <button> (CSS-driven) and <cta> (inline token styles) build on it, so
-      # the Outlook-safe structure lives in exactly one place.
+      # Outlook-safe nested-table structure kept in one place for <button> and <cta>.
       sig do
         params(outer_classes: String, inner: String, cell_style: String, outer_extra: String).returns(String)
       end

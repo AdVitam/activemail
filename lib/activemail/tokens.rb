@@ -6,9 +6,6 @@ require_relative 'tokens/button_style'
 require_relative 'tokens/scss_serializer'
 
 module ActiveMail
-  # Design-tokens registry: the single Ruby source of truth, bridged to SCSS by #to_scss.
-  # Groups (color/font/spacing/radius) share one storage + emission path so adding a
-  # group costs a single GROUPS entry (Open/Closed) — no per-group duplication.
   class Tokens
     extend T::Sig
 
@@ -56,8 +53,7 @@ module ActiveMail
       TokenMap
     )
 
-    # The group registry: drives initialization and SCSS emission. Add a group here
-    # and it gets storage, accessors-backing, and a $am-<group>-* bridge for free.
+    # Open/Closed: adding a group here is the only change needed to wire it everywhere.
     GROUPS = T.let(
       {
         color: DEFAULT_COLORS,
@@ -73,8 +69,6 @@ module ActiveMail
       @stores = T.let(GROUPS.transform_values(&:dup), T::Hash[Symbol, TokenMap])
     end
 
-    # value given → set, omitted → get. Open registry: any key is accepted (define
-    # custom tokens for custom components); the bang readers fail loud on read.
     sig { params(name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
     def color(name, value = nil)
       access(:color, name, value)
@@ -95,8 +89,7 @@ module ActiveMail
       access(:radius, name, value)
     end
 
-    # Strict reads for code that must have the token (e.g. a component's inline
-    # color): raise rather than interpolating nil into the CSS.
+    # Raise rather than interpolating nil into the CSS.
     sig { params(name: T.any(String, Symbol)).returns(String) }
     def color!(name)
       fetch!(:color, name)
@@ -117,14 +110,12 @@ module ActiveMail
       fetch!(:radius, name)
     end
 
-    # Frozen snapshot of every group: mutating the result can't bypass the DSL setters.
+    # Frozen snapshot: mutating the result can't bypass the DSL setters.
     sig { returns(T::Hash[Symbol, TokenMap]) }
     def to_h
       @stores.transform_values { |store| store.dup.freeze }.freeze
     end
 
-    # Bulk-load tokens grouped by family — `tokens.load(color: {...}, radius: {...})`.
-    # Lets a host app configure everything in one block instead of line-by-line.
     sig { params(groups: TokenMap).void }
     def load(**groups)
       groups.each do |group, values|
@@ -132,7 +123,6 @@ module ActiveMail
       end
     end
 
-    # Resolves a button variant (:primary/:secondary/…) to inline-ready values.
     sig { params(variant: T.any(String, Symbol)).returns(ButtonStyle) }
     def button_style(variant)
       ButtonStyle.from(self, variant)
@@ -160,7 +150,7 @@ module ActiveMail
       store = store_for(group)
       key = name.to_sym
       return store[key] if value.nil?
-      # Emitted verbatim into SCSS by #to_scss — reject blanks that would yield broken CSS.
+      # Emitted verbatim into SCSS — reject blanks that would yield broken CSS.
       raise ArgumentError, "token #{key} value must not be blank" if value.strip.empty?
 
       store[key] = value

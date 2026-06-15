@@ -5,9 +5,8 @@ require 'sorbet-runtime'
 
 module ActiveMail
   class Tokens
-    # Ruby → SCSS bridge for the token stores. Each token becomes a `$am-<group>-<name>`
-    # !default var (underscores → dashes) so a host app can pre-declare overrides upstream.
-    # Values are emitted verbatim (trusted, app-controlled input) — not escaped.
+    # !default lets a host pre-declare overrides upstream. Values are emitted
+    # verbatim (trusted, app-controlled input) — not escaped.
     module ScssSerializer
       extend T::Sig
 

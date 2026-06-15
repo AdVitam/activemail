@@ -9,7 +9,7 @@ module ActiveMail
     class InfoBox < Base
       extend T::Sig
 
-      sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
+      sig { override.overridable.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         classes = combine_classes(node, 'info-box')
         [

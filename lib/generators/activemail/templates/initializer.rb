@@ -20,9 +20,7 @@ ActiveMail.configure do |config|
   # How malformed markup is handled: :warn (default), :ignore, or :raise.
   # config.on_parse_error = :warn
 
-  # Design tokens — the single source of truth, bridged to SCSS via $am-*.
-  # Configure values here (literals, including rgba()/transparent) rather than
-  # parsing SCSS back into Ruby: the bridge only flows Ruby → SCSS.
+  # Design tokens. Configure literals here (the bridge only flows Ruby → SCSS).
   # config.tokens.color :primary, "#2a9d8f"
   # config.tokens.color :secondary, "#264653"
   # config.tokens.font :heading, "Georgia, serif"
