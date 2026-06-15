@@ -36,6 +36,34 @@ module ActiveMail
     block.call(configuration)
   end
 
+  # Route warnings to the app logger when present (Sentry breadcrumbs, log
+  # aggregation), else $stderr — which is often dropped in production.
+  sig { params(message: String).void }
+  def self.log_warning(message)
+    logger = rails_logger
+    logger ? logger.warn(message) : Kernel.warn(message)
+  end
+
+  sig { returns(T.untyped) }
+  def self.rails_logger
+    return unless Object.const_defined?(:Rails)
+
+    rails = Object.const_get(:Rails)
+    rails.respond_to?(:logger) ? rails.logger : nil
+  end
+
+  # Invalid bytes degrade deterministically to U+FFFD, but that silently corrupts
+  # content — surface it per on_parse_error before scrubbing.
+  sig { params(html_string: String).returns(String) }
+  def self.scrub_invalid_bytes(html_string)
+    mode = configuration.on_parse_error
+    message = '[activemail] input had invalid byte sequences; scrubbed to U+FFFD'
+    raise ParseError, message if mode == :raise
+
+    log_warning(message) unless mode == :ignore
+    html_string.scrub
+  end
+
   # Zero or negative dimensions blow up at transform time (Infinity ghost width).
   # Reject non-integers rather than silently coercing ("abc"→0, 12.9→12).
   sig { params(name: Symbol, value: T.untyped).returns(Integer) }
@@ -173,11 +201,13 @@ module ActiveMail
       raise ArgumentError, "unknown inliner #{value.inspect}, expected one of #{INLINERS.keys.inspect}, an Inliner::Base subclass, or an instance"
     end
 
+    # Integer-only (no to_int): a Float would otherwise be silently truncated
+    # (12.9 -> 12), contradicting assert_positive_dimension!'s invariant.
     sig { params(name: Symbol, value: T.untyped).returns(Integer) }
     def positive_integer!(name, value)
-      raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_int'" unless value.respond_to?(:to_int)
+      raise TypeError, "#{name} must be an Integer, got #{value.inspect} (#{value.class})" unless value.is_a?(Integer)
 
-      ActiveMail.assert_positive_dimension!(name, value.to_int)
+      ActiveMail.assert_positive_dimension!(name, value)
     end
   end
 end

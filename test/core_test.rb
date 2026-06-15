@@ -38,6 +38,19 @@ class CoreTest < ActiveMailTest
     assert_predicate output, :valid_encoding?
   end
 
+  def test_invalid_bytes_raise_when_on_parse_error_is_raise
+    ActiveMail.configuration.on_parse_error = :raise
+
+    assert_raises(ActiveMail::ParseError) { render("a\xFF".dup.force_encoding(Encoding::UTF_8)) }
+  end
+
+  def test_invalid_bytes_are_scrubbed_silently_when_ignored
+    ActiveMail.configuration.on_parse_error = :ignore
+    output = render("<container>a\xFFb</container>".dup.force_encoding(Encoding::UTF_8))
+
+    assert_predicate output, :valid_encoding?
+  end
+
   def test_handles_multiple_root_nodes
     output = render('<row></row><row></row>')
 

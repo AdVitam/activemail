@@ -29,26 +29,10 @@ module ActiveMail
       messages = relevant.map { |error| error.message.to_s.strip }.join('; ')
       raise ActiveMail::ParseError, messages if mode == :raise
 
-      warn_parse_issues("[activemail] HTML parse issues: #{messages}")
+      ::ActiveMail.log_warning("[activemail] HTML parse issues: #{messages}")
     end
 
     private
-
-    # Prefer the app logger (Sentry breadcrumbs, log aggregation) over $stderr,
-    # which is often dropped; fall back to Kernel.warn outside Rails.
-    sig { params(message: String).void }
-    def warn_parse_issues(message)
-      logger = rails_logger
-      logger ? logger.warn(message) : Kernel.warn(message)
-    end
-
-    sig { returns(T.untyped) }
-    def rails_logger
-      return unless Object.const_defined?(:Rails)
-
-      rails = Object.const_get(:Rails)
-      rails.respond_to?(:logger) ? rails.logger : nil
-    end
 
     sig { params(error: Nokogiri::XML::SyntaxError).returns(T::Boolean) }
     def known_tag_error?(error)

@@ -19,6 +19,10 @@ class QualityConfigurationTest < QualityTest
     assert_raises(ArgumentError) { @config.output_dir = '   ' }
   end
 
+  def test_guard_rejects_a_non_guard
+    assert_raises(TypeError) { @config.guard = 'foo' }
+  end
+
   def test_required_previews_coerces_to_strings
     @config.required_previews = [:welcome, 'mailer#hi']
 

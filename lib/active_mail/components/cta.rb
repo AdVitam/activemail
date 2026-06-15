@@ -5,8 +5,7 @@ require_relative 'base'
 
 module ActiveMail
   module Components
-    # Bulletproof, brand-neutral CTA button. Colors are read from tokens at
-    # transform time (configured at runtime), never as load-time constants.
+    # Colors read from tokens at transform time (runtime config), not load-time constants.
     class Cta < Base
       extend T::Sig
 

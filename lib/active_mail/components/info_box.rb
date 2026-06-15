@@ -5,7 +5,7 @@ require_relative 'base'
 
 module ActiveMail
   module Components
-    # Bordered panel. Colors read from tokens at transform time (runtime config).
+    # Colors read from tokens at transform time (runtime config), not load-time constants.
     class InfoBox < Base
       extend T::Sig
 

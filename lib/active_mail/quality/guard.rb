@@ -24,7 +24,7 @@ module ActiveMail
       # A full HTML document smaller than this carries no real layout and is suspect.
       DEFAULT_MIN_FULL_DOC_BYTES = 1_024
 
-      # disable: rules to skip — :parse_error, :table_role, :img_alt, :lang, :min_full_doc_bytes.
+      # disable: any subset of DISABLEABLE to skip those checks.
       sig { params(max_bytes: Integer, min_full_doc_bytes: Integer, disable: T::Array[Symbol]).void }
       def initialize(max_bytes: DEFAULT_MAX_BYTES, min_full_doc_bytes: DEFAULT_MIN_FULL_DOC_BYTES, disable: [])
         # A non-positive threshold would silently disable (or invert) a check.

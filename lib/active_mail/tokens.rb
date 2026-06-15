@@ -51,7 +51,8 @@ module ActiveMail
       @spacings = T.let(DEFAULT_SPACINGS.dup, TokenMap)
     end
 
-    # color/font/spacing act as setter when a value is given, getter otherwise.
+    # value given → set, omitted → get. Open registry: any key is accepted (define
+    # custom tokens for custom components); color!/font!/spacing! fail loud on read.
     sig { params(name: T.any(String, Symbol), value: T.nilable(String)).returns(T.nilable(String)) }
     def color(name, value = nil)
       access(@colors, name, value)

@@ -56,10 +56,7 @@ module ActiveMail
     )
 
     sig { returns(Integer) }
-    attr_reader :column_count
-
-    sig { returns(Integer) }
-    attr_reader :container_width
+    attr_reader :column_count, :container_width
 
     sig { returns(T::Hash[String, ActiveMail::Components::Base]) }
     attr_reader :component_instances
@@ -75,7 +72,7 @@ module ActiveMail
     # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.
     sig { params(html_string: Object).returns(String) }
     def release_the_kraken(html_string)
-      raws, str = ActiveMail::Core.extract_raws(normalize_input(html_string))
+      raws, str = extract_raws(normalize_input(html_string))
       parse_cmd = str =~ /<html/i ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)
       ParseErrorReporter.new(component_instances.keys).call(html.errors)
@@ -85,7 +82,7 @@ module ActiveMail
       # Needle is a literal U+00A0 (Nokogiri decodes the nbsp entity to one); re-encode
       # it to the entity for email clients that mishandle raw NBSP bytes.
       string = string.gsub(' ', '&nbsp;')
-      ActiveMail::Core.re_inject_raws(string, raws)
+      re_inject_raws(string, raws)
     end
 
     sig { params(elem: Nokogiri::XML::Node).returns(Nokogiri::XML::Node) }
@@ -109,7 +106,7 @@ module ActiveMail
     end
 
     sig { params(string: String).returns([T::Array[String], String]) }
-    def self.extract_raws(string)
+    def extract_raws(string)
       raws = []
       i = 0
       # Captures everything between non-nested raw tags, across lines.
@@ -124,7 +121,7 @@ module ActiveMail
     end
 
     sig { params(string: String, raws: T::Array[String]).returns(String) }
-    def self.re_inject_raws(string, raws)
+    def re_inject_raws(string, raws)
       str = string
       raws.each_with_index do |val, i|
         # Block form: the 2-arg String#sub would expand \0/\1/\& in val.
@@ -137,7 +134,7 @@ module ActiveMail
     private
 
     # Internal transpilation details, not public surface (column_count/container_width stay public).
-    private :component_instances, :transform_doc, :component_factory
+    private :component_instances, :transform_doc, :component_factory, :extract_raws, :re_inject_raws
 
     sig { params(config: ActiveMail::Configuration, overrides: T.untyped).returns(T::Hash[String, ActiveMail::Components::Base]) }
     def build_components(config, overrides)
@@ -151,9 +148,7 @@ module ActiveMail
     def normalize_input(html_string)
       html_string = html_string.to_s
       html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
-      # scrub: invalid bytes (whatever the claimed encoding) degrade
-      # deterministically to U+FFFD instead of raising on the first gsub.
-      html_string = html_string.scrub unless html_string.valid_encoding?
+      html_string = ::ActiveMail.scrub_invalid_bytes(html_string) unless html_string.valid_encoding?
       html_string.gsub(/doctype/i, 'DOCTYPE')
     end
   end

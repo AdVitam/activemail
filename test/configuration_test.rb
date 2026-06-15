@@ -54,6 +54,13 @@ class ConfigurationTest < ActiveMailTest
     assert_equal 600, config.container_width
   end
 
+  def test_dimension_setters_reject_floats_instead_of_truncating
+    config = ActiveMail::Configuration.new
+
+    assert_raises(TypeError) { config.column_count = 12.9 }
+    assert_equal 12, config.column_count
+  end
+
   def test_constructor_rejects_non_positive_dimensions
     assert_raises(ArgumentError) { ActiveMail::Core.new(column_count: 0) }
     assert_raises(ArgumentError) { ActiveMail::Core.new(container_width: -1) }

@@ -5,7 +5,7 @@ require_relative 'base'
 
 module ActiveMail
   module Components
-    # The <inky> tag is a marker that renders a bare <tr>, mirroring inky.js.
+    # Renders a bare <tr> (mirrors inky.js).
     class Inky < Base
       extend T::Sig
 

@@ -5,7 +5,7 @@ require_relative 'base'
 
 module ActiveMail
   module Inliner
-    # Opt-out / test adapter: returns the HTML untouched.
+    # Opt-out / test adapter: returns HTML untouched.
     class Null < Base
       extend T::Sig
 

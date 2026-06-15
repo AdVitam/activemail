@@ -12,7 +12,14 @@ module ActiveMail
       extend T::Sig
 
       sig { returns(Guard) }
-      attr_accessor :guard
+      attr_reader :guard
+
+      sig { params(value: T.untyped).void }
+      def guard=(value)
+        raise TypeError, "guard must be an ActiveMail::Quality::Guard, got #{value.class}" unless value.is_a?(Guard)
+
+        @guard = value
+      end
 
       sig { returns(String) }
       attr_reader :output_dir
