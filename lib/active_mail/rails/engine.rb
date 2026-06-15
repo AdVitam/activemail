@@ -17,12 +17,14 @@ module ActiveMail
         assets.precompile += %w[active_mail/active_mail.css] if assets.respond_to?(:precompile)
       end
 
-      initializer 'active_mail.register_interceptor' do
+      initializer 'active_mail.action_mailer' do
         ActiveSupport.on_load(:action_mailer) do
           require 'active_mail/inliner/interceptor'
           # The interceptor honors config.register_inline_interceptor (and inliner =
           # :null) at delivery time — a boot-time check would precede host config.
           register_interceptor ActiveMail::Inliner::Interceptor
+          # active_mail_inline_styles must be available to mailer layouts/views.
+          helper ActiveMail::StylesHelper
         end
       end
 

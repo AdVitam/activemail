@@ -42,6 +42,13 @@ module ActiveMail
     html.match?(/<html/i)
   end
 
+  # The complete SCSS variable bridge — tokens + the container_width layout knob.
+  # Single source for the .scss.erb bridge (Sprockets) and tokens:export (Propshaft).
+  sig { returns(String) }
+  def self.scss_variables
+    "#{tokens.to_scss}$am-grid-container-width: #{configuration.container_width}px !default;\n"
+  end
+
   # Route warnings to the app logger when present (Sentry breadcrumbs, log
   # aggregation), else $stderr — which is often dropped in production.
   sig { params(message: String).void }

@@ -15,6 +15,8 @@
       </xml>
     </noscript>
     <![endif]-->
+    <%%= active_mail_inline_styles %>
+    <%%# Fallback for when active_mail_inline_styles cannot read the compiled asset. %>
     <%%= stylesheet_link_tag "active_mail/active_mail", media: "all" %>
   </head>
 

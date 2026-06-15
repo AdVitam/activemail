@@ -10,7 +10,7 @@ namespace :active_mail do
     task :export, [:path] => :environment do |_task, args|
       path = args[:path] || 'app/assets/stylesheets/active_mail/_active_mail_tokens.scss'
       FileUtils.mkdir_p(File.dirname(path))
-      File.write(path, ActiveMail.tokens.to_scss)
+      File.write(path, ActiveMail.scss_variables)
       puts "Wrote #{ActiveMail.tokens.colors.size + ActiveMail.tokens.fonts.size + ActiveMail.tokens.spacings.size} tokens to #{path}"
     end
   end

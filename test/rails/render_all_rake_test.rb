@@ -54,7 +54,9 @@ class RenderAllRakeTest < ActiveMailTest
       path = File.join(dir, 'nested', '_tokens.scss')
       capture_io { Rake::Task['active_mail:tokens:export'].invoke(path) }
 
-      assert_includes File.read(path), '$am-color-primary:'
+      written = File.read(path)
+      assert_includes written, '$am-color-primary:'
+      assert_includes written, '$am-grid-container-width:' # must match the .scss.erb bridge
     end
   end
 end

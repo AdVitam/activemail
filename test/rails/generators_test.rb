@@ -43,6 +43,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
 
     assert_includes file_content('config/initializers/active_mail.rb'), 'ActiveMail.configure do |config|'
     assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'stylesheet_link_tag "active_mail/active_mail"'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'active_mail_inline_styles'
     assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), '<container>'
   end
 
