@@ -7,6 +7,8 @@ tokens, automatic CSS inlining, generators, and test-time quality guards — so 
 responsive, accessible email renders **out of the box**, with every default
 overridable.
 
+> A fork and modernization of the now-unmaintained `inky-rb`.
+
 > Not affiliated with Rails core. The name echoes the `Active*` family by
 > convention only.
 

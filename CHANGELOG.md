@@ -5,11 +5,16 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-06-15
+
+### Changed
+
+- Simplified the gem description and README; removed legacy branding.
+
 ## [1.0.0] - 2026-06-13
 
 First release of **ActiveMail**, an opinionated, plug & play responsive email
-toolkit for Rails. The markup engine derives from `inky-rb` v2 (rebranded to the
-`ActiveMail` namespace); the batteries-included framework layer is new.
+toolkit for Rails.
 
 ### Added
 
@@ -57,4 +62,5 @@ toolkit for Rails. The markup engine derives from `inky-rb` v2 (rebranded to the
 - Rails `>= 7.1` (tested up to 8.1).
 - Nokogiri `>= 1.16`.
 
+[1.0.1]: https://github.com/AdVitam/activemail/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/AdVitam/activemail/releases/tag/v1.0.0

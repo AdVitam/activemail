@@ -7,14 +7,14 @@ require 'active_mail/version'
 Gem::Specification.new do |s|
   s.name        = 'activemail'
   s.version     = ActiveMail::VERSION
-  s.summary     = 'Opinionated, plug & play responsive email toolkit for Rails.'
+  s.summary     = 'Plug & play gem to send modern emails, entirely in Ruby, with dark mode and more out of the box.'
   s.description = <<~DESC
-    ActiveMail turns simple, semantic tags into the bulletproof, MSO-safe table markup
-    email clients require, with a batteries-included Rails layer on top — themeable SCSS,
-    dark mode, design tokens, a pluggable CSS-inliner (premailer/roadie) and generators.
+    ActiveMail is a plug & play gem for sending beautiful emails, written entirely in Ruby.
+    It turns simple, semantic tags into responsive, bulletproof email markup and ships with
+    modern standards — dark mode and accessibility — out of the box. Batteries included:
+    design tokens, components, automatic CSS inlining, and generators, all overridable.
   DESC
   s.authors  = ['Advitam']
-  s.email    = ['tech@advitam.fr']
   s.homepage = 'https://github.com/AdVitam/activemail'
   s.licenses = ['MIT']
   s.required_ruby_version = '>= 3.2'
