@@ -16,6 +16,10 @@
 .button.secondary a {
   background: $am-button-secondary-bg;
   color: $am-button-secondary-color;
+}
+
+// Border on the cell only — a repeated <a> border would double the line.
+.button.secondary table td {
   border: 1px solid $am-button-secondary-border;
 }
 
@@ -35,6 +39,9 @@
 .cta.secondary a {
   background: $am-button-secondary-bg;
   color: $am-button-secondary-color;
+}
+
+.cta.secondary table td {
   border: 1px solid $am-button-secondary-border;
 }
 

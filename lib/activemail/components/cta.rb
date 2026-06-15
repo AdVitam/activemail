@@ -32,11 +32,12 @@ module ActiveMail
         "background:#{style.background};border-radius:#{style.radius};#{border_css(style)}"
       end
 
+      # No border here: it lives on the cell only — a repeated <a> border doubles the line.
       sig { params(style: ActiveMail::Tokens::ButtonStyle).returns(String) }
       def link_style(style)
         "display:inline-block;text-decoration:none;#{BUTTON_PADDING}" \
           "background:#{style.background};color:#{style.color};font-weight:bold;" \
-          "border-radius:#{style.radius};#{border_css(style)}"
+          "border-radius:#{style.radius};"
       end
 
       sig { params(style: ActiveMail::Tokens::ButtonStyle).returns(String) }

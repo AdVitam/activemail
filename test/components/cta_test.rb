@@ -58,6 +58,9 @@ class CtaTest < ActiveMailTest
     assert_includes output, 'background:#ffffff'
     assert_includes output, 'color:#0f4447'
     assert_includes output, 'border:1px solid rgba(15, 68, 71, 0.6)'
+    # Border on the cell only — never doubled on the nested anchor.
+    assert_equal 1, output.scan('border:1px solid').size
+    refute_includes Nokogiri::HTML.fragment(output).at_css('a')['style'].to_s, 'border:1px solid'
   end
 
   def test_cta_secondary_keeps_secondary_class
