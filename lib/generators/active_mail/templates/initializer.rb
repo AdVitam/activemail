@@ -26,6 +26,7 @@ ActiveMail.configure do |config|
   # config.tokens.font :heading, "Georgia, serif"
   # config.tokens.spacing :lg, "32px"
 
-  # Register custom components (see `rails g active_mail:component`).
-  # config.register_component "cta", Components::Cta
+  # Register components (built-ins like ActiveMail::Components::Cta, or your own
+  # Components::* from `rails g active_mail:component`).
+  # config.register_component "cta", ActiveMail::Components::Cta
 end

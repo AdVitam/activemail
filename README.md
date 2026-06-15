@@ -79,7 +79,7 @@ ActiveMail.configure do |config|
   config.tokens.color :primary, '#2a9d8f'
 
   # Custom components (see "Custom components").
-  config.register_component 'cta', Components::Cta
+  config.register_component 'cta', ActiveMail::Components::Cta
 end
 ```
 
@@ -276,7 +276,7 @@ A minimal hand-written equivalent:
 class Divider < ActiveMail::Components::Base
   def transform(node, _inner)
     klass = combine_classes(node, 'divider')
-    %(<table class="#{klass}" role="presentation" style="width:100%;"><tbody><tr><td></td></tr></tbody></table>)
+    %(<table class="#{klass}" #{TABLE_RESET} style="width:100%;"><tbody><tr><td></td></tr></tbody></table>)
   end
 end
 

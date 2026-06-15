@@ -16,6 +16,7 @@ module ActiveMail
       def show_register_snippet
         say "\nRegister the component in config/initializers/active_mail.rb:", :green
         say %(  config.register_component "#{tag_name}", Components::#{class_name})
+        say '(top-level Components:: — rename the module if it collides in your app)', :yellow
         say "\nThen use <#{tag_name}>…</#{tag_name}> in your ActiveMail views.\n"
       end
 

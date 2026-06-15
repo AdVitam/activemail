@@ -88,7 +88,7 @@ module ActiveMail
       def check_well_formed(doc, violations)
         return unless enabled?(:parse_error)
 
-        errors = doc.errors.reject { |e| e.respond_to?(:code) && e.code == LIBXML_UNKNOWN_TAG_CODE }
+        errors = doc.errors.reject { |e| e.code == LIBXML_UNKNOWN_TAG_CODE }
         return if errors.empty?
 
         violations << Violation.new(rule: :parse_error, message: "malformed HTML: #{errors.first(3).map { |e| e.message.to_s.strip }.join('; ')}")
