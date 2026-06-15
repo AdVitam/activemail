@@ -15,4 +15,7 @@ gem 'tapioca', '>= 0.13', require: false
 
 group :test do
   gem 'roadie', '>= 5.0', require: false
+  # Dart Sass (maintained, builds on Ruby 4.0): the render-validation harness
+  # compiles the shipped framework SCSS to assert the rendered + inlined output.
+  gem 'sass-embedded', '>= 1.69', require: false
 end

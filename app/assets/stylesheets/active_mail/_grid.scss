@@ -17,7 +17,11 @@
 
 // Gutters: half on each side, outer edges collapsed via first/last so content
 // stays flush with the container.
+// box-sizing keeps the gutter inside the inline max-width — without it a 300px
+// 2-col cell + 8px padding becomes 316px and the row overflows ~616px, wrapping
+// in clients that honor inline padding.
 .columns {
+  box-sizing: border-box;
   padding-left: $am-gutter;
   padding-right: $am-gutter;
 }
@@ -36,8 +40,10 @@
   padding-right: 0;
 }
 
-// Collapse removes gutters on demand (e.g. edge-to-edge images).
-.row.collapse > .columns {
+// Collapse removes gutters on demand (e.g. edge-to-edge images). Columns are not
+// direct children of .row — the real markup nests them as <th class="columns">
+// under tbody > tr — so this must be a descendant selector, not a child one.
+.row.collapse .columns {
   padding-left: 0;
   padding-right: 0;
 }

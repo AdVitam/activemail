@@ -1,3 +1,6 @@
 <%# Ruby→SCSS bridge: ActiveMail::Tokens is the single source of truth. %>
 <%# Sprockets evaluates this ERB at asset-compile time. %>
 <%= ActiveMail.tokens.to_scss %>
+<%# container_width lives on Configuration (it drives the transpiled markup), so %>
+<%# it bridges here too — the SCSS grid must track the Ruby layout knob. %>
+$am-grid-container-width: <%= ActiveMail.configuration.container_width %>px !default;

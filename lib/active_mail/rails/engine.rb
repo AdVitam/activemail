@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'rails/engine'
+require 'active_mail/rails/compiled_stylesheet'
 
 module ActiveMail
   module Rails

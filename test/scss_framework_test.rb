@@ -2,9 +2,10 @@
 
 require 'test_helper'
 
-# Source-level regression guard for the shipped SCSS framework. A full compile
-# smoke would need a Sass toolchain dependency in the test group (deferred); this
-# catches the likeliest regression — the dark-mode rules or an import going missing.
+# Source-level regression guard for the shipped SCSS framework: imports, the
+# dark-mode dual strategy, and the token bridge. The compiled + inlined behavior
+# (gutter overflow, collapse selector, container_width) is proven by the
+# render-validation harness in scss_render_harness_test.rb.
 class ScssFrameworkTest < ActiveMailTest
   SCSS_DIR = File.expand_path('../app/assets/stylesheets/active_mail', __dir__)
 

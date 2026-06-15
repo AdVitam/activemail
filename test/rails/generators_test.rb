@@ -8,6 +8,8 @@ require 'uri'
 require 'action_view'
 require 'action_view/base'
 require 'active_mail/rails/template_handler'
+require 'active_mail/rails/compiled_stylesheet'
+require File.expand_path('../../app/helpers/active_mail/styles_helper', __dir__)
 require 'rails/generators'
 require 'rails/generators/test_case'
 
@@ -153,6 +155,8 @@ class EngineDefaultLayoutTest < ActiveMailTest
       lookup = ActionView::LookupContext.new([views])
       view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
       view.define_singleton_method(:stylesheet_link_tag) { |*| '' }
+      # A real app auto-includes the engine's app/helpers into mailer views.
+      view.extend(ActiveMail::StylesHelper)
 
       html = view.render(template: 'mailers/sample', layout: 'layouts/active_mail/mailer')
 
