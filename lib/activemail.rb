@@ -39,6 +39,8 @@ module ActiveMail
     DEFAULT_COMPONENTS = T.let(
       {
         'button' => ActiveMail::Components::Button,
+        'cta' => ActiveMail::Components::Cta,
+        'info-box' => ActiveMail::Components::InfoBox,
         'row' => ActiveMail::Components::Row,
         'columns' => ActiveMail::Components::Columns,
         'container' => ActiveMail::Components::Container,
