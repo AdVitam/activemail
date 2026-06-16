@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-06-16
+
+### Added
+
+- `cta` and `info-box` are now registered out of the box in `DEFAULT_COMPONENTS`,
+  alongside `button`/`callout`. The components and their styles already shipped but
+  the tags required manual registration; `<cta>`/`<info-box>` now work by default.
+
 ## [1.1.0] - 2026-06-15
 
 ### Added
