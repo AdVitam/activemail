@@ -37,7 +37,7 @@ module ActiveMail
           else
             engine_handler.call(template)
           end
-        "ActiveMail::Core.new.release_the_kraken(begin; #{compiled_source};end)"
+        "ActiveMail::Core.new.transpile(begin; #{compiled_source};end)"
       end
 
       module Composer

@@ -36,7 +36,7 @@ class TemplateHandlerTest < ActiveMailTest
     template = ActionView::Template.new('<container></container>', 'test', handler, locals: [], format: :html)
     compiled = handler.call(template, '<container></container>')
 
-    assert_includes compiled, 'ActiveMail::Core.new.release_the_kraken'
+    assert_includes compiled, 'ActiveMail::Core.new.transpile'
   end
 
   def test_engine_handler_raises_for_unknown_engine
@@ -64,7 +64,7 @@ class TemplateHandlerTest < ActiveMailTest
   end
 
   def test_output_is_html_safe_when_active_support_is_loaded
-    output = ActiveMail::Core.new.release_the_kraken('<row></row>')
+    output = ActiveMail::Core.new.transpile('<row></row>')
 
     assert_predicate output, :html_safe?
   end

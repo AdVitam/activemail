@@ -5,11 +5,11 @@ require 'test_helper'
 class MenuTest < ActiveMailTest
   def test_menu_with_item
     assert_renders(
-      '<menu><item href="http://zurb.com">Item</item></menu>',
+      '<menu><item href="https://example.com">Item</item></menu>',
       <<~HTML
         <table class="menu" role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>
           <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr>
-            <th class="menu-item"><a href="http://zurb.com">Item</a></th>
+            <th class="menu-item"><a href="https://example.com">Item</a></th>
           </tr></tbody></table>
         </td></tr></tbody></table>
       HTML

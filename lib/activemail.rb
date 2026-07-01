@@ -73,7 +73,7 @@ module ActiveMail
 
     # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.
     sig { params(html_string: Object).returns(String) }
-    def release_the_kraken(html_string)
+    def transpile(html_string)
       raws, str = extract_raws(normalize_input(html_string))
       parse_cmd = ::ActiveMail.full_document?(str) ? :parse : :fragment
       html = Nokogiri::HTML.public_send(parse_cmd, str)

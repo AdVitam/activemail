@@ -23,7 +23,7 @@ module ActiveMailTestHelpers
   end
 
   def render(input, **options)
-    ActiveMail::Core.new(options).release_the_kraken(input)
+    ActiveMail::Core.new(options).transpile(input)
   end
 
   def assert_renders(input, expected, **)
