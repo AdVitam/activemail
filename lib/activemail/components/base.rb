@@ -28,8 +28,9 @@ module ActiveMail
 
       abstract!
 
+      # 'rel' is emitted by #link_attributes; passing it through too would duplicate it.
       IGNORED_ON_PASSTHROUGH = T.let(
-        %w[class id href size large no-expander small target up size-sm size-lg style].freeze,
+        %w[class id href size large no-expander small target rel up size-sm size-lg style].freeze,
         T::Array[String]
       )
 
@@ -102,9 +103,16 @@ module ActiveMail
         [pass_through_attributes(node), %(class="#{escape_attr(classes)}")].join
       end
 
+      # An explicit rel wins over the injected blank_link_rel default.
       sig { params(node: Nokogiri::XML::Node).returns(String) }
-      def target_attribute(node)
-        node.attributes['target'] ? %( target="#{escape_attr(node.attributes['target'])}") : ''
+      def link_attributes(node)
+        target = node.attributes['target']&.value
+        rel = node.attributes['rel']&.value
+        rel ||= ActiveMail.configuration.blank_link_rel if target == '_blank'
+        [
+          target ? %( target="#{escape_attr(target)}") : '',
+          rel ? %( rel="#{escape_attr(rel)}") : ''
+        ].join
       end
 
       # Outlook-safe nested-table structure kept in one place for <button> and <cta>.

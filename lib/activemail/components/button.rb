@@ -28,11 +28,11 @@ module ActiveMail
 
       sig { params(node: Nokogiri::XML::Node, inner: String, expand: T::Boolean).returns(String) }
       def anchor(node, inner, expand)
-        target = target_attribute(node)
+        links = link_attributes(node)
         extra = expand ? ' align="center" class="float-center"' : ''
         # Padding on the <a> makes the whole button a clickable target.
         link_style = "display:inline-block;text-decoration:none;#{BUTTON_PADDING}"
-        attrs = %(#{pass_through_attributes(node)}href="#{escape_attr(node.attr('href'))}"#{target}#{extra})
+        attrs = %(#{pass_through_attributes(node)}href="#{escape_attr(node.attr('href'))}"#{links}#{extra})
         %(<a #{attrs}#{style_attribute(node, link_style)}>#{inner}</a>)
       end
     end

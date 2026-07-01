@@ -16,7 +16,7 @@ module ActiveMail
         raise ArgumentError, '<cta> requires an href attribute' if node.attr('href').to_s.strip.empty?
 
         style = ActiveMail.tokens.button_style(class?(node, 'secondary') ? :secondary : :primary)
-        anchor = %(<a href="#{escape_attr(node.attr('href'))}"#{target_attribute(node)} ) +
+        anchor = %(<a href="#{escape_attr(node.attr('href'))}"#{link_attributes(node)} ) +
                  %(style="#{link_style(style)}">#{inner}</a>)
         bulletproof_button_table(
           outer_classes: combine_classes(node, 'cta'),

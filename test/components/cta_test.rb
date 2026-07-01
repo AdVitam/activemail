@@ -80,6 +80,26 @@ class CtaTest < ActiveMailTest
     assert_equal tables, output.scan('role="presentation"').size
   end
 
+  def test_cta_blank_injects_default_rel
+    output = render('<cta href="#" target="_blank">Go</cta>')
+
+    assert_includes output, 'target="_blank"'
+    assert_includes output, 'rel="noopener"'
+  end
+
+  def test_cta_non_blank_gets_no_rel
+    output = render('<cta href="#">Go</cta>')
+
+    refute_includes output, 'rel='
+  end
+
+  def test_cta_explicit_rel_wins_without_duplication
+    output = render('<cta href="#" target="_blank" rel="noopener noreferrer">Go</cta>')
+
+    assert_includes output, 'rel="noopener noreferrer"'
+    assert_equal 1, output.scan('rel="').size
+  end
+
   def test_info_box_reads_border_token
     ActiveMail.tokens.color(:border, '#445566')
     output = render('<info-box>note</info-box>')
