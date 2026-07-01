@@ -28,7 +28,6 @@ module ActiveMail
 
       abstract!
 
-      # 'rel' is emitted by #link_attributes; passing it through too would duplicate it.
       IGNORED_ON_PASSTHROUGH = T.let(
         %w[class id href size large no-expander small target rel up size-sm size-lg style].freeze,
         T::Array[String]
@@ -116,7 +115,6 @@ module ActiveMail
       sig { params(node: Nokogiri::XML::Node, target: T.nilable(String)).returns(T.nilable(String)) }
       def resolve_rel(node, target)
         rel = node.attributes['rel']&.value
-        # Blank is truthy, so a stray rel="" would silently skip the security default.
         rel = nil if rel&.strip&.empty?
         rel || (ActiveMail.configuration.blank_link_rel if target == '_blank')
       end

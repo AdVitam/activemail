@@ -86,7 +86,6 @@ module ActiveMail
     value
   end
 
-  # TypeError (not ArgumentError) so a non-Integer is a caller mistake, distinct from a bad value.
   sig { params(name: Symbol, value: T.untyped).returns(Integer) }
   def self.positive_integer!(name, value)
     raise TypeError, "#{name} must be an Integer, got #{value.inspect} (#{value.class})" unless value.is_a?(Integer)
@@ -198,7 +197,6 @@ module ActiveMail
     def blank_link_rel=(value)
       raise TypeError, "blank_link_rel must be a String or nil, got #{value.inspect} (#{value.class})" unless value.nil? || value.is_a?(String)
 
-      # Blank is truthy in Ruby; normalize to nil so "" means "disabled", not rel="".
       normalized = value&.strip
       @blank_link_rel = normalized&.empty? ? nil : normalized
     end
