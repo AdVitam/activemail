@@ -5,11 +5,11 @@ require 'test_helper'
 class ButtonTest < ActiveMailTest
   def test_simple_button_is_bulletproof
     assert_renders(
-      '<button href="http://zurb.com">Button</button>',
+      '<button href="https://example.com">Button</button>',
       <<~HTML
         <table class="button" role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>
           <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>
-            <a href="http://zurb.com" style="display:inline-block;text-decoration:none;padding:12px 24px;">Button</a>
+            <a href="https://example.com" style="display:inline-block;text-decoration:none;padding:12px 24px;">Button</a>
           </td></tr></tbody></table>
         </td></tr></tbody></table>
       HTML

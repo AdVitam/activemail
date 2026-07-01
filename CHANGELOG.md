@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-07-01
+
+### Changed
+
+- Renamed the internal `ActiveMail::Core#release_the_kraken` to `#transpile`.
+- Neutralised test fixtures (example URLs) and severed the upstream fork link.
+
 ## [1.2.0] - 2026-07-01
 
 ### Added

@@ -7,7 +7,7 @@ tokens, automatic CSS inlining, generators, and test-time quality guards — so 
 responsive, accessible email renders **out of the box**, with every default
 overridable.
 
-A fork and modernization of the now-unmaintained `inky-rb`. Not affiliated with Rails core.
+Not affiliated with Rails core.
 
 Write this:
 
@@ -289,7 +289,7 @@ Helpers available from `Base`: `combine_classes`, `combine_attributes`,
 Per-instance overrides (including replacing a built-in tag) are also possible:
 
 ```ruby
-ActiveMail::Core.new(components: { 'button' => MyButton }).release_the_kraken(source)
+ActiveMail::Core.new(components: { 'button' => MyButton }).transpile(source)
 ```
 
 ## Generators
@@ -356,8 +356,8 @@ Targets the real-world client landscape as of 2026:
 ## Programmatic use
 
 ```ruby
-ActiveMail::Core.new.release_the_kraken('<container><row><columns>Hi</columns></row></container>')
-ActiveMail::Core.new(column_count: 24, container_width: 480).release_the_kraken(source)
+ActiveMail::Core.new.transpile('<container><row><columns>Hi</columns></row></container>')
+ActiveMail::Core.new(column_count: 24, container_width: 480).transpile(source)
 ```
 
 ## Development
@@ -371,4 +371,4 @@ bundle exec srb tc        # Sorbet
 
 ## License
 
-MIT. See [`LICENSE.txt`](LICENSE.txt).
+MIT. See [`LICENSE.txt`](LICENSE.txt), which retains the original ZURB copyright.
