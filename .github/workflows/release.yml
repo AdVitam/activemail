@@ -32,6 +32,7 @@ jobs:
           notes=$(awk -v v="${TAG#v}" '
             $0 ~ "^## \\[" v "\\]" {grab=1; next}
             grab && /^## \[/ {exit}
+            grab && /^\[[^]]+\]:/ {exit}
             grab {print}
           ' CHANGELOG.md)
           gh release create "$TAG" --title "$TAG" \
