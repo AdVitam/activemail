@@ -9,7 +9,33 @@ class ConfigurationTest < ActiveMailTest
     assert_equal :erb, config.template_engine
     assert_equal 12, config.column_count
     assert_equal 600, config.container_width
+    assert_equal 'noopener', config.blank_link_rel
     assert_empty config.components
+  end
+
+  def test_blank_link_rel_override_reflected_in_output
+    ActiveMail.configuration.blank_link_rel = 'noopener noreferrer'
+
+    assert_includes render('<button href="#" target="_blank">B</button>'), 'rel="noopener noreferrer"'
+  end
+
+  def test_blank_link_rel_nil_disables_injection
+    ActiveMail.configuration.blank_link_rel = nil
+
+    refute_includes render('<button href="#" target="_blank">B</button>'), 'rel='
+  end
+
+  def test_blank_link_rel_rejects_invalid
+    config = ActiveMail::Configuration.new
+
+    assert_raises(TypeError) { config.blank_link_rel = 123 }
+  end
+
+  def test_blank_link_rel_empty_string_disables_injection
+    ActiveMail.configuration.blank_link_rel = '  '
+
+    assert_nil ActiveMail.configuration.blank_link_rel
+    refute_includes render('<button href="#" target="_blank">B</button>'), 'rel='
   end
 
   def test_template_engine_setter_coerces_to_symbol
@@ -58,7 +84,9 @@ class ConfigurationTest < ActiveMailTest
     config = ActiveMail::Configuration.new
 
     assert_raises(TypeError) { config.column_count = 12.9 }
+    assert_raises(TypeError) { config.container_width = 4.2 }
     assert_equal 12, config.column_count
+    assert_equal 600, config.container_width
   end
 
   def test_constructor_rejects_non_positive_dimensions

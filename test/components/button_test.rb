@@ -28,6 +28,45 @@ class ButtonTest < ActiveMailTest
     assert_includes output, 'target="_blank"'
   end
 
+  def test_target_blank_injects_default_rel
+    output = render('<button href="#" target="_blank">B</button>')
+
+    assert_includes output, 'rel="noopener"'
+  end
+
+  def test_non_blank_target_gets_no_rel
+    output = render('<button href="#" target="_self">B</button>')
+
+    refute_includes output, 'rel='
+  end
+
+  def test_no_target_gets_no_rel
+    output = render('<button href="#">B</button>')
+
+    refute_includes output, 'rel='
+  end
+
+  def test_explicit_rel_wins_without_duplication
+    output = render('<button href="#" target="_blank" rel="noopener noreferrer">B</button>')
+
+    assert_includes output, 'rel="noopener noreferrer"'
+    assert_equal 1, output.scan('rel="').size
+  end
+
+  def test_empty_rel_falls_back_to_default
+    output = render('<button href="#" target="_blank" rel="">B</button>')
+
+    assert_includes output, 'rel="noopener"'
+    assert_equal 1, output.scan('rel="').size
+  end
+
+  def test_rel_is_escaped
+    output = render('<button href="#" target="_blank" rel="a&quot;b">B</button>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('a')
+
+    assert_equal 'a"b', anchor['rel']
+  end
+
   def test_classes_are_merged_with_button
     output = render('<button class="small alert" href="#">B</button>')
 

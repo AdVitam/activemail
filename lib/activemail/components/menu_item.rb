@@ -12,7 +12,7 @@ module ActiveMail
       def transform(node, inner)
         attributes = combine_attributes(node, 'menu-item')
         # No href → a non-link item, not a broken <a href="">; mirrors <button>.
-        content = node.attr('href') ? %(<a href="#{escape_attr(node.attr('href'))}"#{target_attribute(node)}>#{inner}</a>) : inner
+        content = node.attr('href') ? %(<a href="#{escape_attr(node.attr('href'))}"#{link_attributes(node)}>#{inner}</a>) : inner
         th = ::ActiveMail::Core::INTERIM_TH_TAG
         %(<#{th} #{attributes}#{style_attribute(node)}>#{content}</#{th}>)
       end

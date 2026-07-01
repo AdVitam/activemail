@@ -22,6 +22,19 @@ class MenuTest < ActiveMailTest
     assert_includes output, 'target="_blank"'
   end
 
+  def test_item_blank_injects_default_rel
+    output = render('<menu><item href="#" target="_blank">I</item></menu>')
+
+    assert_includes output, 'rel="noopener"'
+  end
+
+  def test_item_explicit_rel_wins_without_duplication
+    output = render('<menu><item href="#" target="_blank" rel="noopener noreferrer">I</item></menu>')
+
+    assert_includes output, 'rel="noopener noreferrer"'
+    assert_equal 1, output.scan('rel="').size
+  end
+
   def test_item_without_href_emits_no_broken_anchor
     output = render('<menu><item>Label</item></menu>')
 

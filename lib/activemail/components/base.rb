@@ -29,7 +29,7 @@ module ActiveMail
       abstract!
 
       IGNORED_ON_PASSTHROUGH = T.let(
-        %w[class id href size large no-expander small target up size-sm size-lg style].freeze,
+        %w[class id href size large no-expander small target rel up size-sm size-lg style].freeze,
         T::Array[String]
       )
 
@@ -103,8 +103,20 @@ module ActiveMail
       end
 
       sig { params(node: Nokogiri::XML::Node).returns(String) }
-      def target_attribute(node)
-        node.attributes['target'] ? %( target="#{escape_attr(node.attributes['target'])}") : ''
+      def link_attributes(node)
+        target = node.attributes['target']&.value
+        rel = resolve_rel(node, target)
+        [
+          target ? %( target="#{escape_attr(target)}") : '',
+          rel ? %( rel="#{escape_attr(rel)}") : ''
+        ].join
+      end
+
+      sig { params(node: Nokogiri::XML::Node, target: T.nilable(String)).returns(T.nilable(String)) }
+      def resolve_rel(node, target)
+        rel = node.attributes['rel']&.value
+        rel = nil if rel&.strip&.empty?
+        rel || (ActiveMail.configuration.blank_link_rel if target == '_blank')
       end
 
       # Outlook-safe nested-table structure kept in one place for <button> and <cta>.

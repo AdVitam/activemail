@@ -86,6 +86,13 @@ module ActiveMail
     value
   end
 
+  sig { params(name: Symbol, value: T.untyped).returns(Integer) }
+  def self.positive_integer!(name, value)
+    raise TypeError, "#{name} must be an Integer, got #{value.inspect} (#{value.class})" unless value.is_a?(Integer)
+
+    assert_positive_dimension!(name, value)
+  end
+
   class Configuration
     extend T::Sig
 
@@ -113,16 +120,13 @@ module ActiveMail
     end
 
     sig { returns(Symbol) }
-    attr_reader :template_engine
-
-    sig { returns(Symbol) }
-    attr_reader :on_parse_error
+    attr_reader :template_engine, :on_parse_error
 
     sig { returns(Integer) }
-    attr_reader :column_count
+    attr_reader :column_count, :container_width
 
-    sig { returns(Integer) }
-    attr_reader :container_width
+    sig { returns(T.nilable(String)) }
+    attr_reader :blank_link_rel
 
     # Mutating the returned hash would bypass validate_component!.
     sig { returns(ActiveMail::ComponentMap) }
@@ -146,6 +150,7 @@ module ActiveMail
       @inliner = T.let(:premailer, InlinerSetting)
       @resolved_inliner = T.let(nil, T.nilable(ActiveMail::Inliner::Base))
       @register_inline_interceptor = T.let(true, T::Boolean)
+      @blank_link_rel = T.let('noopener', T.nilable(String))
     end
 
     # Validates eagerly (like sibling setters): a typo fails at boot, not silently mid-delivery.
@@ -180,12 +185,20 @@ module ActiveMail
 
     sig { params(value: T.untyped).returns(Integer) }
     def column_count=(value)
-      @column_count = positive_integer!(:column_count, value)
+      @column_count = ActiveMail.positive_integer!(:column_count, value)
     end
 
     sig { params(value: T.untyped).returns(Integer) }
     def container_width=(value)
-      @container_width = positive_integer!(:container_width, value)
+      @container_width = ActiveMail.positive_integer!(:container_width, value)
+    end
+
+    sig { params(value: T.untyped).returns(T.nilable(String)) }
+    def blank_link_rel=(value)
+      raise TypeError, "blank_link_rel must be a String or nil, got #{value.inspect} (#{value.class})" unless value.nil? || value.is_a?(String)
+
+      normalized = value&.strip
+      @blank_link_rel = normalized&.empty? ? nil : normalized
     end
 
     sig { params(value: T.untyped).returns(ActiveMail::ComponentMap) }
@@ -215,15 +228,6 @@ module ActiveMail
       return T.must(INLINERS[value]).new if value.is_a?(Symbol) && INLINERS.key?(value)
 
       raise ArgumentError, "unknown inliner #{value.inspect}, expected one of #{INLINERS.keys.inspect}, an Inliner::Base subclass, or an instance"
-    end
-
-    # Integer-only (no to_int): a Float would otherwise be silently truncated
-    # (12.9 -> 12), contradicting assert_positive_dimension!'s invariant.
-    sig { params(name: Symbol, value: T.untyped).returns(Integer) }
-    def positive_integer!(name, value)
-      raise TypeError, "#{name} must be an Integer, got #{value.inspect} (#{value.class})" unless value.is_a?(Integer)
-
-      ActiveMail.assert_positive_dimension!(name, value)
     end
   end
 end
