@@ -198,7 +198,9 @@ module ActiveMail
     def blank_link_rel=(value)
       raise TypeError, "blank_link_rel must be a String or nil, got #{value.inspect} (#{value.class})" unless value.nil? || value.is_a?(String)
 
-      @blank_link_rel = value
+      # Blank is truthy in Ruby; normalize to nil so "" means "disabled", not rel="".
+      normalized = value&.strip
+      @blank_link_rel = normalized&.empty? ? nil : normalized
     end
 
     sig { params(value: T.untyped).returns(ActiveMail::ComponentMap) }

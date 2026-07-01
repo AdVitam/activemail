@@ -53,6 +53,20 @@ class ButtonTest < ActiveMailTest
     assert_equal 1, output.scan('rel="').size
   end
 
+  def test_empty_rel_falls_back_to_default
+    output = render('<button href="#" target="_blank" rel="">B</button>')
+
+    assert_includes output, 'rel="noopener"'
+    assert_equal 1, output.scan('rel="').size
+  end
+
+  def test_rel_is_escaped
+    output = render('<button href="#" target="_blank" rel="a&quot;b">B</button>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('a')
+
+    assert_equal 'a"b', anchor['rel']
+  end
+
   def test_classes_are_merged_with_button
     output = render('<button class="small alert" href="#">B</button>')
 

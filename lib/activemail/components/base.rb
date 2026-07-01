@@ -103,16 +103,22 @@ module ActiveMail
         [pass_through_attributes(node), %(class="#{escape_attr(classes)}")].join
       end
 
-      # An explicit rel wins over the injected blank_link_rel default.
       sig { params(node: Nokogiri::XML::Node).returns(String) }
       def link_attributes(node)
         target = node.attributes['target']&.value
-        rel = node.attributes['rel']&.value
-        rel ||= ActiveMail.configuration.blank_link_rel if target == '_blank'
+        rel = resolve_rel(node, target)
         [
           target ? %( target="#{escape_attr(target)}") : '',
           rel ? %( rel="#{escape_attr(rel)}") : ''
         ].join
+      end
+
+      sig { params(node: Nokogiri::XML::Node, target: T.nilable(String)).returns(T.nilable(String)) }
+      def resolve_rel(node, target)
+        rel = node.attributes['rel']&.value
+        # Blank is truthy, so a stray rel="" would silently skip the security default.
+        rel = nil if rel&.strip&.empty?
+        rel || (ActiveMail.configuration.blank_link_rel if target == '_blank')
       end
 
       # Outlook-safe nested-table structure kept in one place for <button> and <cta>.
