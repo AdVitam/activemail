@@ -198,7 +198,7 @@ module ActiveMail
       raise TypeError, "blank_link_rel must be a String or nil, got #{value.inspect} (#{value.class})" unless value.nil? || value.is_a?(String)
 
       normalized = value&.strip
-      @blank_link_rel = normalized&.empty? ? nil : normalized
+      @blank_link_rel = normalized && normalized.empty? ? nil : normalized
     end
 
     sig { params(value: T.untyped).returns(ActiveMail::ComponentMap) }
