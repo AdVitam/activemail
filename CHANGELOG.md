@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Bound the runtime dependencies: `nokogiri` `< 1.20`, `premailer` `< 2`, `sorbet-runtime` `>= 0.5.10600, < 0.7`
-  (`0.5.10600` is the first build supporting Ruby 3.2).
+  (`0.5.10600` is the first build supporting Ruby 3.2). The `nokogiri` cap guards the parse-error
+  reporter, which relies on libxml2 error internals that libxml2 2.14 (nokogiri 1.20) may change (#18).
 - Test suite supports minitest 6 (`minitest-mock` is now an explicit test dependency).
 - CI checks the lowest supported dependency versions (`gemfiles/minimum.gemfile`); Dependabot enabled.
 
