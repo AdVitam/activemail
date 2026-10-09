@@ -28,6 +28,20 @@ jobs:
       - name: Run tests
         run: bundle exec rake test
 
+  minimum:
+    name: Minimum dependency versions
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: gemfiles/minimum.gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - name: Run tests
+        run: bundle exec rake test
+
   lint:
     name: Rubocop and Sorbet
     runs-on: ubuntu-latest
