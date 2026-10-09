@@ -75,7 +75,7 @@ class ScssRenderHarnessTest < ActiveMailTest
 
     refute_empty columns, 'no columns rendered — layout/helper did not produce inlinable markup'
     columns.each do |col|
-      assert_includes col['style'].to_s, 'box-sizing: border-box', 'framework gutter rule was not inlined onto the column'
+      assert_match(/box-sizing:\s*border-box/, col['style'].to_s, 'framework gutter rule was not inlined onto the column')
     end
   end
 

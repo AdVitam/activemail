@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
 
   # The markup engine works without Rails; the engine/generators/interceptor load
   # only when Rails is present, so railties is intentionally not a hard dependency.
-  s.add_dependency 'nokogiri', '>= 1.16'
-  s.add_dependency 'premailer', '>= 1.21'
-  s.add_dependency 'sorbet-runtime', '>= 0.5'
+  s.add_dependency 'nokogiri', '>= 1.16', '< 1.20'
+  s.add_dependency 'premailer', '>= 1.21', '< 2'
+  s.add_dependency 'sorbet-runtime', '>= 0.5.10600', '< 0.7'
 end

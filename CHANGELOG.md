@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-10-09
+
+### Changed
+
+- Bound the runtime dependencies: `nokogiri` `< 1.20`, `premailer` `< 2`, `sorbet-runtime` `>= 0.5.10600, < 0.7`
+  (`0.5.10600` is the first build supporting Ruby 3.2).
+- Test suite supports minitest 6 (`minitest-mock` is now an explicit test dependency).
+- CI checks the lowest supported dependency versions (`gemfiles/minimum.gemfile`); Dependabot enabled.
+
 ## [1.2.2] - 2026-07-23
 
 ### Changed
