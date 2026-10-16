@@ -1,0 +1,7 @@
+<row>
+  <columns>
+    <raw><button href="#">x</button></raw>
+    <button href="#">Go</button>
+    <p class="am-host-marker">host</p>
+  </columns>
+</row>

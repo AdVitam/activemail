@@ -31,12 +31,13 @@ class TemplateHandlerTest < ActiveMailTest
     ActionView::Template.unregister_template_handler(:'inky-am_fake')
   end
 
-  def test_call_wraps_the_underlying_engine_output_with_inky
+  def test_call_routes_the_engine_output_through_rendering
     handler = ActionView::Template.registered_template_handler(:inky)
     template = ActionView::Template.new('<container></container>', 'test', handler, locals: [], format: :html)
     compiled = handler.call(template, '<container></container>')
 
-    assert_includes compiled, 'ActiveMail::Core.new.transpile'
+    assert_includes compiled, 'ActiveMail::Rails::Rendering.process('
+    assert_includes compiled, ', :html)'
   end
 
   def test_engine_handler_raises_for_unknown_engine

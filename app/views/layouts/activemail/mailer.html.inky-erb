@@ -15,12 +15,7 @@
       </xml>
     </noscript>
     <![endif]-->
-    <%# Embedded so the Premailer adapter (HTML-string only) can inline the framework CSS. %>
     <%= activemail_inline_styles %>
-    <%# Fallback for when activemail_inline_styles cannot read the compiled asset %>
-    <%# (CDN-only host, compile=false without precompile); redundant otherwise, as the %>
-    <%# embed's rules are idempotent once inlined. %>
-    <%= stylesheet_link_tag "activemail/activemail", media: "all" %>
   </head>
 
   <body style="margin:0;padding:0;word-spacing:normal;">

@@ -22,7 +22,7 @@ module ActiveMail
         require 'roadie'
       rescue LoadError
         # Unify on Inliner::Error (LoadError is not a StandardError, so the
-        # interceptor's rescue would otherwise miss it); the LoadError is #cause.
+        # Pipeline's rescue would otherwise miss it); the LoadError is #cause.
         raise ActiveMail::Inliner::Error, "ActiveMail::Inliner::Roadie requires the 'roadie' gem. Add it to your Gemfile."
       end
     end

@@ -1,0 +1,6 @@
+<html>
+  <head>
+    <%= activemail_inline_styles "nope/nope" %>
+  </head>
+  <body><%= yield %></body>
+</html>

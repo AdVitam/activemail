@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <%= activemail_inline_styles "activemail/activemail", "emails/emails" %>
+  </head>
+  <body>
+    <container>
+      <%= yield %>
+    </container>
+  </body>
+</html>

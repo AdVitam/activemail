@@ -2,13 +2,14 @@
 
 require 'test_helper'
 require 'fileutils'
+require 'minitest/mock'
 require 'tmpdir'
 # ActionView 7.1 references URI without requiring it (NameError on Ruby 3.3+ outside a full Rails app).
 require 'uri'
 require 'action_view'
 require 'action_view/base'
 require 'activemail/rails/template_handler'
-require 'activemail/rails/compiled_stylesheet'
+require 'activemail/asset_pipeline'
 require File.expand_path('../../app/helpers/active_mail/styles_helper', __dir__)
 require 'rails/generators'
 require 'rails/generators/test_case'
@@ -42,8 +43,8 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     assert_generated 'app/views/layouts/mailer.html.inky-erb'
 
     assert_includes file_content('config/initializers/activemail.rb'), 'ActiveMail.configure do |config|'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'stylesheet_link_tag "activemail/activemail"'
     assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'activemail_inline_styles'
+    refute_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'stylesheet_link_tag'
     assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), '<container>'
   end
 
@@ -57,13 +58,16 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     run_generator ['mailer', '--haml']
 
     assert_generated 'app/views/layouts/mailer.html.inky-haml'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'stylesheet_link_tag "activemail/activemail"'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'activemail_inline_styles'
+    refute_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'stylesheet_link_tag'
   end
 
   def test_slim_option_generates_slim_layout
     run_generator ['mailer', '--slim']
 
     assert_generated 'app/views/layouts/mailer.html.inky-slim'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-slim'), 'activemail_inline_styles'
+    refute_includes file_content('app/views/layouts/mailer.html.inky-slim'), 'stylesheet_link_tag'
   end
 
   def test_preserves_an_existing_plain_mailer_layout
@@ -144,8 +148,36 @@ end
 
 class EngineDefaultLayoutTest < ActiveMailTest
   ENGINE_VIEWS = File.expand_path('../../app/views', __dir__)
+  CSS = '.container{max-width:600px}'
+
+  FakeAssets = Struct.new(:css) do
+    def read(_logical_path)
+      css
+    end
+  end
 
   def test_default_layout_renders_head_and_footer_partials
+    html = render_default_layout(FakeAssets.new(CSS))
+
+    assert_includes html, 'BODY_CONTENT'
+    # _head emits a <spacer size="24">, _footer an <h-line>; both expand to tables.
+    assert_includes html, 'class="spacer"'
+    assert_includes html, 'class="h-line"'
+    assert_includes html, 'height="24"'
+    assert_includes html, 'class="container"'
+    assert_includes html, "<style type=\"text/css\">#{CSS}</style>"
+    refute_includes html, '<link'
+  end
+
+  def test_default_layout_raises_when_the_framework_stylesheet_is_unreadable
+    error = assert_raises(ActionView::Template::Error) { render_default_layout(FakeAssets.new(nil)) }
+
+    assert_instance_of ActiveMail::StylesheetNotFound, error.cause
+  end
+
+  private
+
+  def render_default_layout(assets)
     Dir.mktmpdir do |dir|
       views = File.join(dir, 'views')
       FileUtils.mkdir_p(File.join(views, 'mailers'))
@@ -155,18 +187,10 @@ class EngineDefaultLayoutTest < ActiveMailTest
 
       lookup = ActionView::LookupContext.new([views])
       view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
-      view.define_singleton_method(:stylesheet_link_tag) { |*| '' }
       # A real app auto-includes the engine's app/helpers into mailer views.
       view.extend(ActiveMail::StylesHelper)
 
-      html = view.render(template: 'mailers/sample', layout: 'layouts/activemail/mailer')
-
-      assert_includes html, 'BODY_CONTENT'
-      # _head emits a <spacer size="24">, _footer an <h-line>; both expand to tables.
-      assert_includes html, 'class="spacer"'
-      assert_includes html, 'class="h-line"'
-      assert_includes html, 'height="24"'
-      assert_includes html, 'class="container"'
+      ActiveMail::AssetPipeline.stub(:current, assets) { view.render(template: 'mailers/sample', layout: 'layouts/activemail/mailer') }
     end
   end
 end
@@ -185,6 +209,7 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
     content = file_content('app/mailers/components/cta.rb')
     assert_includes content, 'class Cta < ActiveMail::Components::Base'
     assert_includes content, 'def transform(node, inner)'
+    assert_includes content, 'def consumed_attributes'
     assert_includes content, '# typed: false'
     refute_includes content, 'extend T::Sig'
     assert_includes output, 'config.register_component "cta", Components::Cta'
@@ -195,6 +220,6 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
 
     content = file_content('app/mailers/components/social_links.rb')
     assert_includes content, 'config.register_component "social-links", Components::SocialLinks'
-    assert_includes content, 'combine_classes(node, "social-links")'
+    assert_includes content, 'root_attributes(node, classes: "social-links")'
   end
 end

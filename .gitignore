@@ -5,3 +5,5 @@
 Gemfile.lock
 sorbet/tapioca/
 gemfiles/*.lock
+test/integration/*/log/
+test/integration/*/tmp/

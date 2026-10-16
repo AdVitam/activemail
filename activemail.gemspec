@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.files = Dir['lib/**/*', 'app/**/*', 'LICENSE.txt', 'README.md', 'CHANGELOG.md']
   s.require_paths = ['lib']
 
-  # The markup engine works without Rails; the engine/generators/interceptor load
+  # The markup engine works without Rails; the engine/generators/mailer hooks load
   # only when Rails is present, so railties is intentionally not a hard dependency.
   s.add_dependency 'nokogiri', '>= 1.16', '< 1.20'
   s.add_dependency 'premailer', '>= 1.21', '< 2'

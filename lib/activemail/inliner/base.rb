@@ -17,7 +17,7 @@ module ActiveMail
       sig { abstract.params(html: String).returns(String) }
       def inline(html); end
 
-      # Lets the interceptor skip work without type-checking concrete adapters.
+      # Lets the pipeline skip work without type-checking concrete adapters.
       sig { returns(T::Boolean) }
       def noop?
         false

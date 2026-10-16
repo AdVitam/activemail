@@ -16,8 +16,6 @@
     </noscript>
     <![endif]-->
     <%%= activemail_inline_styles %>
-    <%%# Fallback for when activemail_inline_styles cannot read the compiled asset. %>
-    <%%= stylesheet_link_tag "activemail/activemail", media: "all" %>
   </head>
 
   <body style="margin:0;padding:0;word-spacing:normal;">
