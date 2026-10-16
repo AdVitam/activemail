@@ -10,11 +10,18 @@ module ActiveMail
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
-        attributes = combine_attributes(node, 'menu-item')
+        attributes = root_attributes(node, classes: 'menu-item')
         # No href → a non-link item, not a broken <a href="">; mirrors <button>.
         content = node.attr('href') ? %(<a href="#{escape_attr(node.attr('href'))}"#{link_attributes(node)}>#{inner}</a>) : inner
         th = ::ActiveMail::Core::INTERIM_TH_TAG
-        %(<#{th} #{attributes}#{style_attribute(node)}>#{content}</#{th}>)
+        %(<#{th}#{attributes}>#{content}</#{th}>)
+      end
+
+      private
+
+      sig { override.returns(T::Array[String]) }
+      def consumed_attributes
+        %w[href target rel]
       end
     end
   end

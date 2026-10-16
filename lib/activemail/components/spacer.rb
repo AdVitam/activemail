@@ -10,32 +10,36 @@ module ActiveMail
 
       sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
       def transform(node, _inner)
-        classes = combine_classes(node, 'spacer')
         size_sm = node.attr('size-sm')
         size_lg = node.attr('size-lg')
 
-        return build_table(node, classes, nil, size_for(node.attr('size'))) unless size_sm || size_lg
+        return build_table(node, 'spacer', size_for(node.attr('size')), skip: []) unless size_sm || size_lg
 
-        html = +''
-        html << build_table(node, classes, 'hide-for-large', size_for(size_sm)) if size_sm
-        html << build_table(node, classes, 'show-for-large', size_for(size_lg)) if size_lg
-        html
+        tables = []
+        tables << ['spacer hide-for-large', size_for(size_sm)] if size_sm
+        tables << ['spacer show-for-large', size_for(size_lg)] if size_lg
+        tables.each_with_index.map { |(classes, size), index| build_table(node, classes, size, skip: index.zero? ? [] : %w[id]) }.join
       end
 
       private
+
+      sig { override.returns(T::Array[String]) }
+      def consumed_attributes
+        [*TABLE_RESET_ATTRIBUTES, 'size', 'size-sm', 'size-lg']
+      end
 
       sig { params(value: T.untyped).returns(Integer) }
       def size_for(value)
         positive_int(value) || 16
       end
 
-      sig { params(node: Nokogiri::XML::Node, classes: String, extra: T.nilable(String), size: Integer).returns(String) }
-      def build_table(node, classes, extra, size)
-        css_class = extra ? "#{classes} #{extra}" : classes
+      # A repeated id would be invalid HTML: only the first table carries it.
+      sig { params(node: Nokogiri::XML::Node, classes: String, size: Integer, skip: T::Array[String]).returns(String) }
+      def build_table(node, classes, size, skip:)
         # mso-line-height-rule:exactly keeps Outlook from inflating the spacer.
         style = "font-size:#{size}px;line-height:#{size}px;mso-line-height-rule:exactly;"
         [
-          %(<table class="#{css_class}" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr>),
+          %(<table#{root_attributes(node, classes: classes, layout_style: 'width:100%;', skip: skip)} #{TABLE_RESET}><tbody><tr>),
           %(<td height="#{size}" style="#{style}">&nbsp;</td>),
           '</tr></tbody></table>'
         ].join

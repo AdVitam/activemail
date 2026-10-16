@@ -11,8 +11,15 @@ module ActiveMail
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         up = positive_int(node.attr('up'))
-        classes = combine_classes(node, ['block-grid', up && "up-#{up}"].compact.join(' '))
-        %(<table class="#{classes}" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr>#{inner}</tr></tbody></table>)
+        classes = ['block-grid', up && "up-#{up}"].compact.join(' ')
+        %(<table#{root_attributes(node, classes: classes, layout_style: 'width:100%;')} #{TABLE_RESET}><tbody><tr>#{inner}</tr></tbody></table>)
+      end
+
+      private
+
+      sig { override.returns(T::Array[String]) }
+      def consumed_attributes
+        [*TABLE_RESET_ATTRIBUTES, 'up']
       end
     end
   end

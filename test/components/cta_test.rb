@@ -100,6 +100,32 @@ class CtaTest < ActiveMailTest
     assert_equal 1, output.scan('rel="').size
   end
 
+  def test_cta_keeps_id_and_aria_attributes
+    output = render('<cta href="#" id="buy" aria-label="Buy now">Go</cta>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('a')
+
+    assert_equal 'buy', anchor['id']
+    assert_equal 'Buy now', anchor['aria-label']
+  end
+
+  def test_cta_does_not_leak_href_target_rel_twice
+    output = render('<cta href="#" target="_blank" rel="nofollow">Go</cta>')
+
+    assert_equal 1, output.scan('href="').size
+    assert_equal 1, output.scan('target="').size
+    assert_equal 1, output.scan('rel="').size
+  end
+
+  def test_info_box_keeps_user_style_and_passthrough
+    output = render('<info-box style="margin:0" id="note" data-x="1">note</info-box>')
+    table = Nokogiri::HTML.fragment(output).at_css('table.info-box')
+
+    assert_includes table['style'], 'width:100%'
+    assert_includes table['style'], 'margin:0'
+    assert_equal 'note', table['id']
+    assert_equal '1', table['data-x']
+  end
+
   def test_info_box_reads_border_token
     ActiveMail.tokens.color(:border, '#445566')
     output = render('<info-box>note</info-box>')

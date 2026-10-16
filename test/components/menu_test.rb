@@ -42,6 +42,16 @@ class MenuTest < ActiveMailTest
     refute_includes output, '<a'
   end
 
+  def test_menu_and_item_pass_through_attributes
+    fragment = Nokogiri::HTML.fragment(render('<menu id="nav" aria-label="Nav"><item href="#" id="first" data-x="1">I</item></menu>'))
+
+    assert_equal 'nav', fragment.at_css('table.menu')['id']
+    assert_equal 'Nav', fragment.at_css('table.menu')['aria-label']
+    assert_equal 'first', fragment.at_css('th.menu-item')['id']
+    assert_equal '1', fragment.at_css('th.menu-item')['data-x']
+    assert_nil fragment.at_css('th.menu-item')['href']
+  end
+
   def test_menu_merges_classes
     output = render('<menu class="vertical"></menu>')
 

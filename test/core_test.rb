@@ -69,6 +69,22 @@ class CoreTest < ActiveMailTest
     assert_includes output, '<!DOCTYPE html>'
   end
 
+  def test_word_doctype_in_text_is_untouched
+    output = render('<p>the doctype of a doctype</p>')
+
+    assert_includes output, 'the doctype of a doctype'
+    refute_includes output, 'DOCTYPE'
+  end
+
+  def test_nbsp_inside_style_is_not_rewritten
+    nbsp = "\u00A0"
+    output = render(%(<style>a:after{content:"#{nbsp}"}</style><p>#{nbsp}</p><script>var s = "#{nbsp}";</script>))
+
+    assert_includes output, %(content:"#{nbsp}")
+    assert_includes output, %(var s = "#{nbsp}")
+    assert_includes output, '<p>&nbsp;</p>'
+  end
+
   def test_unclosed_component_tag_is_still_transformed
     ActiveMail.configuration.on_parse_error = :ignore
     output = render('<row><columns>One')
@@ -163,6 +179,40 @@ class RawTest < ActiveMailTest
 
     assert_includes output, "a\n", 'newline before <raw> must survive'
     assert_includes output, "\nc", 'newline after </raw> must survive'
+  end
+
+  def test_user_text_resembling_a_raw_placeholder_is_untouched
+    output = render('<div><raw><b>kept</b></raw><p>###RAW0### and ###RAW1###</p></div>')
+
+    assert_includes output, '<b>kept</b>'
+    assert_includes output, '###RAW0### and ###RAW1###'
+  end
+
+  def test_two_raws_keep_their_own_content
+    output = render('<div><raw><x-one></raw>|<raw><x-two></raw></div>')
+
+    assert_includes output, '<x-one>|<x-two>'
+  end
+
+  def test_raw_containing_a_component_tag_is_not_transformed
+    output = render('<div><raw><button href="#">raw</button></raw><button href="#">real</button></div>')
+
+    assert_includes output, '<button href="#">raw</button>'
+    assert_equal 1, output.scan('class="button"').size
+  end
+
+  def test_many_raws_are_all_restored
+    output = render('<p>x</p><raw><i>r</i></raw>' * 300)
+
+    assert_equal 300, output.scan('<i>r</i>').size
+  end
+
+  def test_deeply_nested_components_keep_their_content
+    html = "#{'<row><columns>' * 60}deep#{'</columns></row>' * 60}"
+    output = render(html)
+
+    assert_equal 60, output.scan('class="row"').size
+    assert_includes output, 'deep'
   end
 
   def test_multiple_raw_blocks
