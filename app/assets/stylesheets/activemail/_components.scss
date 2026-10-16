@@ -1,52 +1,14 @@
-// Background on both cell and link so the whole bulletproof button is filled and
-// clickable. Radius by default — progressive enhancement, clients that don't support it ignore it.
-.button table td,
-.button a {
-  background: $am-button-primary-bg;
-  border-radius: $am-button-radius;
-}
+@use "sass:math";
+@use "settings" as *;
 
-.button a {
-  color: $am-button-color;
-  font-family: $am-font-family;
-  font-weight: bold;
-}
-
-.button.secondary table td,
-.button.secondary a {
-  background: $am-button-secondary-bg;
-  color: $am-button-secondary-color;
-}
-
-// Border on the cell only — a repeated <a> border would double the line.
-.button.secondary table td {
-  border: 1px solid $am-button-secondary-border;
-}
-
-.cta table td,
-.cta a {
-  background: $am-button-primary-bg;
-  border-radius: $am-button-radius;
-}
-
-.cta a {
-  color: $am-button-color;
-  font-family: $am-font-family;
-  font-weight: bold;
-}
-
-.cta.secondary table td,
-.cta.secondary a {
-  background: $am-button-secondary-bg;
-  color: $am-button-secondary-color;
-}
-
-.cta.secondary table td {
-  border: 1px solid $am-button-secondary-border;
+.expander {
+  padding: 0 !important;
+  visibility: hidden;
+  width: 0;
 }
 
 .info-box td {
-  background-color: $am-info-box-bg;
+  background-color: $am-info-box-background;
   border-left: 5px solid $am-info-box-border;
   border-radius: $am-box-radius;
   color: $am-info-box-text;
@@ -57,6 +19,35 @@
   background-color: $am-background;
   color: $am-text;
   padding: $am-spacing-md;
+}
+
+.h-line,
+.h-line th {
+  font-size: 1px;
+  line-height: 1px;
+}
+
+.h-line {
+  border-top: 1px solid $am-border;
+}
+
+.menu {
+  width: auto !important;
+}
+
+.menu-item {
+  padding: $am-spacing-sm $am-spacing-md;
+}
+
+.menu-item a {
+  text-decoration: none;
+}
+
+@for $n from 1 through $am-column-count {
+  .block-grid.up-#{$n} > tbody > tr > th,
+  .block-grid.up-#{$n} > tbody > tr > td {
+    width: math.div(100%, $n);
+  }
 }
 
 // Height is set inline per instance; this rule is just a styling anchor.

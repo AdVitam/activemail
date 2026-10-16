@@ -1,12 +1,15 @@
 // Dark mode: prefers-color-scheme (Apple Mail/iOS) + [data-ogsc] (Outlook
 // Android). Colors derived from tokens — pure black/white crush contrast.
 
-$am-dark-bg: mix($am-color-text, $am-color-background, 96%) !default;
-$am-dark-surface: mix($am-color-text, $am-color-background, 92%) !default;
-$am-dark-panel: mix($am-color-text, $am-color-background, 82%) !default;
-$am-dark-text: mix($am-color-background, $am-color-text, 88%) !default;
+@use "sass:color";
+@use "settings" as *;
+
+$am-dark-bg: color.mix($am-color-text, $am-color-background, 96%) !default;
+$am-dark-surface: color.mix($am-color-text, $am-color-background, 92%) !default;
+$am-dark-panel: color.mix($am-color-text, $am-color-background, 82%) !default;
+$am-dark-text: color.mix($am-color-background, $am-color-text, 88%) !default;
 $am-dark-muted: $am-color-muted !default;
-$am-dark-link: $am-color-primary !default;
+$am-dark-link: $am-button-primary-bg !default;
 
 @mixin am-dark-rules {
   .body,
@@ -39,25 +42,33 @@ $am-dark-link: $am-color-primary !default;
 
   .button table td,
   .button a,
+  .button span,
   .cta table td,
-  .cta a {
-    background: $am-color-primary !important;
-    color: $am-color-button-text !important;
+  .cta a,
+  .cta span {
+    background: $am-button-primary-bg !important;
+    color: $am-button-primary-color !important;
   }
 
-  // Restore the secondary fill AND text — the primary rule above forces button-text,
-  // which would be unreadable on an outline (light) secondary fill.
+  // Restore the secondary fill AND text — the primary rule above would be unreadable
+  // on a light secondary fill.
   .button.secondary table td,
   .button.secondary a,
+  .button.secondary span,
   .cta.secondary table td,
-  .cta.secondary a {
-    background: $am-color-secondary !important;
+  .cta.secondary a,
+  .cta.secondary span {
+    background: $am-button-secondary-bg !important;
     color: $am-button-secondary-color !important;
   }
 
   // Panels keep their inline background unless overridden here, which would
   // otherwise leave dark text on a dark background.
-  .callout-inner,
+  .callout-inner {
+    background-color: $am-dark-panel !important;
+    color: $am-dark-text !important;
+  }
+
   .info-box,
   .info-box td {
     background-color: $am-dark-panel !important;
@@ -102,21 +113,29 @@ $am-dark-link: $am-color-primary !default;
 
   [data-ogsc] .button table td,
   [data-ogsc] .button a,
+  [data-ogsc] .button span,
   [data-ogsc] .cta table td,
-  [data-ogsc] .cta a {
-    background: $am-color-primary !important;
-    color: $am-color-button-text !important;
+  [data-ogsc] .cta a,
+  [data-ogsc] .cta span {
+    background: $am-button-primary-bg !important;
+    color: $am-button-primary-color !important;
   }
 
   [data-ogsc] .button.secondary table td,
   [data-ogsc] .button.secondary a,
+  [data-ogsc] .button.secondary span,
   [data-ogsc] .cta.secondary table td,
-  [data-ogsc] .cta.secondary a {
-    background: $am-color-secondary !important;
+  [data-ogsc] .cta.secondary a,
+  [data-ogsc] .cta.secondary span {
+    background: $am-button-secondary-bg !important;
     color: $am-button-secondary-color !important;
   }
 
-  [data-ogsc] .callout-inner,
+  [data-ogsc] .callout-inner {
+    background-color: $am-dark-panel !important;
+    color: $am-dark-text !important;
+  }
+
   [data-ogsc] .info-box,
   [data-ogsc] .info-box td {
     background-color: $am-dark-panel !important;

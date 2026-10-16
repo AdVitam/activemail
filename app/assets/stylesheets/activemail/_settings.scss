@@ -1,5 +1,7 @@
-// All !default so a host app can pre-declare any value before importing the framework.
-@import "activemail/activemail_tokens";
+// @forward re-exposes the Ruby token defaults and every variable below, so a host
+// can override any of them with `@use "activemail/activemail" with (...)`.
+@forward "activemail_tokens";
+@use "activemail_tokens" as *;
 
 // Typography
 $am-font-family: $am-font-body !default;
@@ -11,19 +13,19 @@ $am-background: $am-color-background !default;
 $am-muted: $am-color-muted !default;
 $am-border: $am-color-border !default;
 
-// Buttons
+// Buttons — a null border means no border at all.
 $am-button-primary-bg: $am-color-primary !default;
+$am-button-primary-color: $am-color-primary-text !default;
+$am-button-primary-border: $am-color-primary-border !default;
 $am-button-secondary-bg: $am-color-secondary !default;
-$am-button-color: $am-color-button-text !default;
-// Secondary falls back to filled-button defaults; override *-secondary-* for an outline variant.
-$am-button-secondary-color: $am-color-button-text !default;
-$am-button-secondary-border: transparent !default;
+$am-button-secondary-color: $am-color-secondary-text !default;
+$am-button-secondary-border: $am-color-secondary-border !default;
 $am-button-radius: $am-radius-button !default;
 
 // Info box
-$am-info-box-bg: $am-background !default;
-$am-info-box-border: $am-border !default;
-$am-info-box-text: $am-text !default;
+$am-info-box-background: $am-color-info-box-background !default;
+$am-info-box-border: $am-color-info-box-border !default;
+$am-info-box-text: $am-color-info-box-text !default;
 $am-box-radius: $am-radius-box !default;
 
 // Grid — the gem emits no gutters; we provide them via column padding. Width
@@ -31,3 +33,4 @@ $am-box-radius: $am-radius-box !default;
 // aligned with the transpiled markup (ghost tables, column max-width).
 $am-container-width: $am-grid-container-width !default;
 $am-gutter: $am-spacing-sm !default;
+$am-breakpoint: $am-container-width !default;

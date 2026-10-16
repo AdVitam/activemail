@@ -10,7 +10,7 @@ require 'uri'
 require 'action_view'
 require 'action_view/base'
 require 'activemail/rails/template_handler'
-require 'activemail/rails/compiled_stylesheet'
+require 'activemail/asset_pipeline'
 require File.expand_path('../app/helpers/active_mail/styles_helper', __dir__)
 
 # Render-validation harness: compiles the shipped framework SCSS and validates the
@@ -20,6 +20,12 @@ require File.expand_path('../app/helpers/active_mail/styles_helper', __dir__)
 # this one proves the compiled CSS behaves once rendered through Premailer.
 class ScssRenderHarnessTest < ActiveMailTest
   ENGINE_VIEWS = File.expand_path('../app/views', __dir__)
+  FakeAssets = Struct.new(:css) do
+    def read(_logical_path)
+      css
+    end
+  end
+
   SAMPLE = '<row><columns large="6">A</columns>' \
            '<columns large="6">B</columns></row>'
 
@@ -94,10 +100,10 @@ class ScssRenderHarnessTest < ActiveMailTest
 
   # Renders the REAL default layout through ActionView with StylesHelper extended
   # (as a host's mailer would), stubbing the asset read so the helper emits the
-  # compiled framework CSS. This exercises the layout→helper→CompiledStylesheet
+  # compiled framework CSS. This exercises the layout→helper→AssetPipeline
   # seam — if either stops injecting the <style> block, the inline assertions fail.
   def rendered_email
-    ActiveMail::CompiledStylesheet.stub(:read, @css) do
+    ActiveMail::AssetPipeline.stub(:current, FakeAssets.new(@css)) do
       Dir.mktmpdir do |dir|
         views = File.join(dir, 'views')
         FileUtils.mkdir_p(File.join(views, 'mailers'))
