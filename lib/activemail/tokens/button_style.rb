@@ -18,7 +18,7 @@ module ActiveMail
       def self.from(tokens, variant)
         new(
           background: tokens.color!(variant),
-          color: tokens.color("#{variant}_text") || tokens.color!(:button_text),
+          color: tokens.color!("#{variant}_text"),
           radius: tokens.radius!(:button),
           border: tokens.color("#{variant}_border")
         )

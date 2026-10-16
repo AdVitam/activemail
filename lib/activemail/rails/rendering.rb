@@ -5,9 +5,8 @@ require 'active_support/isolated_execution_state'
 
 module ActiveMail
   module Rails
-    # One transpile + inline pass per mailer body. Inky template handlers only
-    # mark the scope opened by ActionMailer::Base#render_to_body; the pipeline runs
-    # once at its exit, so layouts wrapping a view never re-transpile it.
+    # Handlers only mark the scope; the pipeline runs once at its exit, so a
+    # layout wrapping a view never re-transpiles it.
     module Rendering
       STATE_KEY = :activemail_render_scope
 

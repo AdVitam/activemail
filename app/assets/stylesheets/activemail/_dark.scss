@@ -1,15 +1,7 @@
 // Dark mode: prefers-color-scheme (Apple Mail/iOS) + [data-ogsc] (Outlook
 // Android). Colors derived from tokens — pure black/white crush contrast.
 
-@use "sass:color";
 @use "settings" as *;
-
-$am-dark-bg: color.mix($am-color-text, $am-color-background, 96%) !default;
-$am-dark-surface: color.mix($am-color-text, $am-color-background, 92%) !default;
-$am-dark-panel: color.mix($am-color-text, $am-color-background, 82%) !default;
-$am-dark-text: color.mix($am-color-background, $am-color-text, 88%) !default;
-$am-dark-muted: $am-color-muted !default;
-$am-dark-link: $am-button-primary-bg !default;
 
 @mixin am-dark-rules {
   .body,

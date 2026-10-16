@@ -22,12 +22,12 @@ module ActiveMail
         const :broken_required, T::Array[String]
       end
 
+      MARKER = '.activemail_previews'
       EXTENSIONS = T.let({ html: 'html', text: 'txt' }.freeze, T::Hash[Symbol, String])
 
       sig { returns(Pathname) }
       attr_reader :output_root
 
-      # config.output_dir is resolved under root and must stay strictly inside it.
       sig { params(root: T.any(String, Pathname), config: Configuration).void }
       def initialize(root:, config: ActiveMail::Quality.config)
         @config = T.let(config, Configuration)
@@ -41,9 +41,8 @@ module ActiveMail
       sig { returns(Result) }
       def call
         clean_previous_output
-        FileUtils.mkdir_p(@output_root)
         previews = PreviewRenderer.all
-        previews.each { |preview, email| @config.locales_for(preview).each { |locale| render_locale(preview, email, locale) } }
+        PreviewRenderer.cases(@config, previews).each { |preview, email, locale| render_locale(preview, email, locale) }
 
         Result.new(
           output_root: @output_root, discovered: previews.size, rendered: @rendered, render_failures: @render_failures,
@@ -53,12 +52,27 @@ module ActiveMail
 
       private
 
-      # Only the files a previous run could have written: never the directory itself,
-      # so anything else living under output_dir survives.
       sig { void }
       def clean_previous_output
+        ensure_owned!
         @output_root.glob('**/*.{html,txt}').each { |path| path.delete if path.file? }
-        @output_root.glob('**/').sort_by { |dir| -dir.to_s.size }.each { |dir| dir.rmdir if dir != @output_root && dir.empty? }
+        prune_empty_directories
+        FileUtils.mkdir_p(@output_root)
+        FileUtils.touch(@output_root.join(MARKER))
+      end
+
+      # The marker proves a previous run owns the directory: without it, an existing
+      # non-empty output_dir (public/, app/...) is never touched.
+      sig { void }
+      def ensure_owned!
+        return if !@output_root.exist? || @output_root.join(MARKER).exist? || @output_root.empty?
+
+        raise ArgumentError, "output_dir #{@output_root} is not empty and was not created by activemail (no #{MARKER}); use a dedicated directory"
+      end
+
+      sig { void }
+      def prune_empty_directories
+        @output_root.glob('**/*/').sort_by { |dir| -dir.to_s.size }.each { |dir| dir.rmdir if dir.empty? }
       end
 
       # A required preview that fails, OR is never discovered at all (typo / deleted), is broken.

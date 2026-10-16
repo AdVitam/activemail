@@ -207,9 +207,8 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
 
     assert_generated 'app/mailers/components/cta.rb'
     content = file_content('app/mailers/components/cta.rb')
-    assert_includes content, 'class Cta < ActiveMail::Components::Base'
+    assert_includes content, 'class Cta < ActiveMail::Components::TableComponent'
     assert_includes content, 'def transform(node, inner)'
-    assert_includes content, 'def consumed_attributes'
     assert_includes content, '# typed: false'
     refute_includes content, 'extend T::Sig'
     assert_includes output, 'config.register_component "cta", Components::Cta'

@@ -65,9 +65,8 @@ module ActiveMail
 
   # Invalid bytes degrade deterministically to U+FFFD, but that silently corrupts
   # content — surface it per on_parse_error before scrubbing.
-  sig { params(html_string: String).returns(String) }
-  def self.scrub_invalid_bytes(html_string)
-    mode = configuration.on_parse_error
+  sig { params(html_string: String, mode: Symbol).returns(String) }
+  def self.scrub_invalid_bytes(html_string, mode)
     message = '[activemail] input had invalid byte sequences; scrubbed to U+FFFD'
     raise ParseError, message if mode == :raise
 
@@ -198,16 +197,17 @@ module ActiveMail
       # Lookup is by node name (String); a Symbol key would never match.
       normalized = value.to_hash.transform_keys(&:to_s)
       normalized.each { |tag, klass| ActiveMail::Components.validate_component!(tag, klass) }
-      invalidate_core!
       @components = normalized
+      invalidate_core!
+      normalized
     end
 
     sig { params(tag: T.any(String, Symbol), component_class: T.class_of(ActiveMail::Components::Base)).void }
     def register_component(tag, component_class)
       ActiveMail::Components.validate_component!(tag, component_class)
 
-      invalidate_core!
       @components = @components.merge(tag.to_s => component_class)
+      invalidate_core!
     end
 
     private

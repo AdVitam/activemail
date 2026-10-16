@@ -75,15 +75,22 @@ class PreviewRendererTest < QualityTest
     assert_empty html
   end
 
-  def test_render_calls_preview_and_extracts_html
-    message = Mail.new do
-      content_type 'text/html; charset=UTF-8'
-      body PreviewRendererTest::HTML_BODY
-    end
+  def test_declined_detects_empty_and_null_mail
+    null_mail = Class.new { def self.name = 'ActionMailer::Base::NullMail' }.new
 
-    html = ActiveMail::Quality::PreviewRenderer.render(FakePreview.new(message), 'welcome')
+    assert ActiveMail::Quality::PreviewRenderer.declined?(null_mail)
+    assert ActiveMail::Quality::PreviewRenderer.declined?(Mail.new)
+    refute ActiveMail::Quality::PreviewRenderer.declined?(Mail.new { body 'x' })
+  end
 
-    assert_includes html, 'hello'
+  def test_cases_expands_previews_by_locale
+    config = ActiveMail::Quality::Configuration.new
+    config.locales = %i[en fr]
+    preview = FakePreview.new(Mail.new)
+
+    cases = ActiveMail::Quality::PreviewRenderer.cases(config, [[preview, 'welcome']])
+
+    assert_equal [[preview, 'welcome', :en], [preview, 'welcome', :fr]], cases
   end
 
   def test_text_body_reads_the_text_part

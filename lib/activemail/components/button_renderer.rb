@@ -20,7 +20,7 @@ module ActiveMail
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
-        style = ActiveMail.tokens.button_style(class?(node, 'secondary') ? :secondary : :primary)
+        style = core.config.tokens.button_style(class?(node, 'secondary') ? :secondary : :primary)
         expand = class?(node, 'expand')
         width = expand ? ' style="width:100%;"' : ''
         [
@@ -35,7 +35,7 @@ module ActiveMail
 
       sig { override.returns(T::Array[String]) }
       def consumed_attributes
-        %w[href target rel]
+        LINK_ATTRIBUTES
       end
 
       # Padding on the control makes the whole button a clickable target.
@@ -43,10 +43,9 @@ module ActiveMail
       def control(node, inner, style, expand)
         css = control_style(style, expand)
         extra = passthrough_attributes(node)
-        href = node.attr('href')
-        return %(<span#{extra}#{style_attribute(node, css)}>#{inner}</span>) unless href
+        return %(<span#{extra}#{style_attribute(node, css)}>#{inner}</span>) unless node.attr('href')
 
-        %(<a#{extra} href="#{escape_attr(href)}"#{link_attributes(node)}#{style_attribute(node, css)}>#{inner}</a>)
+        anchor(node, inner, before: extra, after: style_attribute(node, css))
       end
 
       # The outline lives on the cell only: repeating it on the control would double the line.

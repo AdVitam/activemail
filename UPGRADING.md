@@ -73,11 +73,17 @@ $am-button-secondary-color: #264653;
 
 - The `<inky>` tag is removed.
 - `inner` is an opaque slot: interpolate it exactly once and never parse or
-  alter it. A component that does not output it drops its children.
+  alter it.
 - `IGNORED_ON_PASSTHROUGH`, `combine_attributes`, `pass_through_attributes`,
   `bulletproof_button_table` and `BUTTON_PADDING` are removed. Use
   `root_attributes(node, classes:, layout_style:)` and override the private
-  `consumed_attributes` to list the attributes your component reads.
+  `consumed_attributes` to list the attributes your component reads; a
+  component whose root is a `TABLE_RESET` table inherits from
+  `ActiveMail::Components::TableComponent`.
+- A component must output `inner` exactly once (or have no children):
+  otherwise `ActiveMail::Error` is raised instead of silently dropping content.
+  Self-closing `<h-line/>`/`<spacer/>` are not valid HTML4 and swallow their
+  following siblings; write `<h-line></h-line>`.
 - `id`, `aria-*`, `data-*` and other attributes now pass through on every
   built-in component. On tables carrying `TABLE_RESET`, the component's
   `role="presentation"` wins over the author's `role`.
@@ -90,14 +96,17 @@ $am-button-secondary-color: #264653;
 
 ## Quality
 
-- `output_dir` must be relative, inside `Rails.root`, and neither `.` nor
-  contain `..`. `render_all` only deletes the `.html`/`.txt` files it owns.
+- `output_dir` must be relative, inside `Rails.root` (symlinks resolved), and
+  neither `.` nor contain `..`. `render_all` marks it with an
+  `.activemail_previews` file and refuses to clean an existing, non-empty
+  directory without that marker: empty your previous output directory once.
+- `PreviewRenderer.render` is removed.
 - `RenderAll.new(root:, config:)` replaces `output_root:`.
 - Rendered files and failures carry the locale when it differs from the
   default (`welcome.fr.html`, `preview#email [fr]`).
 - `Guard#violations` and `assert_email_quality` accept a `Mail::Message` (HTML
   plus message rules) or an HTML string. New built-in rules may flag existing
   emails: `translation_missing`, `translation_missing_text`, `single_root`,
-  `text_part_present`, `text_part_plain`. Disable any with
+  `html_part_present`, `text_part_present`, `text_part_plain`. Disable any with
   `Guard.new(disable: [...])`.
 - Host-specific checks move to `Guard.new(rules: [Quality::Rule.html(...)])`.

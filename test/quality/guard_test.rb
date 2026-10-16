@@ -219,13 +219,36 @@ class GuardTest < QualityTest
     assert_includes message_rules(build_mail(text: 'ok', subject: 'translation missing: en.s')), :translation_missing_text
   end
 
-  def test_message_without_html_has_nothing_to_check
+  def test_message_without_html_violates_html_part_present_and_still_gets_message_rules
     mail = Mail.new do
       content_type 'text/plain; charset=UTF-8'
-      body 'declined'
+      body 'only text'
+    end
+    found = message_rules(mail)
+
+    assert_includes found, :html_part_present
+    assert_includes found, :text_part_present
+  end
+
+  def test_declined_send_has_nothing_to_check
+    assert_empty @guard.violations(Mail.new)
+    assert_empty @guard.violations(Class.new { def self.name = 'ActionMailer::Base::NullMail' }.new)
+  end
+
+  def test_html_part_present_can_be_disabled
+    guard = ActiveMail::Quality::Guard.new(disable: %i[html_part_present text_part_present])
+    mail = Mail.new do
+      content_type 'text/plain; charset=UTF-8'
+      body 'only text'
     end
 
-    assert_empty @guard.violations(mail)
+    assert_empty guard.violations(mail)
+  end
+
+  def test_violation_to_s_formats_rule_and_message
+    violation = ActiveMail::Quality::Guard::Violation.new(rule: :img_alt, message: 'bad')
+
+    assert_equal '[img_alt] bad', violation.to_s
   end
 
   def test_message_html_rules_run_on_the_html_part

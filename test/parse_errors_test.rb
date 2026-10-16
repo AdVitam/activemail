@@ -66,7 +66,7 @@ class ParseErrorsTest < ActiveMailTest
                           .find { |e| e.code == ActiveMail::LIBXML_UNKNOWN_TAG_CODE }
 
     refute_nil error
-    assert_silent { ActiveMail::ParseErrorReporter.new(['row']).call([error]) }
-    assert_output(nil, /\S/) { ActiveMail::ParseErrorReporter.new([]).call([error]) }
+    assert_silent { ActiveMail::ParseErrorReporter.new(['row'], ActiveMail.configuration).call([error]) }
+    assert_output(nil, /\S/) { ActiveMail::ParseErrorReporter.new([], ActiveMail.configuration).call([error]) }
   end
 end

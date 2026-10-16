@@ -217,37 +217,78 @@ class RenderAllTest < QualityTest
     assert_empty result.guard_failures
   end
 
-  def test_previous_run_files_are_replaced_and_foreign_files_survive
+  def run_in(root, dir: 'out')
+    config = ActiveMail::Quality::Configuration.new
+    config.output_dir = dir
+    ActiveMail::Quality::PreviewRenderer.stub(:all, []) do
+      ActiveMail::Quality::RenderAll.new(root: root, config: config).call
+    end
+  end
+
+  def test_second_run_removes_its_own_files_and_keeps_foreign_ones
     Dir.mktmpdir do |root|
+      run_in(root)
       out = File.join(root, 'out')
       FileUtils.mkdir_p(File.join(out, 'old'))
       File.write(File.join(out, 'old', 'stale.html'), 'stale')
       File.write(File.join(out, 'notes.md'), 'keep')
       File.write(File.join(out, 'old', 'keep.json'), 'keep')
-      config = ActiveMail::Quality::Configuration.new
-      config.output_dir = 'out'
 
-      ActiveMail::Quality::PreviewRenderer.stub(:all, []) do
-        ActiveMail::Quality::RenderAll.new(root: root, config: config).call
-      end
+      run_in(root)
 
       refute_path_exists File.join(out, 'old', 'stale.html')
       assert_equal 'keep', File.read(File.join(out, 'notes.md'))
       assert_equal 'keep', File.read(File.join(out, 'old', 'keep.json'))
+      assert_path_exists File.join(out, ActiveMail::Quality::RenderAll::MARKER)
+    end
+  end
+
+  def test_refuses_a_non_empty_directory_without_marker
+    Dir.mktmpdir do |root|
+      FileUtils.mkdir_p(File.join(root, 'public'))
+      File.write(File.join(root, 'public', '404.html'), 'precious')
+
+      error = assert_raises(ArgumentError) { run_in(root, dir: 'public') }
+
+      assert_includes error.message, ActiveMail::Quality::RenderAll::MARKER
+      assert_equal 'precious', File.read(File.join(root, 'public', '404.html'))
+    end
+  end
+
+  def test_accepts_an_existing_empty_directory
+    Dir.mktmpdir do |root|
+      FileUtils.mkdir_p(File.join(root, 'out'))
+
+      run_in(root)
+
+      assert_path_exists File.join(root, 'out', ActiveMail::Quality::RenderAll::MARKER)
+    end
+  end
+
+  def test_refuses_a_symlink_escaping_the_root
+    Dir.mktmpdir do |root|
+      Dir.mktmpdir do |outside|
+        File.write(File.join(outside, '404.html'), 'precious')
+        FileUtils.mkdir_p(File.join(root, 'tmp'))
+        File.symlink(outside, File.join(root, 'tmp', 'x'))
+
+        assert_raises(ArgumentError) { run_in(root, dir: 'tmp/x') }
+        assert_raises(ArgumentError) { run_in(root, dir: 'tmp/x/sub') }
+        assert_equal 'precious', File.read(File.join(outside, '404.html'))
+      end
     end
   end
 
   def test_empty_preview_directories_are_pruned
     Dir.mktmpdir do |root|
-      FileUtils.mkdir_p(File.join(root, 'tmp/activemail_previews/gone'))
-      File.write(File.join(root, 'tmp/activemail_previews/gone/a.txt'), 'x')
+      run_in(root)
+      FileUtils.mkdir_p(File.join(root, 'out/gone/deeper'))
+      File.write(File.join(root, 'out/gone/deeper/a.txt'), 'x')
 
-      ActiveMail::Quality::PreviewRenderer.stub(:all, []) do
-        ActiveMail::Quality::RenderAll.new(root: root, config: ActiveMail::Quality::Configuration.new).call
-      end
+      run_in(root)
 
-      assert_path_exists File.join(root, 'tmp/activemail_previews')
-      refute_path_exists File.join(root, 'tmp/activemail_previews/gone')
+      assert_path_exists File.join(root, 'out')
+      refute_path_exists File.join(root, 'out/gone')
     end
   end
 

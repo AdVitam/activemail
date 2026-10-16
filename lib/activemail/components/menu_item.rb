@@ -12,7 +12,7 @@ module ActiveMail
       def transform(node, inner)
         attributes = root_attributes(node, classes: 'menu-item')
         # No href → a non-link item, not a broken <a href="">; mirrors <button>.
-        content = node.attr('href') ? %(<a href="#{escape_attr(node.attr('href'))}"#{link_attributes(node)}>#{inner}</a>) : inner
+        content = node.attr('href') ? anchor(node, inner) : inner
         th = ::ActiveMail::Core::INTERIM_TH_TAG
         %(<#{th}#{attributes}>#{content}</#{th}>)
       end
@@ -21,7 +21,7 @@ module ActiveMail
 
       sig { override.returns(T::Array[String]) }
       def consumed_attributes
-        %w[href target rel]
+        LINK_ATTRIBUTES
       end
     end
   end

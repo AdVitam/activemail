@@ -13,11 +13,16 @@ module ActiveMail
     class Guard
       extend T::Sig
 
-      # One failed invariant. :rule is a stable symbol for programmatic matching;
-      # :message is human-facing.
       class Violation < T::Struct
+        extend T::Sig
+
         const :rule, Symbol
         const :message, String
+
+        sig { returns(String) }
+        def to_s
+          "[#{rule}] #{message}"
+        end
       end
 
       DISABLEABLE = BuiltinRules::NAMES
@@ -26,8 +31,6 @@ module ActiveMail
       # A full HTML document smaller than this carries no real layout and is suspect.
       DEFAULT_MIN_FULL_DOC_BYTES = 1_024
 
-      # disable: any subset of DISABLEABLE to skip those built-in checks.
-      # rules: custom Rule objects, checked in addition to the built-in ones.
       sig { params(max_bytes: Integer, min_full_doc_bytes: Integer, disable: T::Array[Symbol], rules: T::Array[Rule]).void }
       def initialize(max_bytes: DEFAULT_MAX_BYTES, min_full_doc_bytes: DEFAULT_MIN_FULL_DOC_BYTES, disable: [], rules: [])
         all = assemble_rules(BuiltinRules.new(max_bytes: max_bytes, min_full_doc_bytes: min_full_doc_bytes), disable, rules)
@@ -35,18 +38,16 @@ module ActiveMail
         @message_rules = T.let(all.select { |rule| rule.level == :message }, T::Array[Rule])
       end
 
-      # A String is checked as HTML (message rules do not apply). A Mail::Message
-      # (or ActionMailer::MessageDelivery) is checked on its HTML part plus the
-      # message rules; a message without HTML (declined send) has nothing to check.
+      # A String only gets the HTML rules; a message gets both levels, except a declined send.
       sig { params(html_or_message: T.untyped).returns(T::Array[Violation]) }
       def violations(html_or_message)
         return html_violations(html_or_message) if html_or_message.is_a?(String)
 
         mail = PreviewRenderer.mail(html_or_message)
-        html = PreviewRenderer.html_body(mail)
-        return [] if html.empty?
+        return [] if PreviewRenderer.declined?(mail)
 
-        html_violations(html) + apply(@message_rules, [mail])
+        html = PreviewRenderer.html_body(mail)
+        (html.empty? ? [] : html_violations(html)) + apply(@message_rules, [mail])
       end
 
       sig { params(html_or_message: T.untyped).returns(T::Boolean) }

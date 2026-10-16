@@ -291,8 +291,8 @@ Register your own tag with a class that inherits from
 `ActiveMail::Components::Base` and implements `#transform(node, inner)`. You get
 the matched Nokogiri node (read its attributes) and `inner`, an opaque slot
 standing for the already-transformed children: interpolate it exactly once where
-the children belong, never parse or alter it (a component that drops it drops
-its children). Return the replacement markup string. The generator scaffolds one:
+the children belong, never parse or alter it (dropping or duplicating it raises
+`ActiveMail::Error`). Return the replacement markup string. The generator scaffolds one:
 
 ```bash
 bin/rails g activemail:component Divider
@@ -303,15 +303,9 @@ The generator namespaces the class as `Components::Divider` (under
 A minimal hand-written equivalent:
 
 ```ruby
-class Divider < ActiveMail::Components::Base
+class Divider < ActiveMail::Components::TableComponent
   def transform(node, inner)
     %(<table#{root_attributes(node, classes: 'divider', layout_style: 'width:100%;')} #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table>)
-  end
-
-  private
-
-  def consumed_attributes
-    TABLE_RESET_ATTRIBUTES
   end
 end
 
@@ -320,7 +314,9 @@ ActiveMail.configuration.register_component('divider', Divider)
 
 `root_attributes` emits the merged `class`, the merged `style` and every
 pass-through attribute; override `consumed_attributes` to list the attributes
-your component reads itself (they are not passed through). Other helpers:
+your component reads itself (they are not passed through). `TableComponent`
+already consumes the `TABLE_RESET` attributes (`role`, `border`, …) of a layout
+table root; inherit from `Base` for any other root element. Other helpers:
 `class?`, `escape_attr`, `column_count`, `container_width`.
 
 Per-instance overrides (including replacing a built-in tag) are also possible:

@@ -5,9 +5,8 @@ require 'sorbet-runtime'
 
 module ActiveMail
   module Quality
-    # A named invariant. An :html rule receives (Nokogiri document, html String); a
-    # :message rule receives the Mail::Message. The check returns nil/false when it
-    # passes, or one message / an Array of messages per failure.
+    # :html rules receive (Nokogiri document, html), :message rules the mail; a check
+    # returns nil/false to pass, else one message or an Array of them.
     class Rule
       extend T::Sig
 

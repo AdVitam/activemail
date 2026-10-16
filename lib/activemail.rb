@@ -38,7 +38,7 @@ module ActiveMail
     # Comment placeholder handed to components as `inner`; the transformed children
     # are moved there without being re-serialized.
     SLOT_TEXT = 'activemail-slot'
-    SLOT = "<!--#{SLOT_TEXT}-->".freeze
+    SLOT = T.let("<!--#{SLOT_TEXT}-->".freeze, String)
 
     # The component markup repeats the id of the node it replaces, which libxml2 still has registered.
     LIBXML_ID_REDEFINED_CODE = 513
@@ -74,6 +74,9 @@ module ActiveMail
     sig { returns(Integer) }
     attr_reader :column_count, :container_width
 
+    sig { returns(ActiveMail::Configuration) }
+    attr_reader :config
+
     sig do
       params(
         config: ActiveMail::Configuration,
@@ -83,10 +86,11 @@ module ActiveMail
       ).void
     end
     def initialize(config: ::ActiveMail.configuration, components: nil, column_count: nil, container_width: nil)
+      @config = T.let(config, ActiveMail::Configuration)
       @component_instances = T.let(build_components(config, components), T::Hash[String, ActiveMail::Components::Base])
       @column_count = T.let(ActiveMail.positive_integer!(:column_count, column_count || config.column_count), Integer)
       @container_width = T.let(ActiveMail.positive_integer!(:container_width, container_width || config.container_width), Integer)
-      @error_reporter = T.let(ParseErrorReporter.new(@component_instances.keys + [INTERIM_TH_TAG]), ParseErrorReporter)
+      @error_reporter = T.let(ParseErrorReporter.new(@component_instances.keys + [INTERIM_TH_TAG], config), ParseErrorReporter)
     end
 
     # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.
@@ -112,18 +116,27 @@ module ActiveMail
     def transform_doc(node)
       node.children.each { |child| transform_doc(child) }
       component = component_instances[node.name]
-      replace_with_component(node, component.transform(node, SLOT)) if component
+      replace_with_component(node, component, component.transform(node, SLOT)) if component
     end
 
     # Only the component's own markup is parsed; the node's children are moved into
     # its slot, never re-serialized.
-    sig { params(node: Nokogiri::XML::Node, markup: String).void }
-    def replace_with_component(node, markup)
+    sig { params(node: Nokogiri::XML::Node, component: ActiveMail::Components::Base, markup: String).void }
+    def replace_with_component(node, component, markup)
       fragment = Nokogiri::HTML::DocumentFragment.new(node.document, markup, node)
       @error_reporter.call(fragment.errors.reject { |error| error.code == LIBXML_ID_REDEFINED_CODE })
-      slot = fragment.xpath('.//comment()').find { |comment| comment.content == SLOT_TEXT }
-      slot&.replace(node.children)
+      slots = fragment.xpath('.//comment()').select { |comment| comment.content == SLOT_TEXT }
+      ensure_slot_usage!(node, component, slots.size)
+      slots.first&.replace(node.children)
       node.replace(fragment)
+    end
+
+    sig { params(node: Nokogiri::XML::Node, component: ActiveMail::Components::Base, count: Integer).void }
+    def ensure_slot_usage!(node, component, count)
+      return if count == 1 || (count.zero? && node.children.all? { |child| child.text? && child.content.strip.empty? })
+
+      raise ActiveMail::Error,
+            "<#{node.name}> (#{component.class}) must output `inner` exactly once, found #{count}: its children would be lost or duplicated"
     end
 
     sig { params(string: String, marker: String, raws: T::Hash[String, String]).returns(String) }
@@ -166,7 +179,7 @@ module ActiveMail
     def normalize_input(html_string)
       html_string = html_string.to_s
       html_string = html_string.dup.force_encoding(Encoding::UTF_8) if html_string.encoding == Encoding::BINARY
-      html_string = ::ActiveMail.scrub_invalid_bytes(html_string) unless html_string.valid_encoding?
+      html_string = ::ActiveMail.scrub_invalid_bytes(html_string, config.on_parse_error) unless html_string.valid_encoding?
       html_string
     end
   end

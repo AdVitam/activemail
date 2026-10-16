@@ -25,7 +25,6 @@ module ActiveMail
         @guard = value
       end
 
-      # Relative to the host root (Rails.root); see OutputDir.
       sig { returns(String) }
       attr_reader :output_dir
 
@@ -49,7 +48,6 @@ module ActiveMail
         @required_previews = value.to_a.map(&:to_s)
       end
 
-      # An Array of locales, or a Proc receiving the preview class and returning one.
       sig { returns(T.any(T::Array[Symbol], Proc)) }
       attr_reader :locales
 
@@ -64,7 +62,6 @@ module ActiveMail
         value.is_a?(Proc) ? normalize_locales(value.call(preview)) : value
       end
 
-      # Which renderings RenderAll writes: a non-empty subset of FORMATS.
       sig { returns(T::Array[Symbol]) }
       def formats
         @formats.dup.freeze
@@ -82,8 +79,7 @@ module ActiveMail
         @formats = formats.uniq
       end
 
-      # ->(preview, email, locale, &block): wraps each rendering (freeze the clock,
-      # roll back a transaction, seed Faker). It must yield.
+      # ->(preview, email, locale, &block) wrapping each rendering; it must call block.
       sig { returns(T.nilable(Proc)) }
       attr_reader :around_each
 
@@ -94,9 +90,7 @@ module ActiveMail
         @around_each = value
       end
 
-      # Rewrites the content RenderAll writes (masking uuids, tokens, ids); the
-      # Guard always checks the unfiltered content. Each filter is a Proc
-      # (String -> String) or a [Regexp, replacement] pair.
+      # Applied to written files only: the Guard always sees the unfiltered content.
       sig { returns(T::Array[Proc]) }
       attr_reader :output_filters
 

@@ -1,11 +1,11 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative 'base'
+require_relative 'table_component'
 
 module ActiveMail
   module Components
-    class Container < Base
+    class Container < TableComponent
       extend T::Sig
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
@@ -25,7 +25,7 @@ module ActiveMail
 
       sig { override.returns(T::Array[String]) }
       def consumed_attributes
-        [*TABLE_RESET_ATTRIBUTES, 'align']
+        [*super, 'align']
       end
     end
   end

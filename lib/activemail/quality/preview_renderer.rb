@@ -10,21 +10,12 @@ module ActiveMail
       class << self
         extend T::Sig
 
-        # preview and message are external/dynamic ActionMailer & Mail objects.
-        sig { params(preview: T.untyped, email: String).returns(String) }
-        def render(preview, email)
-          html_body(preview.call(email))
-        end
-
-        # The single source for the "preview_name#email" key format (config keys,
-        # render_all, the Minitest helper).
         sig { params(preview: T.untyped, email: String).returns(String) }
         def key(preview, email)
           "#{preview.preview_name}##{email}"
         end
 
-        # The message is processed lazily, so everything that reads it (html_body,
-        # text_body, the Guard) must run inside the block, within locale and around_each.
+        # The message renders lazily: every read of it must happen inside the block.
         sig do
           params(preview: T.untyped, email: String, locale: Symbol, around_each: T.nilable(Proc), block: T.proc.params(mail: T.untyped).returns(T.untyped))
             .returns(T.untyped)
@@ -42,7 +33,6 @@ module ActiveMail
           result
         end
 
-        # [] when ActionMailer previews aren't loaded (host has none / previews disabled).
         sig { returns(T::Array[[T.untyped, String]]) }
         def all
           return [] unless defined?(ActionMailer::Preview)
@@ -52,8 +42,7 @@ module ActiveMail
           end
         end
 
-        # Returns '' for a plain-text-only message so the Guard surfaces missing
-        # HTML instead of validating plain text as if it were HTML.
+        # '' for a plain-text-only message: plain text must not be validated as HTML.
         sig { params(message: T.untyped).returns(String) }
         def html_body(message)
           unwrapped = mail(message)
@@ -63,13 +52,11 @@ module ActiveMail
           body.respond_to?(:decoded) ? body.decoded : body.to_s
         end
 
-        # Unwraps an ActionMailer::MessageDelivery into its Mail::Message.
         sig { params(message: T.untyped).returns(T.untyped) }
         def mail(message)
           message.respond_to?(:message) ? message.message : message
         end
 
-        # '' when the message has no text/plain alternative.
         sig { params(message: T.untyped).returns(String) }
         def text_body(message)
           unwrapped = mail(message)
@@ -77,6 +64,17 @@ module ActiveMail
           return '' unless body
 
           body.respond_to?(:decoded) ? body.decoded : body.to_s
+        end
+
+        # A send the mailer declined (NullMail, or nothing to deliver) has nothing to check.
+        sig { params(mail: T.untyped).returns(T::Boolean) }
+        def declined?(mail)
+          mail.class.name.to_s.end_with?('::NullMail') || (!mail.multipart? && mail.body.to_s.strip.empty?)
+        end
+
+        sig { params(config: Configuration, previews: T::Array[[T.untyped, String]]).returns(T::Array[[T.untyped, String, Symbol]]) }
+        def cases(config, previews = all)
+          previews.flat_map { |preview, email| config.locales_for(preview).map { |locale| [preview, email, locale] } }
         end
 
         private

@@ -60,6 +60,21 @@ class ScssFrameworkTest < ActiveMailTest
     assert_match(/background: #ff0000 !important/, css)
   end
 
+  def test_host_overrides_the_dark_palette
+    css = host('$am-dark-bg: #010101, $am-dark-link: #020202')
+
+    assert_match(/body \{\s*background-color: #010101 !important/, css)
+    assert_match(/\ba \{\s*color: #020202 !important/, css)
+  end
+
+  def test_only_settings_declares_configurable_variables
+    Dir.glob(File.join(SCSS_DIR, '*.scss')).each do |file|
+      next if File.basename(file) == '_settings.scss'
+
+      refute_match(/!default/, File.read(file), "#{File.basename(file)} declares a variable a host cannot configure")
+    end
+  end
+
   def test_host_overrides_the_button_layer
     css = host('$am-button-secondary-color: #010203')
 

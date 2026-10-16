@@ -10,14 +10,13 @@ require_relative 'rule'
 
 module ActiveMail
   module Quality
-    # The rules every Guard ships with; each name is disableable via Guard.new(disable:).
     class BuiltinRules
       extend T::Sig
 
       NAMES = T.let(
         %i[
-          max_bytes parse_error table_role img_alt lang min_full_doc_bytes
-          translation_missing single_root translation_missing_text text_part_present text_part_plain
+          max_bytes parse_error table_role img_alt lang min_full_doc_bytes translation_missing single_root
+          translation_missing_text html_part_present text_part_present text_part_plain
         ].freeze,
         T::Array[Symbol]
       )
@@ -64,6 +63,7 @@ module ActiveMail
       def message_rules
         [
           Rule.message(:translation_missing_text) { |mail| translation_missing_text_message(mail) },
+          Rule.message(:html_part_present) { |mail| html_part_present_message(mail) },
           Rule.message(:text_part_present) { |mail| text_part_present_message(mail) },
           Rule.message(:text_part_plain) { |mail| text_part_plain_message(mail) }
         ]
@@ -110,9 +110,7 @@ module ActiveMail
         'rendered HTML contains a missing i18n translation'
       end
 
-      # A view rewriting the skeleton under a layout that also provides one yields two
-      # roots, which breaks Outlook/Gmail rendering. Counted on the raw string: libxml2
-      # would silently merge the duplicates.
+      # Counted on the raw string: libxml2 silently merges duplicate roots.
       sig { params(html: String).returns(T::Array[String]) }
       def single_root_messages(html)
         { html: /<html[\s>]/i, body: /<body[\s>]/i }.filter_map do |tag, pattern|
@@ -143,7 +141,11 @@ module ActiveMail
         'subject or text part contains a missing i18n translation' if text.match?(MISSING_TRANSLATION)
       end
 
-      # A text-only message reads as HTML to the renderer, so multipart? is checked too.
+      sig { params(mail: T.untyped).returns(T.nilable(String)) }
+      def html_part_present_message(mail)
+        'message has no HTML part' if PreviewRenderer.html_body(mail).empty?
+      end
+
       sig { params(mail: T.untyped).returns(T.nilable(String)) }
       def text_part_present_message(mail)
         return if mail.multipart? && !PreviewRenderer.text_body(mail).strip.empty?

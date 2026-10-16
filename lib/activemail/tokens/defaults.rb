@@ -64,7 +64,6 @@ module ActiveMail
       T::Hash[Symbol, T.nilable(Symbol)]
     )
 
-    # Open/Closed: adding a group here is the only change needed to wire it everywhere.
     GROUPS = T.let(
       {
         color: DEFAULT_COLORS,

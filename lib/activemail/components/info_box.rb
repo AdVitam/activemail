@@ -1,12 +1,12 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative 'base'
+require_relative 'table_component'
 
 module ActiveMail
   module Components
     # Colors read from tokens at transform time (runtime config), not load-time constants.
-    class InfoBox < Base
+    class InfoBox < TableComponent
       extend T::Sig
 
       sig { override.overridable.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
@@ -20,14 +20,9 @@ module ActiveMail
 
       private
 
-      sig { override.returns(T::Array[String]) }
-      def consumed_attributes
-        TABLE_RESET_ATTRIBUTES
-      end
-
       sig { returns(String) }
       def cell_style
-        tokens = ActiveMail.tokens
+        tokens = core.config.tokens
         "background-color:#{tokens.color!(:info_box_background)};border-left:5px solid #{tokens.color!(:info_box_border)};" \
           "border-radius:#{tokens.radius!(:box)};color:#{tokens.color!(:info_box_text)};padding:#{tokens.spacing!(:md)};"
       end

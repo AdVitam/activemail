@@ -1,6 +1,7 @@
-// @forward re-exposes the Ruby token defaults and every variable below, so a host
-// can override any of them with `@use "activemail/activemail" with (...)`.
+// Sass only lets `with (...)` configure !default variables of forwarded modules:
+// every configurable variable must live here or in the forwarded token bridge.
 @forward "activemail_tokens";
+@use "sass:color";
 @use "activemail_tokens" as *;
 
 // Typography
@@ -34,3 +35,11 @@ $am-box-radius: $am-radius-box !default;
 $am-container-width: $am-grid-container-width !default;
 $am-gutter: $am-spacing-sm !default;
 $am-breakpoint: $am-container-width !default;
+
+// Dark mode
+$am-dark-bg: color.mix($am-color-text, $am-color-background, 96%) !default;
+$am-dark-surface: color.mix($am-color-text, $am-color-background, 92%) !default;
+$am-dark-panel: color.mix($am-color-text, $am-color-background, 82%) !default;
+$am-dark-text: color.mix($am-color-background, $am-color-text, 88%) !default;
+$am-dark-muted: $am-color-muted !default;
+$am-dark-link: $am-button-primary-bg !default;

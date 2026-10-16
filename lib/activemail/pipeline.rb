@@ -4,7 +4,6 @@
 require 'sorbet-runtime'
 
 module ActiveMail
-  # The single transpile + inline pass applied to a finished HTML body.
   module Pipeline
     extend T::Sig
 
@@ -20,8 +19,10 @@ module ActiveMail
     sig { params(inliner: ActiveMail::Inliner::Base, html: String).returns(String) }
     def self.inline(inliner, html)
       inliner.inline(html)
+    rescue ActiveMail::Inliner::Error
+      raise
     rescue StandardError => e
-      # A silently non-inlined mail is worse than a failed one; Ruby sets e as #cause.
+      # A silently non-inlined mail is worse than a failed one.
       raise ActiveMail::Inliner::Error, "[#{inliner.class}] CSS inlining failed: #{e.message}"
     end
     private_class_method :inline

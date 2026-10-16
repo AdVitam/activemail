@@ -4,15 +4,9 @@
 module Components
   # Register in config/initializers/activemail.rb:
   #   config.register_component "<%= tag_name %>", Components::<%= class_name %>
-  class <%= class_name %> < ActiveMail::Components::Base
+  class <%= class_name %> < ActiveMail::Components::TableComponent
     def transform(node, inner)
       %(<table#{root_attributes(node, classes: "<%= tag_name %>")} #{TABLE_RESET}><tbody><tr><td>#{inner}</td></tr></tbody></table>)
-    end
-
-    private
-
-    def consumed_attributes
-      TABLE_RESET_ATTRIBUTES
     end
   end
 end

@@ -9,14 +9,12 @@ require_relative 'asset_pipeline/propshaft'
 require_relative 'asset_pipeline/null'
 
 module ActiveMail
-  # Strategy over the host's asset pipeline: the inliner needs the compiled CSS
-  # bytes, which neither pipeline exposes through a common API.
   module AssetPipeline
     class << self
       extend T::Sig
 
-      # Constant detection, never respond_to?: Sprockets' config.assets is an
-      # OrderedOptions that answers respond_to? for any key.
+      # Never respond_to?: Sprockets' config.assets is an OrderedOptions that
+      # answers it for any key.
       sig { params(app: T.untyped).returns(ActiveMail::AssetPipeline::Base) }
       def for(app)
         if defined?(::Sprockets::Railtie)

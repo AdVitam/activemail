@@ -27,7 +27,7 @@ namespace :activemail do
       warn '[activemail] WARNING: no mailer previews were discovered — nothing was checked.' if result.discovered.zero?
       result.render_failures.each { |key, error| puts "  render failed: #{key}: #{error}" }
       result.guard_failures.each do |key, violations|
-        puts "  guard failed: #{key}", violations.map { |v| "    - [#{v.rule}] #{v.message}" }.join("\n")
+        puts "  guard failed: #{key}", violations.map { |v| "    - #{v}" }.join("\n")
       end
       abort "\n#{result.broken_required.size} required preview(s) failed: #{result.broken_required.join(', ')}" if result.broken_required.any?
     end

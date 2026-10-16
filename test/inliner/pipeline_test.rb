@@ -10,6 +10,12 @@ class PipelineTest < ActiveMailTest
     end
   end
 
+  class RaisingInlinerError < ActiveMail::Inliner::Base
+    def inline(_html)
+      raise ActiveMail::Inliner::Error, 'already wrapped'
+    end
+  end
+
   HTML = '<style>.x{color:red}</style><row class="x"><columns>hi</columns></row>'
 
   def test_transpiles_then_inlines
@@ -37,6 +43,14 @@ class PipelineTest < ActiveMailTest
     assert_includes error.message, 'ExplodingInliner'
     assert_includes error.message, 'CSS inlining failed: boom'
     assert_instance_of ArgumentError, error.cause
+  end
+
+  def test_inliner_error_is_not_wrapped_twice
+    ActiveMail.configuration.inliner = RaisingInlinerError
+
+    error = assert_raises(ActiveMail::Inliner::Error) { ActiveMail::Pipeline.call(HTML) }
+
+    assert_equal 'already wrapped', error.message
   end
 
   def test_reads_the_configuration_at_call_time

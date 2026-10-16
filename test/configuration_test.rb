@@ -260,8 +260,8 @@ class RegistryTest < ActiveMailTest
 
   def test_custom_component_has_dom_access
     counter = Class.new(ActiveMail::Components::Base) do
-      def transform(node, _inner)
-        "<span>#{node.elements.size}</span>"
+      def transform(node, inner)
+        "<span>#{node.elements.size}</span>#{inner}"
       end
     end
     output = render('<count><a></a><b></b></count>', components: { 'count' => counter })

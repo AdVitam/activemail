@@ -31,6 +31,7 @@ module ActiveMail
       abstract!
 
       HANDLED_ATTRIBUTES = T.let(%w[class style].freeze, T::Array[String])
+      LINK_ATTRIBUTES = T.let(%w[href target rel].freeze, T::Array[String])
 
       # Layout tables: presentation role (a11y) and zeroed legacy spacing.
       TABLE_RESET = 'role="presentation" border="0" cellpadding="0" cellspacing="0"'
@@ -60,13 +61,11 @@ module ActiveMail
         ActiveMail.parse_positive_integer(value)
       end
 
-      # Attributes the component turns into markup itself; everything else is passed through.
       sig { overridable.returns(T::Array[String]) }
       def consumed_attributes
         []
       end
 
-      # The one place a component's root element gets its class, author style and passthrough attributes.
       sig do
         params(node: Nokogiri::XML::Node, classes: T.nilable(String), layout_style: String, skip: T::Array[String]).returns(String)
       end
@@ -118,11 +117,16 @@ module ActiveMail
         ].join
       end
 
+      sig { params(node: Nokogiri::XML::Node, inner: String, before: String, after: String).returns(String) }
+      def anchor(node, inner, before: '', after: '')
+        %(<a#{before} href="#{escape_attr(node.attr('href'))}"#{link_attributes(node)}#{after}>#{inner}</a>)
+      end
+
       sig { params(node: Nokogiri::XML::Node, target: T.nilable(String)).returns(T.nilable(String)) }
       def resolve_rel(node, target)
         rel = node.attributes['rel']&.value
         rel = nil if rel&.strip&.empty?
-        rel || (ActiveMail.configuration.blank_link_rel if target == '_blank')
+        rel || (core.config.blank_link_rel if target == '_blank')
       end
 
       sig { returns(Integer) }

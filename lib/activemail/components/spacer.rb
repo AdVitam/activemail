@@ -1,11 +1,11 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative 'base'
+require_relative 'table_component'
 
 module ActiveMail
   module Components
-    class Spacer < Base
+    class Spacer < TableComponent
       extend T::Sig
 
       sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
@@ -25,7 +25,7 @@ module ActiveMail
 
       sig { override.returns(T::Array[String]) }
       def consumed_attributes
-        [*TABLE_RESET_ATTRIBUTES, 'size', 'size-sm', 'size-lg']
+        [*super, 'size', 'size-sm', 'size-lg']
       end
 
       sig { params(value: T.untyped).returns(Integer) }

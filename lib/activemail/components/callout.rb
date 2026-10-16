@@ -1,11 +1,11 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative 'base'
+require_relative 'table_component'
 
 module ActiveMail
   module Components
-    class Callout < Base
+    class Callout < TableComponent
       extend T::Sig
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
@@ -16,13 +16,6 @@ module ActiveMail
           %(<th class="#{escape_attr(classes)}">#{inner}</th><th class="expander"></th>),
           '</tr></tbody></table>'
         ].join
-      end
-
-      private
-
-      sig { override.returns(T::Array[String]) }
-      def consumed_attributes
-        TABLE_RESET_ATTRIBUTES
       end
     end
   end
