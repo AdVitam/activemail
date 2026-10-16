@@ -14,12 +14,11 @@ module ActiveMail
       const :radius, String
       const :border, T.nilable(String)
 
-      # color falls back to :button_text; border is opt-in (a "<variant>_border" token).
       sig { params(tokens: ActiveMail::Tokens, variant: T.any(String, Symbol)).returns(ButtonStyle) }
       def self.from(tokens, variant)
         new(
           background: tokens.color!(variant),
-          color: tokens.color("#{variant}_text") || tokens.color!(:button_text),
+          color: tokens.color!("#{variant}_text"),
           radius: tokens.radius!(:button),
           border: tokens.color("#{variant}_border")
         )

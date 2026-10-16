@@ -8,8 +8,8 @@ class ButtonTest < ActiveMailTest
       '<button href="https://example.com">Button</button>',
       <<~HTML
         <table class="button" role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>
-            <a href="https://example.com" style="display:inline-block;text-decoration:none;padding:12px 24px;">Button</a>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td style="background:#2a9d8f;border-radius:4px;">
+            <a href="https://example.com" style="display:inline-block;text-decoration:none;padding:12px 24px;background:#2a9d8f;color:#ffffff;font-weight:bold;border-radius:4px;">Button</a>
           </td></tr></tbody></table>
         </td></tr></tbody></table>
       HTML
@@ -20,6 +20,21 @@ class ButtonTest < ActiveMailTest
     output = render('<button href="#">Go</button>')
 
     assert_match(/<a [^>]*style="[^"]*padding:12px 24px;[^"]*"/, output)
+  end
+
+  def test_colors_come_from_tokens
+    ActiveMail.tokens.color(:primary, '#aa0011')
+    output = render('<button href="#">Go</button>')
+
+    assert_includes output, 'background:#aa0011'
+  end
+
+  def test_secondary_class_selects_the_secondary_variant
+    ActiveMail.tokens.color(:secondary, '#00cc33')
+    output = render('<button class="secondary" href="#">Go</button>')
+
+    assert_includes output, 'background:#00cc33'
+    assert_includes Nokogiri::HTML.fragment(output).at_css('table')['class'].split, 'secondary'
   end
 
   def test_target_blank_is_preserved
@@ -73,12 +88,28 @@ class ButtonTest < ActiveMailTest
     assert_includes output, 'small alert button'
   end
 
-  def test_expanded_button_adds_center_and_expander
+  def test_expanded_button_is_full_width
     output = render('<button class="expand" href="#">B</button>')
+    fragment = Nokogiri::HTML.fragment(output)
 
-    assert_includes output, '<center>'
-    assert_includes output, 'class="expander"'
-    assert_includes output, 'class="float-center"'
+    assert_equal 2, fragment.css('table[style*="width:100%"]').size
+    assert_includes fragment.at_css('a')['style'], 'display:block'
+    assert_includes fragment.at_css('table')['class'].split, 'expand'
+  end
+
+  def test_regular_button_is_not_full_width
+    output = render('<button href="#">B</button>')
+
+    refute_includes output, 'width:100%'
+  end
+
+  def test_id_and_aria_attributes_reach_the_anchor
+    output = render('<button href="#" id="go" aria-label="Go now" data-track="x">B</button>')
+    anchor = Nokogiri::HTML.fragment(output).at_css('a')
+
+    assert_equal 'go', anchor['id']
+    assert_equal 'Go now', anchor['aria-label']
+    assert_equal 'x', anchor['data-track']
   end
 
   def test_button_without_href_has_no_anchor

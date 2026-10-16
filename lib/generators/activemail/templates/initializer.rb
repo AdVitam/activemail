@@ -14,9 +14,6 @@ ActiveMail.configure do |config|
   # ActiveMail::Inliner::Base subclass/instance.
   # config.inliner = :premailer
 
-  # Set false if another inliner (e.g. premailer-rails) already runs on mailers.
-  # config.register_inline_interceptor = true
-
   # How malformed markup is handled: :warn (default), :ignore, or :raise.
   # config.on_parse_error = :warn
 

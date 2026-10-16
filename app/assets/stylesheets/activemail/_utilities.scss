@@ -1,3 +1,5 @@
+@use "settings" as *;
+
 // Alignment and visibility utilities.
 
 .text-center {
@@ -32,7 +34,7 @@
   overflow: hidden;
 }
 
-@media only screen and (min-width: 596px) {
+@media only screen and (min-width: $am-breakpoint) {
   .show-for-large {
     display: block !important;
     font-size: inherit;

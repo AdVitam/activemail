@@ -22,12 +22,18 @@ module ActiveMailTestHelpers
     assert_equal reformat_html(expected), reformat_html(actual)
   end
 
-  def render(input, **options)
-    ActiveMail::Core.new(options).transpile(input)
+  def render(input, **)
+    ActiveMail::Core.new(**).transpile(input)
   end
 
   def assert_renders(input, expected, **)
     assert_same_html(expected, render(input, **))
+  end
+end
+
+FakeAssets = Struct.new(:css) do
+  def read(_logical_path)
+    css
   end
 end
 

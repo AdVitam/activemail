@@ -1,20 +1,19 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative 'base'
+require_relative 'table_component'
 
 module ActiveMail
   module Components
-    class Callout < Base
+    class Callout < TableComponent
       extend T::Sig
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         classes = combine_classes(node, 'callout-inner')
-        attributes = pass_through_attributes(node)
         [
-          %(<table #{attributes}class="callout" #{TABLE_RESET}#{style_attribute(node, 'width:100%;')}><tbody><tr>),
-          %(<th class="#{classes}">#{inner}</th><th class="expander"></th>),
+          %(<table class="callout"#{passthrough_attributes(node)}#{style_attribute(node, 'width:100%;')} #{TABLE_RESET}><tbody><tr>),
+          %(<th class="#{escape_attr(classes)}">#{inner}</th><th class="expander"></th>),
           '</tr></tbody></table>'
         ].join
       end

@@ -8,10 +8,17 @@ class ContainerTest < ActiveMailTest
       '<container></container>',
       <<~HTML
         <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="600"><tr><td><![endif]-->
-        <table class="container" role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:600px;margin:0 auto;"><tbody><tr><td></td></tr></tbody></table>
+        <table class="container" style="width:100%;max-width:600px;margin:0 auto;" role="presentation" border="0" cellpadding="0" cellspacing="0" align="center"><tbody><tr><td></td></tr></tbody></table>
         <!--[if mso | IE]></td></tr></table><![endif]-->
       HTML
     )
+  end
+
+  def test_passes_through_attributes
+    table = Nokogiri::HTML.fragment(render('<container id="main" aria-label="Mail"></container>')).at_css('table.container')
+
+    assert_equal 'main', table['id']
+    assert_equal 'Mail', table['aria-label']
   end
 
   def test_keeps_passed_classes

@@ -3,6 +3,8 @@
 
 require 'sorbet-runtime'
 
+require_relative 'rendering'
+
 module ActiveMail
   module Rails
     class TemplateHandler
@@ -37,7 +39,7 @@ module ActiveMail
           else
             engine_handler.call(template)
           end
-        "ActiveMail::Core.new.transpile(begin; #{compiled_source};end)"
+        "ActiveMail::Rails::Rendering.process(begin; #{compiled_source};end, #{template.format.inspect})"
       end
 
       module Composer

@@ -5,6 +5,7 @@ require 'minitest/mock'
 require 'tmpdir'
 require 'rake'
 require 'activemail/quality'
+require 'activemail/quality/render_all'
 
 # The CI contract lives in the rake wrapper: abort (non-zero exit) when a
 # required preview is broken. RenderAll is unit-tested; this guards the glue.
@@ -24,7 +25,8 @@ class RenderAllRakeTest < ActiveMailTest
 
   def stub_render_all(broken:, &)
     result = ActiveMail::Quality::RenderAll::Result.new(
-      discovered: 1, rendered: 0, render_failures: {}, guard_failures: {}, broken_required: broken
+      output_root: Pathname('/tmp/out'), discovered: 1, rendered: 0, render_failures: {}, guard_failures: {},
+      broken_required: broken
     )
     runner = Object.new
     runner.define_singleton_method(:call) { result }
@@ -47,6 +49,26 @@ class RenderAllRakeTest < ActiveMailTest
         Rake::Task['activemail:emails:render_all'].invoke
       end
     end
+  end
+
+  def test_delegates_to_render_all_with_the_root_and_shared_config
+    received = nil
+    result = ActiveMail::Quality::RenderAll::Result.new(
+      output_root: Pathname('/tmp/out'), discovered: 1, rendered: 1, render_failures: {}, guard_failures: {}, broken_required: []
+    )
+    runner = Object.new
+    runner.define_singleton_method(:call) { result }
+    builder = lambda { |**kwargs|
+      received = kwargs
+      runner
+    }
+    out, = capture_io do
+      ActiveMail::Quality::RenderAll.stub(:new, builder) { Rake::Task['activemail:emails:render_all'].invoke }
+    end
+
+    assert_same ActiveMail::Quality.config, received[:config]
+    assert_kind_of Pathname, received[:root]
+    assert_includes out, 'into /tmp/out'
   end
 
   def test_tokens_export_writes_the_scss_partial_creating_dirs

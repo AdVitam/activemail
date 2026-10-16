@@ -1,20 +1,26 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative 'base'
+require_relative 'table_component'
 
 module ActiveMail
   module Components
-    class Wrapper < Base
+    class Wrapper < TableComponent
       extend T::Sig
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
-        attributes = combine_attributes(node, 'wrapper')
         [
-          %(<table #{attributes} #{TABLE_RESET} align="center"#{style_attribute(node, 'width:100%;')}><tbody><tr>),
+          %(<table#{root_attributes(node, classes: 'wrapper', layout_style: 'width:100%;')} #{TABLE_RESET} align="center"><tbody><tr>),
           %(<td class="wrapper-inner">#{inner}</td></tr></tbody></table>)
         ].join
+      end
+
+      private
+
+      sig { override.returns(T::Array[String]) }
+      def consumed_attributes
+        [*super, 'align']
       end
     end
   end

@@ -15,6 +15,9 @@ gem 'sorbet-static-and-runtime', '>= 0.5', '< 0.7', require: false
 gem 'tapioca', '>= 0.13', '< 0.21', require: false
 
 group :test do
+  # Real-app integration tests boot Sprockets and Propshaft apps in separate subprocesses.
+  gem 'dartsass-sprockets', require: false
+  gem 'propshaft', require: false
   gem 'roadie', '>= 5.0', require: false
   # Dart Sass (maintained, builds on Ruby 4.0): the render-validation harness
   # compiles the shipped framework SCSS to assert the rendered + inlined output.

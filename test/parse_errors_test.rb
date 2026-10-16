@@ -19,6 +19,14 @@ class ParseErrorsTest < ActiveMailTest
     assert_silent { render(input) }
   end
 
+  def test_component_markup_repeating_a_node_id_is_silent
+    assert_silent { render('<container id="c"><cta href="#" id="z">Go</cta><spacer id="s" size-sm="2" size-lg="3"></spacer></container>') }
+  end
+
+  def test_duplicate_author_ids_still_warn
+    assert_output(nil, /\S/) { render('<p id="a">x</p><p id="a">y</p>') }
+  end
+
   def test_registered_custom_tag_is_silent
     ActiveMail.configuration.register_component('my-box', CustomComponent)
 
@@ -58,7 +66,7 @@ class ParseErrorsTest < ActiveMailTest
                           .find { |e| e.code == ActiveMail::LIBXML_UNKNOWN_TAG_CODE }
 
     refute_nil error
-    assert_silent { ActiveMail::ParseErrorReporter.new(['row']).call([error]) }
-    assert_output(nil, /\S/) { ActiveMail::ParseErrorReporter.new([]).call([error]) }
+    assert_silent { ActiveMail::ParseErrorReporter.new(['row'], ActiveMail.configuration).call([error]) }
+    assert_output(nil, /\S/) { ActiveMail::ParseErrorReporter.new([], ActiveMail.configuration).call([error]) }
   end
 end

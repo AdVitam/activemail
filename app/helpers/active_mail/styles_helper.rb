@@ -1,29 +1,28 @@
 # typed: false
 # frozen_string_literal: true
 
+require 'activemail/asset_pipeline'
+
 module ActiveMail
-  # Embeds the compiled framework CSS as a <style> block so the Premailer adapter
-  # (string-only) inlines it — it can't fetch the stylesheet_link_tag's asset URL.
+  # Embeds the compiled CSS as a <style> block: the inliners take an HTML string
+  # and cannot fetch the digest URL a stylesheet_link_tag would emit.
   module StylesHelper
-    FRAMEWORK_STYLESHEET = 'activemail/activemail.css'
+    FRAMEWORK_STYLESHEET = 'activemail/activemail'
 
-    # '' (not raise) when the asset can't be read — degrades to the link fallback,
-    # but warns, since the email then ships unstyled.
-    def activemail_inline_styles
-      css = activemail_compiled_css
-      if css.blank?
-        ActiveMail.log_warning('[activemail] framework stylesheet could not be read from the asset pipeline; ' \
-                               'email ships without inlined framework CSS')
-        return ''.html_safe
-      end
-
+    def activemail_inline_styles(*logical_paths)
+      paths = logical_paths.empty? ? [FRAMEWORK_STYLESHEET] : logical_paths
+      css = paths.map { |path| activemail_compiled_css(path.to_s) }.join("\n")
       content_tag(:style, css.html_safe, type: 'text/css')
     end
 
     private
 
-    def activemail_compiled_css
-      ActiveMail::CompiledStylesheet.read(FRAMEWORK_STYLESHEET)
+    def activemail_compiled_css(logical_path)
+      asset = logical_path.end_with?('.css') ? logical_path : "#{logical_path}.css"
+      css = ActiveMail::AssetPipeline.current.read(asset)
+      return css if css.present?
+
+      raise ActiveMail::StylesheetNotFound, "stylesheet #{asset.inspect} is missing or empty in the asset pipeline"
     end
   end
 end

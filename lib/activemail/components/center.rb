@@ -8,16 +8,14 @@ module ActiveMail
     class Center < Base
       extend T::Sig
 
-      sig { override.params(node: Nokogiri::XML::Node, _inner: String).returns(String) }
-      def transform(node, _inner)
-        elements = node.elements
-        elements.each do |child|
+      sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
+      def transform(node, inner)
+        node.elements.each do |child|
           child['align'] = 'center'
           child['class'] = combine_classes(child, 'float-center')
         end
-        items = elements.css('.menu-item').to_a.concat(elements.css('item').to_a)
-        items.each { |item| item['class'] = combine_classes(item, 'float-center') }
-        node.to_s
+        node.css('.menu-item').each { |item| item['class'] = combine_classes(item, 'float-center') }
+        %(<center#{root_attributes(node, classes: nil)}>#{inner}</center>)
       end
     end
   end

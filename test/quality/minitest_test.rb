@@ -2,6 +2,7 @@
 
 require_relative 'quality_test_helper'
 require 'activemail/quality/minitest'
+require 'mail'
 
 class MinitestQualityTest < QualityTest
   include ActiveMail::Quality::Minitest
@@ -53,7 +54,7 @@ class MinitestQualityTest < QualityTest
   def test_assert_quality_for_all_previews_skips_a_non_required_unrenderable_preview
     raising = Object.new
     raising.define_singleton_method(:preview_name) { 'fake' }
-    raising.define_singleton_method(:call) { |_email| raise 'boom' }
+    raising.define_singleton_method(:call) { |_email, _params = {}| raise 'boom' }
     klass = Class.new(Minitest::Test) { include ActiveMail::Quality::Minitest }
 
     ActiveMail::Quality::PreviewRenderer.stub(:all, [[raising, 'welcome']]) do
@@ -65,16 +66,50 @@ class MinitestQualityTest < QualityTest
     assert_raises(Minitest::Skip) { klass.new(generated).send(generated) }
   end
 
+  def test_assert_email_quality_accepts_a_message_and_runs_message_rules
+    html_only = Mail.new do
+      content_type 'text/html; charset=UTF-8'
+      body CLEAN
+    end
+
+    assert_raises(Minitest::Assertion) { assert_email_quality(html_only) }
+    assert_email_quality(build_preview(CLEAN).call('welcome'))
+  end
+
+  def test_assert_email_quality_applies_custom_rules
+    rule = ActiveMail::Quality::Rule.html(:no_x) { |_doc, html| 'has x' if html.include?('x ') }
+    guard = ActiveMail::Quality::Guard.new(rules: [rule])
+
+    assert_raises(Minitest::Assertion) { assert_email_quality(CLEAN, guard: guard) }
+  end
+
+  def test_assert_quality_for_all_previews_generates_a_test_per_locale_and_wraps_in_around_each
+    wrapped = []
+    ActiveMail::Quality.configure do |config|
+      config.locales = %i[en fr]
+      config.around_each = lambda do |_preview, _email, locale, &block|
+        wrapped << locale
+        block.call
+      end
+    end
+    klass = Class.new(Minitest::Test) { include ActiveMail::Quality::Minitest }
+
+    ActiveMail::Quality::PreviewRenderer.stub(:all, [[build_preview(CLEAN), 'welcome']]) do
+      klass.assert_quality_for_all_previews
+    end
+
+    generated = klass.instance_methods.grep(/\Atest_.*email_quality/)
+    assert_equal 2, generated.size
+    generated.each { |name| klass.new(name).send(name) }
+    assert_equal %i[en fr], wrapped.sort
+  end
+
   private
 
   def build_preview(html)
-    require 'mail'
-    message = Mail.new do
-      content_type 'text/html; charset=UTF-8'
-      body html
-    end
+    message = build_mail(html: html)
     preview = Object.new
-    preview.define_singleton_method(:call) { |_email| message }
+    preview.define_singleton_method(:call) { |_email, _params = {}| message }
     preview.define_singleton_method(:preview_name) { 'fake' }
     preview
   end

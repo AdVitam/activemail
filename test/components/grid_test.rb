@@ -6,7 +6,7 @@ class GridTest < ActiveMailTest
   def test_row_renders_a_presentation_table
     assert_renders(
       '<row></row>',
-      '<table class="row" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr></tr></tbody></table>'
+      '<table class="row" style="width:100%;" role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr></tr></tbody></table>'
     )
   end
 
@@ -110,22 +110,44 @@ class GridTest < ActiveMailTest
     assert_equal 2, output.scan('class="row"').size
   end
 
-  def test_consumed_attributes_do_not_leak_into_output
-    output = render('<columns small="6" large="8" href="#x" size="3" no-expander="1" target="_blank">x</columns>')
+  def test_sizing_attributes_do_not_leak_into_output
+    output = render('<columns small="6" large="8">x</columns>')
     th = Nokogiri::HTML.fragment(output).at_css('th.columns')
 
-    %w[small large href size no-expander target].each do |attr|
-      assert_nil th[attr], "#{attr} leaked onto the column"
-    end
+    assert_nil th['small']
+    assert_nil th['large']
   end
 
-  def test_consumed_attributes_are_filtered_case_insensitively
-    output = render('<columns SIZE="10" Large="6">x</columns>')
+  def test_sizing_attributes_are_matched_case_insensitively
+    output = render('<columns SMALL="12" Large="6">x</columns>')
     th = Nokogiri::HTML.fragment(output).at_css('th.columns')
 
-    assert_nil th['size']
+    assert_nil th['small']
     assert_nil th['large']
     assert_includes output, 'large-6'
+  end
+
+  def test_id_and_aria_attributes_pass_through
+    output = render('<columns id="col" aria-label="Left" role="region">x</columns>')
+    th = Nokogiri::HTML.fragment(output).at_css('th.columns')
+
+    assert_equal 'col', th['id']
+    assert_equal 'Left', th['aria-label']
+    assert_equal 'region', th['role']
+  end
+
+  def test_only_column_siblings_count_for_the_default_width
+    output = render('<div><columns>One</columns><p>between</p><columns>Two</columns></div>')
+
+    assert_equal 2, output.scan('large-6').size
+    assert_includes output, 'columns first'
+    assert_includes output, 'columns last'
+  end
+
+  def test_non_column_sibling_does_not_break_first_and_last
+    output = render('<div><p>intro</p><columns>One</columns></div>')
+
+    assert_includes output, 'large-12 columns first last'
   end
 
   def test_user_style_is_not_emitted_twice_on_the_column

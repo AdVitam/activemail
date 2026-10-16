@@ -1,3 +1,5 @@
+@use "settings" as *;
+
 // Gutters are unconditional padding (inlined by the CSS inliner): the gem emits
 // none, and they must not depend on media queries (stripped by Gmail mobile).
 

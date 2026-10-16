@@ -22,26 +22,45 @@ module ActiveMail
 
       private
 
+      sig { override.returns(T::Array[String]) }
+      def consumed_attributes
+        %w[small large]
+      end
+
       sig { params(node: Nokogiri::XML::Node).returns([Integer, Integer]) }
       def column_sizes(node)
         small = positive_int(node.attr('small'))
         large = positive_int(node.attr('large'))
-        siblings = node.parent ? node.parent.elements.size : 1
-        [small || column_count, large || small || [column_count / siblings, 1].max]
+        [small || column_count, large || small || [column_count / column_siblings(node).size, 1].max]
+      end
+
+      # Already transformed columns are interim <th class="columns"> elements; other siblings take no width.
+      sig { params(node: Nokogiri::XML::Node).returns(T::Array[Nokogiri::XML::Node]) }
+      def column_siblings(node)
+        return [node] unless node.parent
+
+        node.parent.elements.select { |sibling| sibling.name == node.name || column?(sibling) }
+      end
+
+      sig { params(node: Nokogiri::XML::Node).returns(T::Boolean) }
+      def column?(node)
+        return false unless node.name == ::ActiveMail::Core::INTERIM_TH_TAG
+
+        class?(node, 'columns')
       end
 
       sig { params(node: Nokogiri::XML::Node, small: Integer, large: Integer).returns(String) }
       def column_classes(node, small, large)
+        siblings = column_siblings(node)
         classes = combine_classes(node, "small-#{small} large-#{large} columns")
-        classes += ' first' unless node.previous_element
-        classes += ' last' unless node.next_element
+        classes += ' first' if siblings.first == node
+        classes += ' last' if siblings.last == node
         classes
       end
 
       sig { params(node: Nokogiri::XML::Node, large: Integer).returns(String) }
       def expander(node, large)
-        subrows = node.elements.css('.row').to_a.concat(node.elements.css('row').to_a)
-        return '' unless large == column_count && subrows.empty?
+        return '' unless large == column_count && node.at_css('.row').nil?
 
         %(<th class="expander"></th>)
       end
@@ -61,7 +80,7 @@ module ActiveMail
         # Neutralize the client default th rendering (bold, centered).
         content_style = 'font-weight:normal;text-align:left;'
         [
-          %(<#{::ActiveMail::Core::INTERIM_TH_TAG} class="#{classes}"#{style_attribute(node, style)} #{pass_through_attributes(node)}>),
+          %(<#{::ActiveMail::Core::INTERIM_TH_TAG}#{root_attributes(node, classes: classes, layout_style: style)}>),
           %(<table #{TABLE_RESET} style="width:100%;"><tbody><tr>),
           %(<th style="#{content_style}">#{inner}</th>#{expander}),
           %(</tr></tbody></table></#{::ActiveMail::Core::INTERIM_TH_TAG}>)

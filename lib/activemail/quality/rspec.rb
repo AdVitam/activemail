@@ -6,8 +6,6 @@ require_relative '../quality'
 module ActiveMail
   module Quality
     module Rspec
-      # Standalone matcher object — testable without booting RSpec. The
-      # be_a_valid_email helper below just returns it (no RSpec::Matchers.define DSL).
       class ValidEmailMatcher
         extend T::Sig
 
@@ -17,9 +15,9 @@ module ActiveMail
           @violations = T.let([], T::Array[Guard::Violation])
         end
 
-        sig { params(html: String).returns(T::Boolean) }
-        def matches?(html)
-          @violations = @guard.violations(html)
+        sig { params(html_or_message: T.untyped).returns(T::Boolean) }
+        def matches?(html_or_message)
+          @violations = @guard.violations(html_or_message)
           @violations.empty?
         end
 
@@ -42,7 +40,7 @@ module ActiveMail
 
         sig { returns(String) }
         def formatted_violations
-          @violations.map { |v| "  - [#{v.rule}] #{v.message}" }.join("\n")
+          @violations.map { |v| "  - #{v}" }.join("\n")
         end
       end
     end
@@ -50,8 +48,6 @@ module ActiveMail
 end
 
 if defined?(RSpec)
-  # ValidEmailMatcher already implements the full matcher protocol, so a simple
-  # helper returning it is enough — no RSpec::Matchers.define DSL needed.
   module RSpec
     module Matchers
       extend T::Sig

@@ -21,22 +21,20 @@ module ActiveMail
       end
     end
 
-    # Public extension point: subclass, implement #transform(node, inner), then register.
+    # `inner` is an opaque slot: interpolate it exactly once; the engine moves the
+    # already transformed children there.
     class Base
       extend T::Sig
       extend T::Helpers
 
       abstract!
 
-      IGNORED_ON_PASSTHROUGH = T.let(
-        %w[class id href size large no-expander small target rel up size-sm size-lg style].freeze,
-        T::Array[String]
-      )
+      HANDLED_ATTRIBUTES = T.let(%w[class style].freeze, T::Array[String])
+      LINK_ATTRIBUTES = T.let(%w[href target rel].freeze, T::Array[String])
 
       # Layout tables: presentation role (a11y) and zeroed legacy spacing.
       TABLE_RESET = 'role="presentation" border="0" cellpadding="0" cellspacing="0"'
-
-      BUTTON_PADDING = 'padding:12px 24px;'
+      TABLE_RESET_ATTRIBUTES = T.let(%w[role border cellpadding cellspacing].freeze, T::Array[String])
 
       sig { params(core: ::ActiveMail::Core).void }
       def initialize(core)
@@ -57,19 +55,33 @@ module ActiveMail
         CGI.escapeHTML(value.to_s)
       end
 
-      # Author attributes are untrusted: "abc".to_i would silently become 0.
       sig { params(value: T.untyped).returns(T.nilable(Integer)) }
       def positive_int(value)
-        # The RBI types Integer(exception: false) as non-nilable; it does return nil.
-        int = T.let(Integer(value.to_s, exception: false), T.nilable(Integer))
-        int if int&.positive?
+        ActiveMail.parse_positive_integer(value)
       end
 
-      sig { params(node: Nokogiri::XML::Node).returns(String) }
-      def pass_through_attributes(node)
-        node.attributes.reject { |name, _| IGNORED_ON_PASSTHROUGH.include?(name.downcase) }.map do |name, value|
-          %(#{name}="#{escape_attr(value)}" )
-        end.join
+      sig { overridable.returns(T::Array[String]) }
+      def consumed_attributes
+        []
+      end
+
+      sig do
+        params(node: Nokogiri::XML::Node, classes: T.nilable(String), layout_style: String, skip: T::Array[String]).returns(String)
+      end
+      def root_attributes(node, classes:, layout_style: '', skip: [])
+        "#{class_attribute(node, classes)}#{passthrough_attributes(node, skip)}#{style_attribute(node, layout_style)}"
+      end
+
+      sig { params(node: Nokogiri::XML::Node, classes: T.nilable(String)).returns(String) }
+      def class_attribute(node, classes)
+        merged = combine_classes(node, classes)
+        merged.empty? ? '' : %( class="#{escape_attr(merged)}")
+      end
+
+      sig { params(node: Nokogiri::XML::Node, skip: T::Array[String]).returns(String) }
+      def passthrough_attributes(node, skip = [])
+        reserved = HANDLED_ATTRIBUTES + consumed_attributes + skip
+        node.attributes.except(*reserved).map { |name, attr| %( #{name}="#{escape_attr(attr.value)}") }.join
       end
 
       # Author style merged after layout (a duplicated style attribute would be
@@ -84,7 +96,7 @@ module ActiveMail
 
       sig { params(node: Nokogiri::XML::Node, klass: String).returns(T::Boolean) }
       def class?(node, klass)
-        !((node.attr('class') || '') =~ /(^|\s)#{Regexp.escape(klass)}($|\s)/).nil?
+        node['class'].to_s.split.include?(klass)
       end
 
       sig { params(node: Nokogiri::XML::Node, extra_classes: T.nilable(String)).returns(String) }
@@ -92,14 +104,6 @@ module ActiveMail
         existing = node['class'].to_s.split
         to_add = extra_classes.to_s.split
         (existing + to_add).uniq.join(' ')
-      end
-
-      sig { params(node: Nokogiri::XML::Node, extra_classes: T.nilable(String)).returns(String) }
-      def combine_attributes(node, extra_classes = nil)
-        classes = combine_classes(node, extra_classes)
-        # Escape like the other attribute paths: a literal " in the class would
-        # otherwise reopen the attribute.
-        [pass_through_attributes(node), %(class="#{escape_attr(classes)}")].join
       end
 
       sig { params(node: Nokogiri::XML::Node).returns(String) }
@@ -112,24 +116,16 @@ module ActiveMail
         ].join
       end
 
+      sig { params(node: Nokogiri::XML::Node, inner: String, before: String, after: String).returns(String) }
+      def anchor(node, inner, before: '', after: '')
+        %(<a#{before} href="#{escape_attr(node.attr('href'))}"#{link_attributes(node)}#{after}>#{inner}</a>)
+      end
+
       sig { params(node: Nokogiri::XML::Node, target: T.nilable(String)).returns(T.nilable(String)) }
       def resolve_rel(node, target)
         rel = node.attributes['rel']&.value
         rel = nil if rel&.strip&.empty?
-        rel || (ActiveMail.configuration.blank_link_rel if target == '_blank')
-      end
-
-      # Outlook-safe nested-table structure kept in one place for <button> and <cta>.
-      sig do
-        params(outer_classes: String, inner: String, cell_style: String, outer_extra: String).returns(String)
-      end
-      def bulletproof_button_table(outer_classes:, inner:, cell_style: '', outer_extra: '')
-        cell = cell_style.empty? ? '<td>' : %(<td style="#{cell_style}">)
-        [
-          %(<table class="#{outer_classes}" #{TABLE_RESET}><tbody><tr><td>),
-          %(<table #{TABLE_RESET}><tbody><tr>#{cell}#{inner}</td></tr></tbody></table>),
-          %(</td>#{outer_extra}</tr></tbody></table>)
-        ].join
+        rel || (core.config.blank_link_rel if target == '_blank')
       end
 
       sig { returns(Integer) }

@@ -7,19 +7,20 @@ require_relative 'libxml'
 
 module ActiveMail
   # Surfaces libxml2 recover-mode repairs that would otherwise silently change
-  # the rendered email, honoring ActiveMail.configuration.on_parse_error.
+  # the rendered email, honoring the config's on_parse_error.
   class ParseErrorReporter
     extend T::Sig
 
-    sig { params(known_tags: T::Array[String]).void }
-    def initialize(known_tags)
+    sig { params(known_tags: T::Array[String], config: ActiveMail::Configuration).void }
+    def initialize(known_tags, config)
+      @config = config
       # dup.freeze: the caller's array stays decoupled and cannot be mutated under us.
       @known_tags = T.let(known_tags.dup.freeze, T::Array[String])
     end
 
     sig { params(errors: T::Array[Nokogiri::XML::SyntaxError]).void }
     def call(errors)
-      mode = ::ActiveMail.configuration.on_parse_error
+      mode = @config.on_parse_error
       return if mode == :ignore
 
       relevant = errors.reject { |error| known_tag_error?(error) }

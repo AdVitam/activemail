@@ -48,6 +48,18 @@ class RspecMatcherTest < QualityTest
     refute matcher(guard: tiny).matches?(CLEAN)
   end
 
+  def test_matches_a_message_and_runs_message_rules
+    require 'mail'
+    html_only = Mail.new do
+      content_type 'text/html; charset=UTF-8'
+      body CLEAN
+    end
+    multipart = build_mail(html: CLEAN)
+
+    refute matcher.matches?(html_only)
+    assert matcher.matches?(multipart)
+  end
+
   def test_no_rspec_dependency_is_required
     refute defined?(RSpec), 'RSpec must not be loaded as a gem dependency'
   end

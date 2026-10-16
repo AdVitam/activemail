@@ -167,10 +167,6 @@ class ConfigurationTest < ActiveMailTest
     assert_raises(ArgumentError) { config.inliner = :nope }
   end
 
-  def test_register_inline_interceptor_defaults_true
-    assert ActiveMail::Configuration.new.register_inline_interceptor
-  end
-
   # The defaults are set by direct ivar assignment (bypassing the validating
   # setters); this guards against a future default that those setters would reject.
   def test_defaults_satisfy_their_own_validation
@@ -180,16 +176,18 @@ class ConfigurationTest < ActiveMailTest
     assert_includes ActiveMail::Configuration::ON_PARSE_ERROR_MODES, config.on_parse_error
     assert_operator config.column_count, :>, 0
     assert_operator config.container_width, :>, 0
-    assert_includes [true, false], config.register_inline_interceptor
     assert_respond_to config.template_engine, :to_sym
   end
 
-  def test_register_inline_interceptor_rejects_non_boolean
+  def test_core_is_memoized_until_an_input_changes
     config = ActiveMail::Configuration.new
+    core = config.core
 
-    assert_raises(TypeError) { config.register_inline_interceptor = 'yes' }
-    config.register_inline_interceptor = false
-    refute config.register_inline_interceptor
+    assert_same core, config.core
+    config.container_width = 480
+
+    refute_same core, config.core
+    assert_equal 480, config.core.container_width
   end
 
   def test_tokens_is_memoized
@@ -262,8 +260,8 @@ class RegistryTest < ActiveMailTest
 
   def test_custom_component_has_dom_access
     counter = Class.new(ActiveMail::Components::Base) do
-      def transform(node, _inner)
-        "<span>#{node.elements.size}</span>"
+      def transform(node, inner)
+        "<span>#{node.elements.size}</span>#{inner}"
       end
     end
     output = render('<count><a></a><b></b></count>', components: { 'count' => counter })
