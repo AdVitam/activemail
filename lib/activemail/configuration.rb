@@ -33,10 +33,10 @@ module ActiveMail
     block.call(configuration)
   end
 
-  # Parse mode (and the Guard's same decision): a full document carries <html.
+  # <html[\s>] so a <htmlfoo> custom tag or "<html" in text never flips the parse mode.
   sig { params(html: String).returns(T::Boolean) }
   def self.full_document?(html)
-    html.match?(/<html/i)
+    html.match?(/<html[\s>]/i)
   end
 
   # The complete SCSS variable bridge — tokens + the container_width layout knob.
