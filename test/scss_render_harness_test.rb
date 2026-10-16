@@ -20,12 +20,6 @@ require File.expand_path('../app/helpers/active_mail/styles_helper', __dir__)
 # this one proves the compiled CSS behaves once rendered through Premailer.
 class ScssRenderHarnessTest < ActiveMailTest
   ENGINE_VIEWS = File.expand_path('../app/views', __dir__)
-  FakeAssets = Struct.new(:css) do
-    def read(_logical_path)
-      css
-    end
-  end
-
   SAMPLE = '<row><columns large="6">A</columns>' \
            '<columns large="6">B</columns></row>'
 

@@ -150,12 +150,6 @@ class EngineDefaultLayoutTest < ActiveMailTest
   ENGINE_VIEWS = File.expand_path('../../app/views', __dir__)
   CSS = '.container{max-width:600px}'
 
-  FakeAssets = Struct.new(:css) do
-    def read(_logical_path)
-      css
-    end
-  end
-
   def test_default_layout_renders_head_and_footer_partials
     html = render_default_layout(FakeAssets.new(CSS))
 

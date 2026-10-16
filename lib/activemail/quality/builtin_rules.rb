@@ -21,13 +21,14 @@ module ActiveMail
         T::Array[Symbol]
       )
       MARKUP_IN_TEXT = %r{<(?:table|div|span|p|br|a)[\s>/]}i
-      MISSING_TRANSLATION = /translation missing/i
+      MISSING_TRANSLATION = /translation[ _]missing/i
+      ROOTS = T.let({ html: /<html[\s>]/i, body: /<body[\s>]/i }.freeze, T::Hash[Symbol, Regexp])
 
       sig { params(max_bytes: Integer, min_full_doc_bytes: Integer).void }
       def initialize(max_bytes:, min_full_doc_bytes:)
         # A non-positive threshold would silently disable (or invert) a check.
-        @max_bytes = T.let(positive_threshold!(:max_bytes, max_bytes), Integer)
-        @min_full_doc_bytes = T.let(positive_threshold!(:min_full_doc_bytes, min_full_doc_bytes), Integer)
+        @max_bytes = T.let(::ActiveMail.positive_integer!(:max_bytes, max_bytes), Integer)
+        @min_full_doc_bytes = T.let(::ActiveMail.positive_integer!(:min_full_doc_bytes, min_full_doc_bytes), Integer)
       end
 
       sig { returns(T::Array[Rule]) }
@@ -52,7 +53,7 @@ module ActiveMail
       sig { returns(T::Array[Rule]) }
       def content_rules
         [
-          Rule.html(:translation_missing) { |doc, html| translation_missing_message(doc, html) },
+          Rule.html(:translation_missing) { |_doc, html| translation_missing_message(html) },
           Rule.html(:single_root) { |_doc, html| single_root_messages(html) },
           Rule.html(:min_full_doc_bytes) { |_doc, html| min_full_doc_message(html) },
           Rule.html(:lang) { |doc, html| lang_message(doc, html) }
@@ -67,13 +68,6 @@ module ActiveMail
           Rule.message(:text_part_present) { |mail| text_part_present_message(mail) },
           Rule.message(:text_part_plain) { |mail| text_part_plain_message(mail) }
         ]
-      end
-
-      sig { params(name: Symbol, value: Integer).returns(Integer) }
-      def positive_threshold!(name, value)
-        raise ArgumentError, "#{name} must be a positive integer, got #{value}" unless value.positive?
-
-        value
       end
 
       sig { params(html: String).returns(T.nilable(String)) }
@@ -103,17 +97,15 @@ module ActiveMail
         "#{offenders} <img> missing an alt attribute" unless offenders.zero?
       end
 
-      sig { params(doc: Nokogiri::XML::Document, html: String).returns(T.nilable(String)) }
-      def translation_missing_message(doc, html)
-        return unless html.match?(MISSING_TRANSLATION) || doc.at_css('.translation_missing')
-
-        'rendered HTML contains a missing i18n translation'
+      sig { params(html: String).returns(T.nilable(String)) }
+      def translation_missing_message(html)
+        'rendered HTML contains a missing i18n translation' if html.match?(MISSING_TRANSLATION)
       end
 
       # Counted on the raw string: libxml2 silently merges duplicate roots.
       sig { params(html: String).returns(T::Array[String]) }
       def single_root_messages(html)
-        { html: /<html[\s>]/i, body: /<body[\s>]/i }.filter_map do |tag, pattern|
+        ROOTS.filter_map do |tag, pattern|
           count = html.scan(pattern).size
           "#{count} <#{tag}> roots, expected at most one" if count > 1
         end

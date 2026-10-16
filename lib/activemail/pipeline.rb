@@ -9,11 +9,7 @@ module ActiveMail
 
     sig { params(html: String, config: ActiveMail::Configuration).returns(String) }
     def self.call(html, config: ActiveMail.configuration)
-      transpiled = config.core.transpile(html)
-      inliner = config.resolved_inliner
-      return transpiled if inliner.noop?
-
-      inline(inliner, transpiled)
+      inline(config.resolved_inliner, config.core.transpile(html))
     end
 
     sig { params(inliner: ActiveMail::Inliner::Base, html: String).returns(String) }

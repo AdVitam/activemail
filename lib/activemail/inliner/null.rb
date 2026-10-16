@@ -13,11 +13,6 @@ module ActiveMail
       def inline(html)
         html
       end
-
-      sig { override.returns(T::Boolean) }
-      def noop?
-        true
-      end
     end
   end
 end

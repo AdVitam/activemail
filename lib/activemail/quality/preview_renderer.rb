@@ -43,13 +43,14 @@ module ActiveMail
         end
 
         # '' for a plain-text-only message: plain text must not be validated as HTML.
-        sig { params(message: T.untyped).returns(String) }
-        def html_body(message)
-          unwrapped = mail(message)
-          body = unwrapped.html_part&.body || single_part_html_body(unwrapped)
-          return '' unless body
+        sig { params(mail: T.untyped).returns(String) }
+        def html_body(mail)
+          body_of(mail, mail.html_part, [nil, 'text/html'])
+        end
 
-          body.respond_to?(:decoded) ? body.decoded : body.to_s
+        sig { params(mail: T.untyped).returns(String) }
+        def text_body(mail)
+          body_of(mail, mail.text_part, ['text/plain'])
         end
 
         # NullMail answers every respond_to? and returns nil: it is its own message.
@@ -58,19 +59,9 @@ module ActiveMail
           (message.message if message.respond_to?(:message)) || message
         end
 
-        sig { params(message: T.untyped).returns(String) }
-        def text_body(message)
-          unwrapped = mail(message)
-          body = unwrapped.text_part&.body || single_part_text_body(unwrapped)
-          return '' unless body
-
-          body.respond_to?(:decoded) ? body.decoded : body.to_s
-        end
-
-        # A send the mailer declined (NullMail, or nothing to deliver) has nothing to check.
         sig { params(mail: T.untyped).returns(T::Boolean) }
         def declined?(mail)
-          mail.class.name.to_s.end_with?('::NullMail') || (!mail.multipart? && mail.body.to_s.strip.empty?)
+          mail.class.name.to_s.end_with?('::NullMail')
         end
 
         sig { params(config: Configuration, previews: T::Array[[T.untyped, String]]).returns(T::Array[[T.untyped, String, Symbol]]) }
@@ -80,18 +71,11 @@ module ActiveMail
 
         private
 
-        sig { params(mail: T.untyped).returns(T.untyped) }
-        def single_part_text_body(mail)
-          mail.body if !mail.multipart? && mail.mime_type == 'text/plain'
-        end
-
-        # A single-part body counts as HTML only when its content-type says so
-        # (or is unset); a declared text/plain body is not HTML.
-        sig { params(mail: T.untyped).returns(T.untyped) }
-        def single_part_html_body(mail)
-          return if mail.multipart?
-
-          mail.body if mail.mime_type.nil? || mail.mime_type == 'text/html'
+        # A single-part body counts only when its content-type says so (unset counts as HTML).
+        sig { params(mail: T.untyped, part: T.untyped, mime_types: T::Array[T.nilable(String)]).returns(String) }
+        def body_of(mail, part, mime_types)
+          body = part&.body || (mail.body if !mail.multipart? && mime_types.include?(mail.mime_type))
+          body ? body.decoded : ''
         end
       end
     end

@@ -30,15 +30,7 @@ class PreviewRendererTest < QualityTest
   end
 
   def test_extracts_html_part_from_multipart_message
-    message = Mail.new do
-      text_part { body 'plain text' }
-      html_part do
-        content_type 'text/html; charset=UTF-8'
-        body PreviewRendererTest::HTML_BODY
-      end
-    end
-
-    html = ActiveMail::Quality::PreviewRenderer.html_body(message)
+    html = ActiveMail::Quality::PreviewRenderer.html_body(build_mail(html: HTML_BODY, text: 'plain text'))
 
     assert_includes html, 'hello'
     refute_includes html, 'plain text'
@@ -76,12 +68,9 @@ class PreviewRendererTest < QualityTest
     assert_empty html
   end
 
-  def test_declined_detects_empty_and_null_mail
-    null_mail = ActionMailer::Base::NullMail.new
-
-    assert ActiveMail::Quality::PreviewRenderer.declined?(null_mail)
-    assert ActiveMail::Quality::PreviewRenderer.declined?(Mail.new)
-    refute ActiveMail::Quality::PreviewRenderer.declined?(Mail.new { body 'x' })
+  def test_declined_detects_only_null_mail
+    assert ActiveMail::Quality::PreviewRenderer.declined?(ActionMailer::Base::NullMail.new)
+    refute ActiveMail::Quality::PreviewRenderer.declined?(Mail.new)
   end
 
   def test_mail_keeps_a_null_mail_whose_message_is_nil
@@ -102,13 +91,7 @@ class PreviewRendererTest < QualityTest
   end
 
   def test_text_body_reads_the_text_part
-    message = Mail.new do
-      text_part { body 'plain text' }
-      html_part do
-        content_type 'text/html; charset=UTF-8'
-        body PreviewRendererTest::HTML_BODY
-      end
-    end
+    message = build_mail(html: HTML_BODY, text: 'plain text')
 
     assert_equal 'plain text', ActiveMail::Quality::PreviewRenderer.text_body(message)
   end

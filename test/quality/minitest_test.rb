@@ -107,14 +107,7 @@ class MinitestQualityTest < QualityTest
   private
 
   def build_preview(html)
-    require 'mail'
-    message = Mail.new do
-      text_part { body 'plain' }
-      html_part do
-        content_type 'text/html; charset=UTF-8'
-        body html
-      end
-    end
+    message = build_mail(html: html)
     preview = Object.new
     preview.define_singleton_method(:call) { |_email, _params = {}| message }
     preview.define_singleton_method(:preview_name) { 'fake' }

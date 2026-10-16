@@ -97,7 +97,7 @@ module ActiveMail
 
       sig { params(node: Nokogiri::XML::Node, klass: String).returns(T::Boolean) }
       def class?(node, klass)
-        !((node.attr('class') || '') =~ /(^|\s)#{Regexp.escape(klass)}($|\s)/).nil?
+        node['class'].to_s.split.include?(klass)
       end
 
       sig { params(node: Nokogiri::XML::Node, extra_classes: T.nilable(String)).returns(String) }

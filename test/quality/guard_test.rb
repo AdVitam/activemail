@@ -232,7 +232,6 @@ class GuardTest < QualityTest
   end
 
   def test_declined_send_has_nothing_to_check
-    assert_empty @guard.violations(Mail.new)
     assert_empty @guard.violations(ActionMailer::Base::NullMail.new)
   end
 
@@ -327,16 +326,5 @@ class GuardTest < QualityTest
     @guard.violations(mail).map(&:rule)
   end
 
-  def build_mail(text:, html: CLEAN_DOC, subject: 'Hello')
-    html_body = html
-    text_body = text
-    Mail.new do
-      subject subject
-      text_part { body text_body } if text_body
-      html_part do
-        content_type 'text/html; charset=UTF-8'
-        body html_body
-      end
-    end
-  end
+  def build_mail(html: CLEAN_DOC, **) = super
 end

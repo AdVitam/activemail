@@ -54,13 +54,7 @@ class RspecMatcherTest < QualityTest
       content_type 'text/html; charset=UTF-8'
       body CLEAN
     end
-    multipart = Mail.new do
-      text_part { body 'plain' }
-      html_part do
-        content_type 'text/html; charset=UTF-8'
-        body CLEAN
-      end
-    end
+    multipart = build_mail(html: CLEAN)
 
     refute matcher.matches?(html_only)
     assert matcher.matches?(multipart)

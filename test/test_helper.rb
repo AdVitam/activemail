@@ -31,6 +31,12 @@ module ActiveMailTestHelpers
   end
 end
 
+FakeAssets = Struct.new(:css) do
+  def read(_logical_path)
+    css
+  end
+end
+
 # Shared fixture: a minimal custom component used across several test files.
 class CustomComponent < ActiveMail::Components::Base
   extend T::Sig
