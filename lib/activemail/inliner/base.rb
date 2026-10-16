@@ -3,12 +3,10 @@
 
 require 'sorbet-runtime'
 
+require_relative '../errors'
+
 module ActiveMail
   module Inliner
-    # Raised when an adapter fails; the original (premailer/roadie/nokogiri)
-    # exception is preserved as Exception#cause with its backtrace intact.
-    class Error < StandardError; end
-
     # DIP seam: ActiveMail depends on this abstraction, not premailer/roadie.
     class Base
       extend T::Sig

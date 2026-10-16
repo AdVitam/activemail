@@ -4,10 +4,7 @@
 require 'sorbet-runtime'
 
 require_relative 'tokens'
-require_relative 'inliner/base'
-require_relative 'inliner/premailer'
-require_relative 'inliner/roadie'
-require_relative 'inliner/null'
+require_relative 'inliner'
 
 module ActiveMail
   extend T::Sig
@@ -77,20 +74,25 @@ module ActiveMail
     html_string.scrub
   end
 
-  # Zero or negative dimensions blow up at transform time (Infinity ghost width).
-  # Reject non-integers rather than silently coercing ("abc"→0, 12.9→12).
+  # Rejects non-integers rather than silently coercing ("abc"→0, 12.9→12); zero or
+  # negative dimensions blow up at transform time (Infinity ghost width).
   sig { params(name: Symbol, value: T.untyped).returns(Integer) }
-  def self.assert_positive_dimension!(name, value)
-    raise ArgumentError, "#{name} must be a positive integer, got #{value.inspect}" unless value.is_a?(Integer) && value.positive?
+  def self.positive_integer!(name, value)
+    raise TypeError, "#{name} must be an Integer, got #{value.inspect} (#{value.class})" unless value.is_a?(Integer)
+    raise ArgumentError, "#{name} must be positive, got #{value}" unless value.positive?
 
     value
   end
 
-  sig { params(name: Symbol, value: T.untyped).returns(Integer) }
-  def self.positive_integer!(name, value)
-    raise TypeError, "#{name} must be an Integer, got #{value.inspect} (#{value.class})" unless value.is_a?(Integer)
+  # Author attributes are untrusted strings: base 10 only (Integer() reads "010" as
+  # octal and "0x20" as hex), nil when not a positive integer.
+  sig { params(value: T.untyped).returns(T.nilable(Integer)) }
+  def self.parse_positive_integer(value)
+    string = value.to_s.strip
+    return unless string.match?(/\A\d+\z/)
 
-    assert_positive_dimension!(name, value)
+    int = string.to_i
+    int if int.positive?
   end
 
   class Configuration
@@ -98,26 +100,8 @@ module ActiveMail
 
     ON_PARSE_ERROR_MODES = T.let(%i[ignore warn raise].freeze, T::Array[Symbol])
 
-    INLINERS = T.let(
-      { premailer: ActiveMail::Inliner::Premailer, roadie: ActiveMail::Inliner::Roadie, null: ActiveMail::Inliner::Null }.freeze,
-      T::Hash[Symbol, T.class_of(ActiveMail::Inliner::Base)]
-    )
-
-    InlinerSetting = T.type_alias { T.any(Symbol, ActiveMail::Inliner::Base, T.class_of(ActiveMail::Inliner::Base)) }
-
-    sig { returns(InlinerSetting) }
+    sig { returns(ActiveMail::Inliner::Setting) }
     attr_reader :inliner
-
-    # Lets a host already running another inliner (e.g. premailer-rails) opt out.
-    sig { returns(T::Boolean) }
-    attr_reader :register_inline_interceptor
-
-    sig { params(value: T.untyped).void }
-    def register_inline_interceptor=(value)
-      raise TypeError, 'register_inline_interceptor must be true or false' unless [true, false].include?(value)
-
-      @register_inline_interceptor = value
-    end
 
     sig { returns(Symbol) }
     attr_reader :template_engine, :on_parse_error
@@ -146,26 +130,27 @@ module ActiveMail
       @container_width = T.let(600, Integer)
       @components = T.let({}, ActiveMail::ComponentMap)
       @on_parse_error = T.let(:warn, Symbol)
-      @tokens = T.let(nil, T.nilable(ActiveMail::Tokens))
-      @inliner = T.let(:premailer, InlinerSetting)
-      @resolved_inliner = T.let(nil, T.nilable(ActiveMail::Inliner::Base))
-      @register_inline_interceptor = T.let(true, T::Boolean)
+      @inliner = T.let(:premailer, ActiveMail::Inliner::Setting)
       @blank_link_rel = T.let('noopener', T.nilable(String))
     end
 
-    # Validates eagerly (like sibling setters): a typo fails at boot, not silently mid-delivery.
-    sig { params(value: T.any(Symbol, String, ActiveMail::Inliner::Base, T.class_of(ActiveMail::Inliner::Base))).returns(InlinerSetting) }
-    def inliner=(value)
-      resolved = value.is_a?(String) ? value.to_sym : value
-      resolve_inliner(resolved) # raises on an invalid value, eagerly
-      @resolved_inliner = nil   # a new setting invalidates the memoized instance
-      @inliner = resolved
+    # Shared: building the component map per render is pure overhead.
+    sig { returns(ActiveMail::Core) }
+    def core
+      @core ||= T.let(ActiveMail::Core.new(config: self), T.nilable(ActiveMail::Core))
     end
 
-    # Memoized so the lifecycle is consistent (one instance reused, not re-built per call).
+    # Validates eagerly (like sibling setters): a typo fails at boot, not silently mid-delivery.
+    sig { params(value: T.any(String, ActiveMail::Inliner::Setting)).returns(ActiveMail::Inliner::Setting) }
+    def inliner=(value)
+      setting = value.is_a?(String) ? value.to_sym : value
+      @resolved_inliner = T.let(ActiveMail::Inliner.resolve(setting), T.nilable(ActiveMail::Inliner::Base))
+      @inliner = setting
+    end
+
     sig { returns(ActiveMail::Inliner::Base) }
     def resolved_inliner
-      @resolved_inliner ||= resolve_inliner(@inliner)
+      @resolved_inliner ||= T.let(ActiveMail::Inliner.resolve(@inliner), T.nilable(ActiveMail::Inliner::Base))
     end
 
     sig { params(value: T.untyped).returns(Symbol) }
@@ -186,11 +171,15 @@ module ActiveMail
     sig { params(value: T.untyped).returns(Integer) }
     def column_count=(value)
       @column_count = ActiveMail.positive_integer!(:column_count, value)
+      invalidate_core!
+      @column_count
     end
 
     sig { params(value: T.untyped).returns(Integer) }
     def container_width=(value)
       @container_width = ActiveMail.positive_integer!(:container_width, value)
+      invalidate_core!
+      @container_width
     end
 
     sig { params(value: T.untyped).returns(T.nilable(String)) }
@@ -208,6 +197,7 @@ module ActiveMail
       # Lookup is by node name (String); a Symbol key would never match.
       normalized = value.to_hash.transform_keys(&:to_s)
       normalized.each { |tag, klass| ActiveMail::Components.validate_component!(tag, klass) }
+      invalidate_core!
       @components = normalized
     end
 
@@ -215,19 +205,15 @@ module ActiveMail
     def register_component(tag, component_class)
       ActiveMail::Components.validate_component!(tag, component_class)
 
+      invalidate_core!
       @components = @components.merge(tag.to_s => component_class)
     end
 
     private
 
-    # Single source for both eager validation (in the setter) and resolution.
-    sig { params(value: InlinerSetting).returns(ActiveMail::Inliner::Base) }
-    def resolve_inliner(value)
-      return value if value.is_a?(ActiveMail::Inliner::Base)
-      return value.new if value.is_a?(Class) && value < ActiveMail::Inliner::Base
-      return T.must(INLINERS[value]).new if value.is_a?(Symbol) && INLINERS.key?(value)
-
-      raise ArgumentError, "unknown inliner #{value.inspect}, expected one of #{INLINERS.keys.inspect}, an Inliner::Base subclass, or an instance"
+    sig { void }
+    def invalidate_core!
+      @core = nil
     end
   end
 end

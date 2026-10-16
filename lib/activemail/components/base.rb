@@ -57,12 +57,9 @@ module ActiveMail
         CGI.escapeHTML(value.to_s)
       end
 
-      # Author attributes are untrusted: "abc".to_i would silently become 0.
       sig { params(value: T.untyped).returns(T.nilable(Integer)) }
       def positive_int(value)
-        # The RBI types Integer(exception: false) as non-nilable; it does return nil.
-        int = T.let(Integer(value.to_s, exception: false), T.nilable(Integer))
-        int if int&.positive?
+        ActiveMail.parse_positive_integer(value)
       end
 
       sig { params(node: Nokogiri::XML::Node).returns(String) }

@@ -21,16 +21,11 @@ module ActiveMail
 
       private
 
-      # Box-scoped tokens (fall back to page-level ones) so a host can give the box
-      # a distinct surface without colliding with :background/:border/:text.
       sig { returns(String) }
       def cell_style
         tokens = ActiveMail.tokens
-        background = tokens.color(:info_box_background) || tokens.color!(:background)
-        border = tokens.color(:info_box_border) || tokens.color!(:border)
-        text = tokens.color(:info_box_text) || tokens.color!(:text)
-        "background-color:#{background};border-left:5px solid #{border};border-radius:#{tokens.radius!(:box)};" \
-          "color:#{text};padding:#{tokens.spacing!(:md)};"
+        "background-color:#{tokens.color!(:info_box_background)};border-left:5px solid #{tokens.color!(:info_box_border)};" \
+          "border-radius:#{tokens.radius!(:box)};color:#{tokens.color!(:info_box_text)};padding:#{tokens.spacing!(:md)};"
       end
     end
   end

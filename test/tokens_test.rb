@@ -133,4 +133,22 @@ class TokensTest < ActiveMailTest
     assert_equal '#0f4447', style.color
     assert_equal 'rgba(15, 68, 71, 0.6)', style.border
   end
+
+  def test_derived_colors_fall_back_until_configured
+    tokens = ActiveMail::Tokens.new
+
+    assert_equal tokens.color(:button_text), tokens.color(:secondary_text)
+    assert_equal tokens.color(:background), tokens.color!(:info_box_background)
+    assert_nil tokens.color(:secondary_border)
+    tokens.color(:secondary_text, '#0f4447')
+
+    assert_equal '#0f4447', tokens.color(:secondary_text)
+  end
+
+  def test_scss_bridge_emits_derived_colors_and_null_for_unset_ones
+    scss = ActiveMail::Tokens.new.to_scss
+
+    assert_includes scss, '$am-color-secondary-text: #ffffff !default;'
+    assert_includes scss, '$am-color-secondary-border: null !default;'
+  end
 end

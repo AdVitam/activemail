@@ -5,6 +5,7 @@ require 'nokogiri'
 require 'sorbet-runtime'
 
 require_relative 'activemail/version'
+require_relative 'activemail/errors'
 require_relative 'activemail/components/base'
 require_relative 'activemail/components/button'
 require_relative 'activemail/components/row'
@@ -26,8 +27,6 @@ require_relative 'activemail/inliner/interceptor'
 require_relative 'activemail/parse_error_reporter'
 
 module ActiveMail
-  class ParseError < StandardError; end
-
   class Core
     extend T::Sig
 
@@ -63,12 +62,18 @@ module ActiveMail
     sig { returns(T::Hash[String, ActiveMail::Components::Base]) }
     attr_reader :component_instances
 
-    sig { params(options: T::Hash[Symbol, T.untyped]).void }
-    def initialize(options = {})
-      config = ::ActiveMail.configuration
-      @component_instances = T.let(build_components(config, options[:components]), T::Hash[String, ActiveMail::Components::Base])
-      @column_count = T.let(ActiveMail.assert_positive_dimension!(:column_count, options[:column_count] || config.column_count), Integer)
-      @container_width = T.let(ActiveMail.assert_positive_dimension!(:container_width, options[:container_width] || config.container_width), Integer)
+    sig do
+      params(
+        config: ActiveMail::Configuration,
+        components: T.untyped,
+        column_count: T.untyped,
+        container_width: T.untyped
+      ).void
+    end
+    def initialize(config: ::ActiveMail.configuration, components: nil, column_count: nil, container_width: nil)
+      @component_instances = T.let(build_components(config, components), T::Hash[String, ActiveMail::Components::Base])
+      @column_count = T.let(ActiveMail.positive_integer!(:column_count, column_count || config.column_count), Integer)
+      @container_width = T.let(ActiveMail.positive_integer!(:container_width, container_width || config.container_width), Integer)
     end
 
     # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.

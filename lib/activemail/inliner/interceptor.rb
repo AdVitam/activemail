@@ -11,12 +11,7 @@ module ActiveMail
 
         sig { params(message: T.untyped).void }
         def delivering_email(message)
-          config = ActiveMail.configuration
-          # Runtime check: an engine initializer runs before the host's, so a
-          # boot-time flag read would always see the default.
-          return unless config.register_inline_interceptor
-
-          inliner = config.resolved_inliner
+          inliner = ActiveMail.configuration.resolved_inliner
           return if inliner.noop?
 
           html_parts(message).each do |part|

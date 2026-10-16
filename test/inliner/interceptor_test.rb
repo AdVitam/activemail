@@ -58,18 +58,6 @@ class InterceptorTest < ActiveMailTest
     assert_equal 'boom', error.cause.message
   end
 
-  def test_register_inline_interceptor_false_is_a_no_op_at_runtime
-    ActiveMail.configuration.register_inline_interceptor = false
-    message = Mail.new do
-      content_type 'text/html; charset=UTF-8'
-      body HTML_BODY
-    end
-
-    ActiveMail::Inliner::Interceptor.delivering_email(message)
-
-    assert_equal HTML_BODY, message.body.to_s
-  end
-
   def test_html_attachment_is_not_inlined
     message = Mail.new do
       html_part do
