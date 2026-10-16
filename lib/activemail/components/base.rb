@@ -21,9 +21,8 @@ module ActiveMail
       end
     end
 
-    # Public extension point: subclass, implement #transform(node, inner), then register.
-    # `inner` is an opaque slot: interpolate it once; the engine moves the already
-    # transformed children there.
+    # `inner` is an opaque slot: interpolate it exactly once; the engine moves the
+    # already transformed children there.
     class Base
       extend T::Sig
       extend T::Helpers

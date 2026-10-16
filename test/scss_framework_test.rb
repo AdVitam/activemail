@@ -3,9 +3,6 @@
 require 'test_helper'
 require 'support/scss_compiler'
 
-# Guards the shipped SCSS framework: module system, token wiring, host
-# configuration and the component rules. The compiled + inlined behavior of the
-# grid is proven by the render-validation harness in scss_render_harness_test.rb.
 class ScssFrameworkTest < ActiveMailTest
   SCSS_DIR = File.expand_path('../app/assets/stylesheets/activemail', __dir__)
 

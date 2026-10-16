@@ -92,10 +92,7 @@ class ScssRenderHarnessTest < ActiveMailTest
 
   private
 
-  # Renders the REAL default layout through ActionView with StylesHelper extended
-  # (as a host's mailer would), stubbing the asset read so the helper emits the
-  # compiled framework CSS. This exercises the layout→helper→AssetPipeline
-  # seam — if either stops injecting the <style> block, the inline assertions fail.
+  # The real default layout, so the assertions fail if the layout or the helper stops emitting the <style> block.
   def rendered_email
     ActiveMail::AssetPipeline.stub(:current, FakeAssets.new(@css)) do
       Dir.mktmpdir do |dir|

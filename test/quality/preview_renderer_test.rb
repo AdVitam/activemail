@@ -8,7 +8,6 @@ require 'i18n'
 class PreviewRendererTest < QualityTest
   HTML_BODY = '<html lang="en"><body><p>hello</p></body></html>'
 
-  # Minimal stand-in for an ActionMailer::Preview: #call(email, params) returns a Mail::Message.
   class FakePreview
     def initialize(message)
       @message = message

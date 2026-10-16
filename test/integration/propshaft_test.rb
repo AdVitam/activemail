@@ -5,9 +5,7 @@ require 'fileutils'
 require_relative 'support/dummy_runner'
 require_relative '../support/scss_compiler'
 
-# Propshaft does not preprocess SCSS (hosts build it with dartsass-rails or
-# equivalent into app/assets/builds), so the framework stylesheet is compiled
-# ahead of the boot, the way `dartsass:build` would.
+# Propshaft does not preprocess SCSS: the stylesheet is compiled before boot, as `dartsass:build` would.
 class PropshaftIntegrationTest < Minitest::Test
   include DummyAppAssertions
 

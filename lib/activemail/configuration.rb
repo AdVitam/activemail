@@ -39,7 +39,6 @@ module ActiveMail
     html.match?(/<html[\s>]/i)
   end
 
-  # The complete SCSS variable bridge — tokens + the grid layout knobs.
   # Single source for the .scss.erb bridge (Sprockets) and tokens:export (Propshaft).
   sig { returns(String) }
   def self.scss_variables

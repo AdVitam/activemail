@@ -5,10 +5,7 @@ require 'tmpdir'
 require 'fileutils'
 require 'sass-embedded'
 
-# Compiles the shipped framework SCSS exactly as the asset pipeline would: the
-# _activemail_tokens.scss.erb bridge is ERB-rendered first (it reads
-# ActiveMail.tokens / config), then dart-sass compiles the entry point with the
-# app/assets/stylesheets load path. Any Sass deprecation aborts the compilation.
+# The .scss.erb token bridge is ERB-rendered first, as the asset pipeline would before Sass.
 module ScssCompiler
   STYLESHEETS_ROOT = File.expand_path('../../app/assets/stylesheets', __dir__)
   FRAMEWORK_DIR = File.join(STYLESHEETS_ROOT, 'activemail')
@@ -27,8 +24,6 @@ module ScssCompiler
 
   module_function
 
-  # source: an optional host stylesheet (e.g. an @use ... with (...)) compiled
-  # instead of the framework entry point.
   def compile(source = nil)
     Dir.mktmpdir do |tmp|
       stage(tmp)
