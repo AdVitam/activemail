@@ -20,10 +20,9 @@ namespace :activemail do
     task render_all: :environment do
       require 'activemail/quality/render_all'
 
-      config = ActiveMail::Quality.config
-      output_root = defined?(Rails) && Rails.respond_to?(:root) ? Rails.root.join(config.output_dir) : Pathname(config.output_dir)
-      result = ActiveMail::Quality::RenderAll.new(output_root: output_root, config: config).call
-      puts "Rendered #{result.rendered} email(s) into #{output_root}"
+      root = defined?(Rails) && Rails.respond_to?(:root) && Rails.root ? Rails.root : Pathname.pwd
+      result = ActiveMail::Quality::RenderAll.new(root: root, config: ActiveMail::Quality.config).call
+      puts "Rendered #{result.rendered} email(s) into #{result.output_root}"
       # A green run on zero previews would silently verify nothing — make it visible.
       warn '[activemail] WARNING: no mailer previews were discovered — nothing was checked.' if result.discovered.zero?
       result.render_failures.each { |key, error| puts "  render failed: #{key}: #{error}" }

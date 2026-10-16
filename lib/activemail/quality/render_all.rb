@@ -2,8 +2,10 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require 'pathname'
 
 require_relative '../quality'
+require_relative 'output_dir'
 
 module ActiveMail
   module Quality
@@ -12,6 +14,7 @@ module ActiveMail
       extend T::Sig
 
       class Result < T::Struct
+        const :output_root, Pathname
         const :discovered, Integer
         const :rendered, Integer
         const :render_failures, T::Hash[String, String]
@@ -19,71 +22,108 @@ module ActiveMail
         const :broken_required, T::Array[String]
       end
 
-      sig { params(output_root: T.any(String, Pathname), config: Configuration).void }
-      def initialize(output_root:, config: ActiveMail::Quality.config)
-        @output_root = T.let(Pathname(output_root), Pathname)
+      EXTENSIONS = T.let({ html: 'html', text: 'txt' }.freeze, T::Hash[Symbol, String])
+
+      sig { returns(Pathname) }
+      attr_reader :output_root
+
+      # config.output_dir is resolved under root and must stay strictly inside it.
+      sig { params(root: T.any(String, Pathname), config: Configuration).void }
+      def initialize(root:, config: ActiveMail::Quality.config)
         @config = T.let(config, Configuration)
+        @output_root = T.let(OutputDir.resolve(config.output_dir, root), Pathname)
+        @render_failures = T.let({}, T::Hash[String, String])
+        @guard_failures = T.let({}, T::Hash[String, T::Array[Guard::Violation]])
+        @failed_keys = T.let(Set.new, T::Set[String])
+        @rendered = T.let(0, Integer)
       end
 
       sig { returns(Result) }
       def call
-        FileUtils.rm_rf(@output_root)
+        clean_previous_output
         FileUtils.mkdir_p(@output_root)
-
-        render_failures = {}
-        guard_failures = {}
         previews = PreviewRenderer.all
-        rendered = render_all(previews, render_failures, guard_failures)
+        previews.each { |preview, email| @config.locales_for(preview).each { |locale| render_locale(preview, email, locale) } }
 
         Result.new(
-          discovered: previews.size, rendered: rendered, render_failures: render_failures,
-          guard_failures: guard_failures, broken_required: broken_required(previews, render_failures, guard_failures)
+          output_root: @output_root, discovered: previews.size, rendered: @rendered, render_failures: @render_failures,
+          guard_failures: @guard_failures, broken_required: broken_required(previews)
         )
       end
 
       private
 
-      # A required preview that fails, OR is never discovered at all (typo / deleted), is broken.
-      sig do
-        params(
-          previews: T::Array[[T.untyped, String]],
-          render_failures: T::Hash[String, String],
-          guard_failures: T::Hash[String, T::Array[Guard::Violation]]
-        ).returns(T::Array[String])
+      # Only the files a previous run could have written: never the directory itself,
+      # so anything else living under output_dir survives.
+      sig { void }
+      def clean_previous_output
+        @output_root.glob('**/*.{html,txt}').each { |path| path.delete if path.file? }
+        @output_root.glob('**/').sort_by { |dir| -dir.to_s.size }.each { |dir| dir.rmdir if dir != @output_root && dir.empty? }
       end
-      def broken_required(previews, render_failures, guard_failures)
+
+      # A required preview that fails, OR is never discovered at all (typo / deleted), is broken.
+      sig { params(previews: T::Array[[T.untyped, String]]).returns(T::Array[String]) }
+      def broken_required(previews)
         required = @config.required_previews
         discovered = previews.map { |preview, email| PreviewRenderer.key(preview, email) }
-        ((render_failures.keys | guard_failures.keys) & required) | (required - discovered)
+        (@failed_keys.to_a & required) | (required - discovered)
       end
 
-      sig do
-        params(previews: T::Array[[T.untyped, String]], render_failures: T::Hash[String, String], guard_failures: T::Hash[String, T::Array[Guard::Violation]]).returns(Integer)
+      sig { params(preview: T.untyped, email: String, locale: Symbol).void }
+      def render_locale(preview, email, locale)
+        key = PreviewRenderer.key(preview, email)
+        label = locale == I18n.default_locale ? key : "#{key} [#{locale}]"
+        violations = render_one(preview, email, locale, label)
+        record(key, label, violations)
       end
-      def render_all(previews, render_failures, guard_failures)
-        previews.count do |preview, email|
-          key = PreviewRenderer.key(preview, email)
-          path = render_one(preview, email, render_failures, key)
-          next false unless path
 
-          violations = @config.guard.violations(File.read(path))
-          guard_failures[key] = violations unless violations.empty?
-          true
+      sig { params(key: String, label: String, violations: T.nilable(T::Array[Guard::Violation])).void }
+      def record(key, label, violations)
+        return @failed_keys << key if violations.nil?
+
+        @rendered += 1
+        return if violations.empty?
+
+        @failed_keys << key
+        @guard_failures[label] = violations
+      end
+
+      sig { params(preview: T.untyped, email: String, locale: Symbol, label: String).returns(T.nilable(T::Array[Guard::Violation])) }
+      def render_one(preview, email, locale, label)
+        PreviewRenderer.within(preview, email, locale, @config.around_each) do |mail|
+          write(preview, email, locale, mail)
+          @config.guard.violations(mail)
         end
-      end
-
-      sig do
-        params(preview: T.untyped, email: String, failures: T::Hash[String, String], key: String).returns(T.nilable(Pathname))
-      end
-      def render_one(preview, email, failures, key)
-        PreviewRenderer.render_to_disk(preview, email, @output_root)
       rescue SystemCallError
         raise # disk/permission failures are not template bugs — let them abort the run
       rescue StandardError => e
-        root = e.cause
-        cause = root ? "\n  caused by: #{root.class}: #{root.message}" : ''
-        failures[key] = "#{e.class}: #{e.message}\n  #{e.backtrace&.first(5)&.join("\n  ")}#{cause}"
+        @render_failures[label] = describe(e)
         nil
+      end
+
+      sig { params(error: StandardError).returns(String) }
+      def describe(error)
+        root = error.cause
+        cause = root ? "\n  caused by: #{root.class}: #{root.message}" : ''
+        "#{error.class}: #{error.message}\n  #{error.backtrace&.first(5)&.join("\n  ")}#{cause}"
+      end
+
+      sig { params(preview: T.untyped, email: String, locale: Symbol, mail: T.untyped).void }
+      def write(preview, email, locale, mail)
+        dir = @output_root.join(preview.preview_name)
+        FileUtils.mkdir_p(dir)
+        # The default locale stays unsuffixed so a diff against an older run still lines up.
+        stem = locale == I18n.default_locale ? email : "#{email}.#{locale}"
+        contents = { html: PreviewRenderer.html_body(mail), text: PreviewRenderer.text_body(mail) }
+
+        @config.formats.each do |format|
+          File.write(dir.join("#{stem}.#{EXTENSIONS.fetch(format)}"), filtered(contents.fetch(format)))
+        end
+      end
+
+      sig { params(content: String).returns(String) }
+      def filtered(content)
+        @config.output_filters.reduce(content) { |acc, filter| filter.call(acc) }
       end
     end
   end

@@ -4,6 +4,8 @@ require 'test_helper'
 require 'minitest/mock'
 require 'activemail/quality'
 
+I18n.enforce_available_locales = false
+
 # Shared base for quality-layer tests: resets the module-level Quality.config so
 # a test that calls ActiveMail::Quality.configure cannot pollute its siblings.
 class QualityTest < Minitest::Test

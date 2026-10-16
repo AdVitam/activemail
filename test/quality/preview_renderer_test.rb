@@ -2,6 +2,7 @@
 
 require_relative 'quality_test_helper'
 require 'mail'
+require 'i18n'
 
 class PreviewRendererTest < QualityTest
   HTML_BODY = '<html lang="en"><body><p>hello</p></body></html>'
@@ -85,24 +86,57 @@ class PreviewRendererTest < QualityTest
     assert_includes html, 'hello'
   end
 
-  def test_render_to_disk_writes_file
+  def test_text_body_reads_the_text_part
+    message = Mail.new do
+      text_part { body 'plain text' }
+      html_part do
+        content_type 'text/html; charset=UTF-8'
+        body PreviewRendererTest::HTML_BODY
+      end
+    end
+
+    assert_equal 'plain text', ActiveMail::Quality::PreviewRenderer.text_body(message)
+  end
+
+  def test_text_body_is_empty_for_html_only_message
     message = Mail.new do
       content_type 'text/html; charset=UTF-8'
       body PreviewRendererTest::HTML_BODY
     end
 
-    Dir.mktmpdir do |dir|
-      path = ActiveMail::Quality::PreviewRenderer.render_to_disk(FakePreview.new(message), 'welcome', dir)
+    assert_empty ActiveMail::Quality::PreviewRenderer.text_body(message)
+  end
 
-      assert_path_exists path
-      assert_equal 'welcome.html', path.basename.to_s
-      assert_includes File.read(path), 'hello'
+  def test_within_yields_the_mail_under_the_locale
+    message = Mail.new { body 'x' }
+    seen = ActiveMail::Quality::PreviewRenderer.within(FakePreview.new(message), 'welcome', :fr, nil) do |mail|
+      [mail, I18n.locale]
+    end
+
+    assert_equal [message, :fr], seen
+  end
+
+  def test_within_wraps_the_block_in_around_each
+    calls = []
+    around = lambda do |preview, email, locale, &block|
+      calls << [preview.preview_name, email, locale]
+      block.call
+    end
+    ActiveMail::Quality::PreviewRenderer.within(FakePreview.new(Mail.new), 'welcome', :en, around) { :ok }
+
+    assert_equal [['fake_mailer', 'welcome', :en]], calls
+  end
+
+  def test_within_rejects_an_around_each_that_never_yields
+    around = ->(_preview, _email, _locale, &_block) {}
+
+    assert_raises(ArgumentError) do
+      ActiveMail::Quality::PreviewRenderer.within(FakePreview.new(Mail.new), 'welcome', :en, around) { :ok }
     end
   end
 
-  def test_all_returns_empty_without_action_mailer_previews
-    # No host Rails app / ActionMailer::Preview loaded in the gem test suite.
-    refute defined?(ActionMailer::Preview), 'precondition: ActionMailer::Preview not loaded'
-    assert_empty ActiveMail::Quality::PreviewRenderer.all
+  def test_all_returns_empty_when_no_preview_is_defined
+    require 'action_mailer'
+    ActionMailer::Preview.stub(:all, []) { assert_empty ActiveMail::Quality::PreviewRenderer.all }
   end
 end

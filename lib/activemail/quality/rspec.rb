@@ -17,9 +17,10 @@ module ActiveMail
           @violations = T.let([], T::Array[Guard::Violation])
         end
 
-        sig { params(html: String).returns(T::Boolean) }
-        def matches?(html)
-          @violations = @guard.violations(html)
+        # html_or_message: an HTML String, or a Mail::Message (also runs the message rules).
+        sig { params(html_or_message: T.untyped).returns(T::Boolean) }
+        def matches?(html_or_message)
+          @violations = @guard.violations(html_or_message)
           @violations.empty?
         end
 
