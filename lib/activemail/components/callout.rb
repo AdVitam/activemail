@@ -12,7 +12,7 @@ module ActiveMail
       def transform(node, inner)
         classes = combine_classes(node, 'callout-inner')
         [
-          %(<table#{root_attributes(node, classes: 'callout', layout_style: 'width:100%;')} #{TABLE_RESET}><tbody><tr>),
+          %(<table class="callout"#{passthrough_attributes(node)}#{style_attribute(node, 'width:100%;')} #{TABLE_RESET}><tbody><tr>),
           %(<th class="#{escape_attr(classes)}">#{inner}</th><th class="expander"></th>),
           '</tr></tbody></table>'
         ].join

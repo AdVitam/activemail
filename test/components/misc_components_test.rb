@@ -29,10 +29,11 @@ class CalloutTest < ActiveMailTest
     assert_equal 'presentation', table['role']
   end
 
-  def test_callout_copies_classes_to_inner
-    output = render('<callout class="primary">C</callout>')
+  def test_callout_moves_author_classes_to_inner_only
+    doc = Nokogiri::HTML.fragment(render('<callout class="primary">C</callout>'))
 
-    assert_includes output, 'primary callout-inner'
+    assert_equal 'callout', doc.at_css('table')['class']
+    assert_equal 'primary callout-inner', doc.at_css('th')['class']
   end
 end
 
