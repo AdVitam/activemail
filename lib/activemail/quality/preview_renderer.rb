@@ -52,9 +52,10 @@ module ActiveMail
           body.respond_to?(:decoded) ? body.decoded : body.to_s
         end
 
+        # NullMail answers every respond_to? and returns nil: it is its own message.
         sig { params(message: T.untyped).returns(T.untyped) }
         def mail(message)
-          message.respond_to?(:message) ? message.message : message
+          (message.message if message.respond_to?(:message)) || message
         end
 
         sig { params(message: T.untyped).returns(String) }

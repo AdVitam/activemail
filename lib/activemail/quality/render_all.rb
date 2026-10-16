@@ -105,6 +105,8 @@ module ActiveMail
       sig { params(preview: T.untyped, email: String, locale: Symbol, label: String).returns(T.nilable(T::Array[Guard::Violation])) }
       def render_one(preview, email, locale, label)
         PreviewRenderer.within(preview, email, locale, @config.around_each) do |mail|
+          next [] if PreviewRenderer.declined?(PreviewRenderer.mail(mail))
+
           write(preview, email, locale, mail)
           @config.guard.violations(mail)
         end

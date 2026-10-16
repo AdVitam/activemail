@@ -3,6 +3,7 @@
 require_relative 'quality_test_helper'
 require 'tmpdir'
 require 'mail'
+require 'action_mailer'
 require 'activemail/quality/render_all'
 
 class RenderAllTest < QualityTest
@@ -15,7 +16,7 @@ class RenderAllTest < QualityTest
 
   VIOLATING = '<html><body><img src="x.png"></body></html>'
 
-  # emails_to_html: { email_sym => html String | :raise }. Records the locale each call ran under.
+  # emails_to_html: { email_sym => html String | :raise | :declined }. Records the locale each call ran under.
   def build_preview(name, calls: [], **emails_to_html)
     preview = Object.new
     preview.define_singleton_method(:preview_name) { name }
@@ -24,6 +25,7 @@ class RenderAllTest < QualityTest
       calls << [email, I18n.locale]
       html = emails_to_html.fetch(email.to_sym)
       raise 'boom' if html == :raise
+      next ActionMailer::Base::NullMail.new if html == :declined
 
       Mail.new do
         text_part { body "text of #{email}" }
@@ -71,6 +73,16 @@ class RenderAllTest < QualityTest
     assert_empty result.broken_required
     assert_equal %w[mailer/welcome.html mailer/welcome.txt], @written
     assert_equal 'text of welcome', @contents['mailer/welcome.txt']
+  end
+
+  def test_declined_send_is_rendered_without_files_or_failures
+    preview = build_preview('mailer', skipped: :declined)
+    result = run_with_previews([preview], ActiveMail::Quality::Configuration.new)
+
+    assert_equal 1, result.rendered
+    assert_empty result.render_failures
+    assert_empty result.guard_failures
+    assert_empty @written
   end
 
   def test_collects_guard_failures

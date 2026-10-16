@@ -2,6 +2,7 @@
 
 require_relative 'quality_test_helper'
 require 'mail'
+require 'action_mailer'
 require 'i18n'
 
 class PreviewRendererTest < QualityTest
@@ -76,11 +77,18 @@ class PreviewRendererTest < QualityTest
   end
 
   def test_declined_detects_empty_and_null_mail
-    null_mail = Class.new { def self.name = 'ActionMailer::Base::NullMail' }.new
+    null_mail = ActionMailer::Base::NullMail.new
 
     assert ActiveMail::Quality::PreviewRenderer.declined?(null_mail)
     assert ActiveMail::Quality::PreviewRenderer.declined?(Mail.new)
     refute ActiveMail::Quality::PreviewRenderer.declined?(Mail.new { body 'x' })
+  end
+
+  def test_mail_keeps_a_null_mail_whose_message_is_nil
+    null_mail = ActionMailer::Base::NullMail.new
+
+    assert_same null_mail, ActiveMail::Quality::PreviewRenderer.mail(null_mail)
+    assert ActiveMail::Quality::PreviewRenderer.declined?(ActiveMail::Quality::PreviewRenderer.mail(null_mail))
   end
 
   def test_cases_expands_previews_by_locale

@@ -2,6 +2,7 @@
 
 require_relative 'quality_test_helper'
 require 'mail'
+require 'action_mailer'
 
 class GuardTest < QualityTest
   CLEAN_DOC = <<~HTML.freeze
@@ -232,7 +233,7 @@ class GuardTest < QualityTest
 
   def test_declined_send_has_nothing_to_check
     assert_empty @guard.violations(Mail.new)
-    assert_empty @guard.violations(Class.new { def self.name = 'ActionMailer::Base::NullMail' }.new)
+    assert_empty @guard.violations(ActionMailer::Base::NullMail.new)
   end
 
   def test_html_part_present_can_be_disabled
