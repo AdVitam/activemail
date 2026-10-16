@@ -21,8 +21,8 @@ class RenderAllTest < QualityTest
     preview = Object.new
     preview.define_singleton_method(:preview_name) { name }
     preview.define_singleton_method(:emails) { emails_to_html.keys.map(&:to_s) }
-    preview.define_singleton_method(:call) do |email|
-      calls << [email, I18n.locale]
+    preview.define_singleton_method(:call) do |email, params = {}|
+      calls << [email, I18n.locale, params[:locale]]
       html = emails_to_html.fetch(email.to_sym)
       raise 'boom' if html == :raise
       next ActionMailer::Base::NullMail.new if html == :declined
@@ -97,7 +97,7 @@ class RenderAllTest < QualityTest
     preview = Object.new
     preview.define_singleton_method(:preview_name) { 'mailer' }
     preview.define_singleton_method(:emails) { ['notext'] }
-    preview.define_singleton_method(:call) do |_email|
+    preview.define_singleton_method(:call) do |_email, _params = {}|
       Mail.new do
         content_type 'text/html; charset=UTF-8'
         body CLEAN
@@ -159,7 +159,7 @@ class RenderAllTest < QualityTest
     result = run_with_previews([build_preview('mailer', welcome: CLEAN, calls: calls)], config)
 
     assert_equal 2, result.rendered
-    assert_equal [['welcome', I18n.default_locale], ['welcome', :fr]], calls
+    assert_equal [['welcome', I18n.default_locale, I18n.default_locale], ['welcome', :fr, :fr]], calls
     assert_equal %w[mailer/welcome.fr.html mailer/welcome.fr.txt mailer/welcome.html mailer/welcome.txt], @written
   end
 
@@ -176,7 +176,7 @@ class RenderAllTest < QualityTest
     config.locales = [I18n.default_locale, :fr]
     config.required_previews = ['mailer#welcome']
     preview = build_preview('mailer', welcome: CLEAN)
-    preview.define_singleton_method(:call) do |_email|
+    preview.define_singleton_method(:call) do |_email, _params = {}|
       raise 'fr only' if I18n.locale == :fr
 
       Mail.new { body 'x' }

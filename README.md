@@ -378,7 +378,7 @@ end
 ActiveMail::Quality.configure do |c|
   c.required_previews = %w[welcome_mailer#welcome]
   c.guard = ActiveMail::Quality::Guard.new(max_bytes: 90_000, disable: %i[img_alt], rules: [signature])
-  c.locales = %i[fr en]                      # or ->(preview) { [...] }
+  c.locales = %i[fr en]                      # or ->(preview) { [...] }; each preview gets params[:locale]
   c.formats = %i[html text]
   c.around_each = lambda do |_preview, _email, _locale, &render|
     ActiveRecord::Base.transaction { render.call; raise ActiveRecord::Rollback } # previews leave no data behind

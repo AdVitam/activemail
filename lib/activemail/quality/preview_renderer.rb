@@ -25,7 +25,7 @@ module ActiveMail
           result = T.let(nil, T.untyped)
           run = lambda do
             ran = true
-            result = I18n.with_locale(locale) { block.call(mail(preview.call(email))) }
+            result = I18n.with_locale(locale) { block.call(mail(preview.call(email, locale: locale))) }
           end
           around_each ? around_each.call(preview, email, locale, &run) : run.call
           raise ArgumentError, 'around_each must yield' unless ran

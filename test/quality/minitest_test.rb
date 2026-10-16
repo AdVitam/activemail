@@ -54,7 +54,7 @@ class MinitestQualityTest < QualityTest
   def test_assert_quality_for_all_previews_skips_a_non_required_unrenderable_preview
     raising = Object.new
     raising.define_singleton_method(:preview_name) { 'fake' }
-    raising.define_singleton_method(:call) { |_email| raise 'boom' }
+    raising.define_singleton_method(:call) { |_email, _params = {}| raise 'boom' }
     klass = Class.new(Minitest::Test) { include ActiveMail::Quality::Minitest }
 
     ActiveMail::Quality::PreviewRenderer.stub(:all, [[raising, 'welcome']]) do
@@ -116,7 +116,7 @@ class MinitestQualityTest < QualityTest
       end
     end
     preview = Object.new
-    preview.define_singleton_method(:call) { |_email| message }
+    preview.define_singleton_method(:call) { |_email, _params = {}| message }
     preview.define_singleton_method(:preview_name) { 'fake' }
     preview
   end
