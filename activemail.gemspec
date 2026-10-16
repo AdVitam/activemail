@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
     'rubygems_mfa_required' => 'true'
   }
 
-  s.files = Dir['lib/**/*', 'app/**/*', 'LICENSE.txt', 'README.md', 'CHANGELOG.md']
+  s.files = Dir['lib/**/*', 'app/**/*', 'LICENSE.txt', 'README.md', 'CHANGELOG.md', 'UPGRADING.md']
   s.require_paths = ['lib']
 
   # The markup engine works without Rails; the engine/generators/mailer hooks load

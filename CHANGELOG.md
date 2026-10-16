@@ -5,6 +5,60 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - Unreleased
+
+Breaking release: see [UPGRADING.md](UPGRADING.md).
+
+### Fixed
+
+- Emails rendered by a real Rails app shipped without the framework CSS: the
+  stylesheet lookup probed `config.assets` (an `OrderedOptions` that answers
+  every `respond_to?` with `nil`) and the `<link>` fallback was stripped by
+  Premailer. Assets are now read from the actual Sprockets environment/manifest
+  or Propshaft load path.
+- Propshaft hosts no longer risk a boot crash on `assets.precompile`.
+- `<raw>` content is no longer transformed when the layout re-rendered the view,
+  and an author's literal `###RAW0###` is left intact.
+- The word "doctype" in content and `&nbsp;`-like characters inside `<style>`
+  are no longer rewritten.
+- Numeric attributes are parsed in strict base 10 (`"010"` was read as 8).
+- `<cta>`, `<info-box>`, `<spacer>` and `<block-grid>` keep `id`, `aria-*`,
+  `data-*` and the author's `style`.
+- Column widths only count sibling columns (a sibling `<p>` skewed them).
+- The secondary button and info-box tokens now reach the stylesheet and dark
+  mode (1.1.0 announced it, but the SCSS ignored them).
+- `.h-line`, `.block-grid.up-N`, `.menu`, `.expander` had no CSS.
+- `render_all` refuses an `output_dir` outside the app and only deletes its own
+  files (it used to `rm_rf` the whole directory).
+- The responsive breakpoint follows `container_width` instead of a fixed 596px.
+- Code annotations are registered for the real `inky-*` extensions.
+
+### Changed
+
+- One transpilation and one inlining pass per email, hooked on
+  `ActionMailer::Base#render_to_body`; text parts, attachments and
+  non-ActiveMail emails are untouched.
+- `activemail_inline_styles(*paths)` embeds host stylesheets too and raises
+  `ActiveMail::StylesheetNotFound` instead of warning.
+- `<button>` and `<cta>` share one bulletproof, token-styled, inlined rendering.
+- SCSS uses the module system (`@use`/`@forward`, `sass:color`, `sass:math`).
+- Transpilation is linear in the document size (200 nested rows: ×3.7,
+  2,000 raw blocks: ×35) and reuses a memoized `Core`.
+- `Quality::Guard` is extensible with `Quality::Rule` and gains
+  `translation_missing`, `single_root`, `text_part_present`, `text_part_plain`.
+- `Quality` gains `locales`, `formats`, `around_each` and `output_filters`.
+- Errors share the `ActiveMail::Error` base class.
+
+### Removed
+
+- `ActiveMail::Inliner::Interceptor` and `config.register_inline_interceptor`.
+- `ActiveMail::CompiledStylesheet` (replaced by `ActiveMail::AssetPipeline`).
+- The `<inky>` tag.
+- `IGNORED_ON_PASSTHROUGH`, `combine_attributes`, `pass_through_attributes`,
+  `bulletproof_button_table` and `BUTTON_PADDING`.
+- `stylesheet_link_tag` from the layouts.
+- The manual `workflow_dispatch` release trigger.
+
 ## [1.2.3] - 2026-10-09
 
 ### Changed
@@ -61,8 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<button>` and `<cta>` share a `bulletproof_button_table` scaffold; `<cta>`
   drops its hardcoded `4px` radius in favor of the `radius` token.
 - The corner radius is now applied by default on `.button`/`.cta` (the opt-in
-  `.radius` class is gone); `.button.secondary`/`.cta.secondary` mirror the
-  secondary color/border tokens.
+  `.radius` class is gone).
 
 ### Removed
 
