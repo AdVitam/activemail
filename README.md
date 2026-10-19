@@ -42,7 +42,7 @@ renders consistently from Apple Mail to Outlook (Word engine) to Gmail mobile.
 
 ```ruby
 # Gemfile
-gem 'activemail', '~> 3.0'
+gem 'activemail', '~> 2.1'
 ```
 
 ```bash

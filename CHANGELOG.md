@@ -5,9 +5,9 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.0] - 2026-10-19
+## [2.1.0] - 2026-10-19
 
-Breaking release: see [UPGRADING.md](UPGRADING.md).
+Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
 
 ### Added
 
@@ -54,7 +54,7 @@ Breaking release: see [UPGRADING.md](UPGRADING.md).
 
 ## [2.0.0] - 2026-10-16
 
-Breaking release: see [UPGRADING.md](UPGRADING.md).
+Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
 
 ### Fixed
 
@@ -238,7 +238,7 @@ toolkit for Rails.
 - Rails `>= 7.1` (tested up to 8.1).
 - Nokogiri `>= 1.16`.
 
-[3.0.0]: https://github.com/AdVitam/activemail/compare/v2.0.0...v3.0.0
+[2.1.0]: https://github.com/AdVitam/activemail/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/AdVitam/activemail/compare/v1.2.3...v2.0.0
 [1.0.1]: https://github.com/AdVitam/activemail/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/AdVitam/activemail/releases/tag/v1.0.0

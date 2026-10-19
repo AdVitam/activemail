@@ -1,9 +1,9 @@
-# Upgrading to ActiveMail 3.0
+# Upgrading to ActiveMail 2.1
 
 ## Gemfile
 
 ```ruby
-gem 'activemail', '~> 3.0'
+gem 'activemail', '~> 2.1'
 ```
 
 ## Outer gutter
