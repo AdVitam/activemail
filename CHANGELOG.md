@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-10-19
+
+### Fixed
+
+- `<center>` adds `align="center"` and `.float-center` to its direct children and
+  nested menu items again, as in 2.0: since 2.1.0 a centered table, image or
+  paragraph stayed left-aligned and paragraphs got their default margins back.
+
 ## [2.1.0] - 2026-10-19
 
 Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
@@ -42,7 +50,7 @@ Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
   `<a>` carries `display:inline-block`, the body font and a `1.25` line height.
   The dark-mode fill targets the cell.
 - `<center>` renders a `<center align="center" class="float-center">` and no
-  longer rewrites its children.
+  longer rewrites its children (reverted in 2.1.1).
 - A mailer that declines to send (`NullMail`) is a `declined` violation unless
   allowed.
 - The generated layouts render the same `_document_head`, `_head` and `_footer`
@@ -241,6 +249,7 @@ toolkit for Rails.
 - Rails `>= 7.1` (tested up to 8.1).
 - Nokogiri `>= 1.16`.
 
+[2.1.1]: https://github.com/AdVitam/activemail/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/AdVitam/activemail/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/AdVitam/activemail/compare/v1.2.3...v2.0.0
 [1.0.1]: https://github.com/AdVitam/activemail/compare/v1.0.0...v1.0.1
