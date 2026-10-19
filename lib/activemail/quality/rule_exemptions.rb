@@ -32,6 +32,12 @@ module ActiveMail
         by_key.empty? ? by_name : by_key | by_name
       end
 
+      # Called before any preview renders: a bad name would otherwise surface as a render failure, or a skip.
+      sig { params(guard: Guard).void }
+      def check_exemptions!(guard)
+        exemptions.each_value { |rules| guard.check_skippable!(rules) }
+      end
+
       private
 
       sig { returns(T::Hash[String, T::Array[Symbol]]) }

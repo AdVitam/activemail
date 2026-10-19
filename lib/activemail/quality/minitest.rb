@@ -27,16 +27,23 @@ module ActiveMail
         sig { params(guard: Guard).void }
         def assert_quality_for_all_previews(guard: ActiveMail::Quality.guard)
           config = ActiveMail::Quality.config
+          config.check_exemptions!(guard)
           cases = PreviewRenderer.cases(config)
           # A silent no-test run would look like everything passed.
           Kernel.warn('[activemail] assert_quality_for_all_previews: no previews discovered.') if cases.empty?
-          cases.each_with_index do |(preview, email, locale), i|
-            # Index prefix: distinct keys can normalize to the same method name.
-            name = "test_#{i}_#{PreviewRenderer.key(preview, email).gsub(/\W/, '_')}_#{locale}_email_quality"
-            T.unsafe(self).define_method(name) do
-              violations = T.unsafe(self).send(:render_preview_or_skip, preview, email, locale, guard, config.required_previews)
-              T.unsafe(self).send(:assert_no_quality_violations, violations)
-            end
+          cases.each_with_index { |test_case, index| define_preview_test(index, test_case, guard, config.required_previews) }
+        end
+
+        private
+
+        sig { params(index: Integer, test_case: [T.untyped, String, Symbol], guard: Guard, required: T::Array[String]).void }
+        def define_preview_test(index, test_case, guard, required)
+          preview, email, locale = test_case
+          # Index prefix: distinct keys can normalize to the same method name.
+          name = "test_#{index}_#{PreviewRenderer.key(preview, email).gsub(/\W/, '_')}_#{locale}_email_quality"
+          T.unsafe(self).define_method(name) do
+            violations = T.unsafe(self).send(:render_preview_or_skip, preview, email, locale, guard, required)
+            T.unsafe(self).send(:assert_no_quality_violations, violations)
           end
         end
       end

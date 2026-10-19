@@ -31,14 +31,33 @@ class GridTest < ActiveMailTest
     output = render('<row><columns large="6"><row><columns large="6">in</columns><columns large="6">in</columns></row></columns></row>')
     ghosts = output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
 
-    assert_equal [300, 150, 150], ghosts
-    assert_equal [150, 150, 300], output.scan(/max-width:(\d+)px/).flatten.map(&:to_i).sort
+    # The parent column (300px) keeps a 16px container gutter on each side: 268px of content.
+    assert_equal [300, 134, 134], ghosts
+    assert_equal [134, 134, 300], output.scan(/max-width:(\d+)px/).flatten.map(&:to_i).sort
+  end
+
+  def test_nested_columns_fit_in_a_full_width_parent
+    output = render('<row><columns><row><columns large="6">A</columns><columns large="6">B</columns></row></columns></row>')
+
+    assert_equal [600, 284, 284], output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
+  end
+
+  def test_nested_columns_take_the_inner_gutter_of_a_middle_parent
+    output = render('<row><columns large="4">a</columns><columns large="4"><row><columns>in</columns></row></columns><columns large="4">c</columns></row>')
+
+    assert_includes output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i), 184
+  end
+
+  def test_nested_columns_of_a_collapsed_row_use_the_whole_parent
+    output = render('<row class="collapse"><columns large="6"><row><columns large="6">in</columns></row></columns></row>')
+
+    assert_equal [300, 150], output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
   end
 
   def test_ghost_width_clamps_an_oversized_share_per_level
     output = render('<row><columns large="20"><row><columns large="12">in</columns></row></columns></row>')
 
-    assert_equal [600, 600], output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
+    assert_equal [600, 568], output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
   end
 
   def test_column_count_option_changes_default_sizes

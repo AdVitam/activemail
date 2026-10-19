@@ -65,14 +65,35 @@ module ActiveMail
         %(<th class="expander"></th>)
       end
 
-      # Columns are transformed leaves first, so the enclosing <columns> are still raw
-      # nodes whose sizes are readable. Each share is clamped: an oversized `large`
-      # would push the MSO ghost cell past its parent and force a wrap in Outlook Word.
+      # Columns are transformed leaves first, so the enclosing <columns> are still raw nodes whose
+      # sizes and positions are readable. A nested row shares the content box of its parent column.
       sig { params(node: Nokogiri::XML::Node, large: Integer).returns(Integer) }
       def ghost_width(node, large)
-        shares = [large, *node.ancestors('columns').map { |ancestor| column_sizes(ancestor).last }]
-        ratio = shares.reduce(Rational(1)) { |product, share| product * Rational([share, column_count].min, column_count) }
-        (container_width * ratio).round
+        available = node.ancestors('columns').reverse.reduce(Rational(container_width)) do |width, ancestor|
+          share_of(width, column_sizes(ancestor).last) - horizontal_padding(ancestor)
+        end
+        share_of(available, large).round
+      end
+
+      # Clamped: an oversized `large` would push the MSO ghost cell past its parent and force a wrap in Outlook Word.
+      sig { params(width: Rational, share: Integer).returns(Rational) }
+      def share_of(width, share)
+        width * Rational([share, column_count].min, column_count)
+      end
+
+      # Mirrors _grid.scss, whose padding is inlined on each column.
+      sig { params(node: Nokogiri::XML::Node).returns(Rational) }
+      def horizontal_padding(node)
+        return Rational(0) if node.ancestors('row').any? { |row| class?(row, 'collapse') }
+
+        siblings = column_siblings(node)
+        outer_side = node.ancestors('columns').empty? ? spacing(:container_gutter) : Rational(0)
+        [siblings.first, siblings.last].sum(Rational(0)) { |edge| edge == node ? outer_side : spacing(:sm) }
+      end
+
+      sig { params(name: Symbol).returns(Rational) }
+      def spacing(name)
+        Rational(core.config.tokens.spacing!(name).delete_suffix('px'))
       end
 
       sig { params(node: Nokogiri::XML::Node, inner: String, classes: String, width_px: Integer, expander: String).returns(String) }

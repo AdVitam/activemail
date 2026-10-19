@@ -56,6 +56,14 @@ class RenderAllTest < QualityTest
     assert_equal 2, result.discovered
   end
 
+  def test_an_unknown_exempted_rule_aborts_the_run_instead_of_failing_a_render
+    config = ActiveMail::Quality::Configuration.new
+    config.rule_exemptions = { 'mailer' => %i[img_atl] }
+
+    error = assert_raises(ArgumentError) { run_with_previews([build_preview('mailer', welcome: CLEAN)], config) }
+    assert_includes error.message, ':img_atl'
+  end
+
   def test_discovered_is_zero_when_no_previews
     result = run_with_previews([], ActiveMail::Quality::Configuration.new)
 

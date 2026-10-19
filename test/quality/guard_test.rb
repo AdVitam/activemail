@@ -317,13 +317,16 @@ class GuardTest < QualityTest
     assert guard.valid?(mail, skip: %i[text_part_present no_x])
   end
 
-  def test_skip_rejects_unknown_and_disabled_rule_names
+  def test_skip_rejects_unknown_rule_names
     error = assert_raises(ArgumentError) { @guard.violations(CLEAN_DOC, skip: %i[img_alt nope]) }
 
     assert_includes error.message, ':nope'
-    assert_includes error.message, ':img_alt'
+  end
+
+  def test_skip_accepts_a_disabled_rule
     guard = ActiveMail::Quality::Guard.new(disable: %i[img_alt])
-    assert_raises(ArgumentError) { guard.valid?(CLEAN_DOC, skip: %i[img_alt]) }
+
+    assert guard.valid?(CLEAN_DOC, skip: %i[img_alt])
   end
 
   def test_skip_is_validated_for_a_declined_send_too

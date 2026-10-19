@@ -389,7 +389,8 @@ send (`NullMail`) is a violation unless it is listed in `allow_declined`
 disabled and your own added; a single email can also be exempt from a rule
 (`assert_email_quality(html, skip: %i[img_alt])`, `be_a_valid_email(skip: …)`, or
 `rule_exemptions` below) while every other rule still applies to it. A name the
-guard does not know raises an `ArgumentError`.
+guard does not know raises an `ArgumentError` before any preview renders; a
+disabled rule is a known name.
 
 ```ruby
 signature = ActiveMail::Quality::Rule.html(:single_signature) do |doc, _html|

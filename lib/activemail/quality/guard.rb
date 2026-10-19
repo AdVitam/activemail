@@ -37,7 +37,8 @@ module ActiveMail
         all = assemble_rules(BuiltinRules.new(max_bytes: max_bytes, min_full_doc_bytes: min_full_doc_bytes), disable, rules)
         @html_rules = T.let(all.select { |rule| rule.level == :html }, T::Array[Rule])
         @message_rules = T.let(all.select { |rule| rule.level == :message }, T::Array[Rule])
-        @rule_names = T.let(all.map(&:name).freeze, T::Array[Symbol])
+        # A disabled built-in rule stays a known name: exempting a preview from it is harmless, not a typo.
+        @rule_names = T.let((DISABLEABLE + rules.map(&:name)).freeze, T::Array[Symbol])
       end
 
       # A String only gets the HTML rules; a message gets both levels. A declined send
@@ -57,6 +58,14 @@ module ActiveMail
       sig { params(html_or_message: T.untyped, allow_declined: T::Boolean, skip: T::Array[Symbol]).returns(T::Boolean) }
       def valid?(html_or_message, allow_declined: false, skip: NO_SKIP)
         violations(html_or_message, allow_declined: allow_declined, skip: skip).empty?
+      end
+
+      sig { params(skip: T::Array[Symbol]).void }
+      def check_skippable!(skip)
+        return if skip.empty?
+
+        unknown = skip - @rule_names
+        raise ArgumentError, "unknown rule(s) to skip: #{unknown.inspect}, expected a subset of #{@rule_names.inspect}" unless unknown.empty?
       end
 
       private
@@ -80,14 +89,6 @@ module ActiveMail
         raise ArgumentError, "duplicate rule name(s): #{duplicates.inspect}" unless duplicates.empty?
 
         rules
-      end
-
-      sig { params(skip: T::Array[Symbol]).void }
-      def check_skippable!(skip)
-        return if skip.empty?
-
-        unknown = skip - @rule_names
-        raise ArgumentError, "unknown rule(s) to skip: #{unknown.inspect}, expected a subset of #{@rule_names.inspect}" unless unknown.empty?
       end
 
       sig { params(html: String, skip: T::Array[Symbol]).returns(T::Array[Violation]) }

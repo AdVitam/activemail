@@ -31,7 +31,8 @@ Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
 ### Changed
 
 - A nested `<columns>` ghost cell and `max-width` are computed against the
-  enclosing columns instead of the container.
+  content box of the enclosing columns (their share minus their padding)
+  instead of the container.
 - The MSO ghost cell of a column wraps it in its own `<table><tr>` (the `<th>`
   used to sit directly in a `<td>`).
 - Conditional comments use `<!--[if mso]>` instead of `<!--[if mso | IE]>`.
@@ -54,7 +55,7 @@ Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
 
 ## [2.0.0] - 2026-10-16
 
-Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
+Breaking release: see [UPGRADING.md](UPGRADING.md).
 
 ### Fixed
 

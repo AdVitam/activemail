@@ -40,6 +40,7 @@ module ActiveMail
 
       sig { returns(Result) }
       def call
+        @config.check_exemptions!(@config.guard)
         clean_previous_output
         previews = PreviewRenderer.all
         PreviewRenderer.cases(@config, previews).each { |preview, email, locale| render_locale(preview, email, locale) }

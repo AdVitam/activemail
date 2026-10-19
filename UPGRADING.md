@@ -26,8 +26,8 @@ text area is 16px narrower on each side.
 - Conditional comments are `<!--[if mso]>` (`mso` alone targets Outlook
   for Windows). Tests matching `[if mso | IE]` must change.
 - Each column ghost cell wraps its column in a `<table><tr>`. A nested column
-  is sized against its enclosing column (`large="6"` in `large="6"` is 150px,
-  not 300px).
+  is sized against the content box of its enclosing column: `large="6"` in a
+  lone `large="6"` is 134px (300px minus two 16px gutters, halved), not 300px.
 
 ## Buttons
 
