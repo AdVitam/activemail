@@ -14,11 +14,31 @@ class GridTest < ActiveMailTest
     assert_renders(
       '<columns>One</columns>',
       <<~HTML
-        <!--[if mso | IE]><td width="600" valign="top"><![endif]-->
+        <!--[if mso]><td width="600" valign="top"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600"><tr><![endif]-->
         <th class="small-12 large-12 columns first last" style="display:inline-block;vertical-align:top;width:100%;max-width:600px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;"><tbody><tr><th style="font-weight:normal;text-align:left;">One</th><th class="expander"></th></tr></tbody></table></th>
-        <!--[if mso | IE]></td><![endif]-->
+        <!--[if mso]></tr></table></td><![endif]-->
       HTML
     )
+  end
+
+  def test_ghost_cell_wraps_the_column_in_its_own_table
+    ghost = render('<columns large="6">One</columns>')[/<!--\[if mso\]><td.*?<!\[endif\]-->/m]
+
+    assert_includes ghost, '<td width="300" valign="top"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="300"><tr>'
+  end
+
+  def test_nested_ghost_width_is_relative_to_the_enclosing_column
+    output = render('<row><columns large="6"><row><columns large="6">in</columns><columns large="6">in</columns></row></columns></row>')
+    ghosts = output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
+
+    assert_equal [300, 150, 150], ghosts
+    assert_equal [150, 150, 300], output.scan(/max-width:(\d+)px/).flatten.map(&:to_i).sort
+  end
+
+  def test_ghost_width_clamps_an_oversized_share_per_level
+    output = render('<row><columns large="20"><row><columns large="12">in</columns></row></columns></row>')
+
+    assert_equal [600, 600], output.scan(/<!--\[if mso\]><td width="(\d+)"/).flatten.map(&:to_i)
   end
 
   def test_column_count_option_changes_default_sizes

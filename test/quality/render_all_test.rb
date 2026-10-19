@@ -9,7 +9,7 @@ require 'activemail/quality/render_all'
 class RenderAllTest < QualityTest
   CLEAN = <<~HTML.freeze
     <!DOCTYPE html>
-    <html lang="en"><head></head><body>
+    <html lang="en"><head><title>Welcome</title></head><body>
       <table role="presentation"><tr><td>#{'x ' * 600}</td></tr></table>
     </body></html>
   HTML
@@ -75,12 +75,22 @@ class RenderAllTest < QualityTest
     assert_equal 'text of welcome', @contents['mailer/welcome.txt']
   end
 
-  def test_declined_send_is_rendered_without_files_or_failures
+  def test_declined_send_fails_unless_allowed_and_writes_no_files
     preview = build_preview('mailer', skipped: :declined)
     result = run_with_previews([preview], ActiveMail::Quality::Configuration.new)
 
     assert_equal 1, result.rendered
     assert_empty result.render_failures
+    assert_equal [:declined], result.guard_failures['mailer#skipped'].map(&:rule)
+    assert_empty @written
+  end
+
+  def test_allowed_declined_send_is_rendered_without_files_or_failures
+    config = ActiveMail::Quality::Configuration.new
+    config.allow_declined = ['mailer#skipped']
+    result = run_with_previews([build_preview('mailer', skipped: :declined)], config)
+
+    assert_equal 1, result.rendered
     assert_empty result.guard_failures
     assert_empty @written
   end

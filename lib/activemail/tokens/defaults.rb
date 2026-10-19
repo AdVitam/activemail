@@ -36,7 +36,8 @@ module ActiveMail
         sm: '8px',
         md: '16px',
         lg: '24px',
-        xl: '40px'
+        xl: '40px',
+        container_gutter: '16px'
       }.freeze,
       TokenMap
     )

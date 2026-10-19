@@ -10,6 +10,13 @@ class Premailer
   sig { returns(String) }
   def to_inline_css; end
 
+  protected
+
+  sig { void }
+  def load_css_from_html!; end
+
+  public
+
   module Warnings
     NONE = 0
   end

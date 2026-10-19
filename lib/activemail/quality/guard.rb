@@ -38,24 +38,30 @@ module ActiveMail
         @message_rules = T.let(all.select { |rule| rule.level == :message }, T::Array[Rule])
       end
 
-      # A String only gets the HTML rules; a message gets both levels, except a declined send.
-      sig { params(html_or_message: T.untyped).returns(T::Array[Violation]) }
-      def violations(html_or_message)
+      # A String only gets the HTML rules; a message gets both levels. A declined send
+      # (NullMail) has nothing to check, but it is a violation unless the caller expects it.
+      sig { params(html_or_message: T.untyped, allow_declined: T::Boolean).returns(T::Array[Violation]) }
+      def violations(html_or_message, allow_declined: false)
         return html_violations(html_or_message) if html_or_message.is_a?(String)
 
         mail = PreviewRenderer.mail(html_or_message)
-        return [] if PreviewRenderer.declined?(mail)
+        return declined_violations(allow_declined) if PreviewRenderer.declined?(mail)
 
         html = PreviewRenderer.html_body(mail)
         (html.empty? ? [] : html_violations(html)) + apply(@message_rules, [mail])
       end
 
-      sig { params(html_or_message: T.untyped).returns(T::Boolean) }
-      def valid?(html_or_message)
-        violations(html_or_message).empty?
+      sig { params(html_or_message: T.untyped, allow_declined: T::Boolean).returns(T::Boolean) }
+      def valid?(html_or_message, allow_declined: false)
+        violations(html_or_message, allow_declined: allow_declined).empty?
       end
 
       private
+
+      sig { params(allowed: T::Boolean).returns(T::Array[Violation]) }
+      def declined_violations(allowed)
+        allowed ? [] : [Violation.new(rule: :declined, message: 'the mailer declined to send (NullMail)')]
+      end
 
       sig { params(builtin: BuiltinRules, disable: T::Array[Symbol], custom: T::Array[Rule]).returns(T::Array[Rule]) }
       def assemble_rules(builtin, disable, custom)

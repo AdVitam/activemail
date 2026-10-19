@@ -5,7 +5,50 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - Unreleased
+## [3.0.0] - 2026-10-19
+
+Breaking release: see [UPGRADING.md](UPGRADING.md).
+
+### Added
+
+- `container_gutter` spacing token (16px) and `$am-container-gutter`: the first
+  and last column of a row carry it as an outer, border-box, inlined padding;
+  nested columns do not repeat it.
+- `<title>` in the layout head, set to the message subject (new
+  `layouts/activemail/_document_head` partial).
+- Quality rules, on by default and disableable: `title`, `anchor_href`,
+  `placeholder` (`BuiltinRules::PLACEHOLDER`), `unsupported_color`,
+  `text_entities`.
+- `Quality::Configuration#allow_declined` and the `allow_declined:` option of
+  `Guard#violations`, `Guard#valid?`, `assert_email_quality` and
+  `be_a_valid_email`.
+- `mso-padding-alt` on the button cell so Outlook keeps the padding.
+
+### Changed
+
+- A nested `<columns>` ghost cell and `max-width` are computed against the
+  enclosing columns instead of the container.
+- The MSO ghost cell of a column wraps it in its own `<table><tr>` (the `<th>`
+  used to sit directly in a `<td>`).
+- Conditional comments use `<!--[if mso]>` instead of `<!--[if mso | IE]>`.
+- `<button>` and `<cta>`: the fill and the radius live on the cell only; the
+  `<a>` carries `display:inline-block`, the body font and a `1.25` line height.
+  The dark-mode fill targets the cell.
+- `<center>` renders a `<center align="center" class="float-center">` and no
+  longer rewrites its children.
+- A mailer that declines to send (`NullMail`) is a `declined` violation unless
+  allowed.
+- The generated layouts render the same `_document_head`, `_head` and `_footer`
+  partials as the gem layout.
+- With Premailer the parsed framework CSS is cached per stylesheet fingerprint
+  (a FIFO of 16) instead of being re-parsed for every email.
+
+### Removed
+
+- The `.columns.first.last` SCSS rule: a lone column now takes both container
+  gutters through `.first` and `.last`.
+
+## [2.0.0] - 2026-10-16
 
 Breaking release: see [UPGRADING.md](UPGRADING.md).
 
@@ -191,5 +234,7 @@ toolkit for Rails.
 - Rails `>= 7.1` (tested up to 8.1).
 - Nokogiri `>= 1.16`.
 
+[3.0.0]: https://github.com/AdVitam/activemail/compare/v2.0.0...v3.0.0
+[2.0.0]: https://github.com/AdVitam/activemail/compare/v1.2.3...v2.0.0
 [1.0.1]: https://github.com/AdVitam/activemail/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/AdVitam/activemail/releases/tag/v1.0.0

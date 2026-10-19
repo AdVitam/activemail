@@ -121,6 +121,20 @@ class QualityConfigurationTest < QualityTest
     assert_raises(TypeError) { @config.required_previews = 42 }
   end
 
+  def test_allow_declined_coerces_to_strings_and_is_frozen
+    assert_empty @config.allow_declined
+    @config.allow_declined = [:skipped, 'mailer#hi']
+
+    assert_equal %w[skipped mailer#hi], @config.allow_declined
+    assert_predicate @config.allow_declined, :frozen?
+    assert @config.allow_declined?('mailer#hi')
+    refute @config.allow_declined?('mailer#other')
+  end
+
+  def test_allow_declined_rejects_non_enumerable
+    assert_raises(TypeError) { @config.allow_declined = 42 }
+  end
+
   def test_module_configure_yields_shared_config
     custom = ActiveMail::Quality::Guard.new(max_bytes: 5)
     ActiveMail::Quality.configure { |c| c.guard = custom }

@@ -9,15 +9,16 @@ module ActiveMail
       class ValidEmailMatcher
         extend T::Sig
 
-        sig { params(guard: Guard).void }
-        def initialize(guard: ActiveMail::Quality.guard)
+        sig { params(guard: Guard, allow_declined: T::Boolean).void }
+        def initialize(guard: ActiveMail::Quality.guard, allow_declined: false)
           @guard = T.let(guard, Guard)
+          @allow_declined = T.let(allow_declined, T::Boolean)
           @violations = T.let([], T::Array[Guard::Violation])
         end
 
         sig { params(html_or_message: T.untyped).returns(T::Boolean) }
         def matches?(html_or_message)
-          @violations = @guard.violations(html_or_message)
+          @violations = @guard.violations(html_or_message, allow_declined: @allow_declined)
           @violations.empty?
         end
 
@@ -52,9 +53,9 @@ if defined?(RSpec)
     module Matchers
       extend T::Sig
 
-      sig { params(guard: ActiveMail::Quality::Guard).returns(ActiveMail::Quality::Rspec::ValidEmailMatcher) }
-      def be_a_valid_email(guard: ActiveMail::Quality.guard)
-        ActiveMail::Quality::Rspec::ValidEmailMatcher.new(guard: guard)
+      sig { params(guard: ActiveMail::Quality::Guard, allow_declined: T::Boolean).returns(ActiveMail::Quality::Rspec::ValidEmailMatcher) }
+      def be_a_valid_email(guard: ActiveMail::Quality.guard, allow_declined: false)
+        ActiveMail::Quality::Rspec::ValidEmailMatcher.new(guard: guard, allow_declined: allow_declined)
       end
     end
   end

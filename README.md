@@ -35,14 +35,14 @@ renders consistently from Apple Mail to Outlook (Word engine) to Gmail mobile.
 - **Automatic CSS inlining** via a pluggable adapter (premailer by default, roadie
   optional, or your own).
 - **Generators** to install, eject views/styles, and scaffold components.
-- **Opt-in quality layer**: a Guard (size, `role`, `alt`, `lang`), preview
+- **Opt-in quality layer**: a Guard (size, `role`, `alt`, `lang`, `title`, links, placeholders), preview
   renderer, Minitest assertions + RSpec matcher, and a `render_all` rake task.
 
 ## Installation
 
 ```ruby
 # Gemfile
-gem 'activemail', '~> 2.0'
+gem 'activemail', '~> 3.0'
 ```
 
 ```bash
@@ -136,7 +136,9 @@ Override at three levels, cheapest first:
 3. **`bin/rails g activemail:views`** — eject the default layout + partials
    (`app/views/layouts/activemail/*`); a same-named file in your app wins by
    Rails path precedence. Put your logo/header/footer here — those are the app's
-   identity, not the gem's.
+   identity, not the gem's. The `<head>` lives in `_document_head` (metas,
+   `<title>` set to the message subject, Outlook settings, inlined styles) and
+   is shared by the default layout and the generated one.
 
 Dark mode ships on: a `<style>` block keys off `prefers-color-scheme: dark` (Apple
 Mail/iOS) and Outlook's `[data-ogsc]`, with surfaces derived from your tokens.
@@ -147,7 +149,9 @@ Email clients (Gmail mobile, Orange.fr) strip `<style>`, so critical CSS must be
 inlined. When a mailer renders an inky HTML template, ActiveMail transpiles the
 whole body (view + layout) and runs the configured inliner once. Text parts,
 attachments and non-ActiveMail emails are never touched; your `<style>`
-enhancement block (media queries, dark mode) is preserved.
+enhancement block (media queries, dark mode) is preserved. With Premailer the
+parsed framework CSS is cached per stylesheet, so it is parsed once, not once per
+email.
 
 The layout embeds the compiled stylesheets with `activemail_inline_styles`
 (Sprockets or Propshaft); pass your own on top of the framework's:
@@ -182,11 +186,11 @@ Fluid-hybrid wrapper, capped at `container_width`, wrapped in an MSO ghost table
 ```
 
 ```html
-<!--[if mso | IE]><table role="presentation" align="center" width="600">...<![endif]-->
+<!--[if mso]><table role="presentation" align="center" width="600">...<![endif]-->
 <table class="container" align="center" style="width:100%;max-width:600px;margin:0 auto;">
   <tbody><tr><td>...</td></tr></tbody>
 </table>
-<!--[if mso | IE]></td></tr></table><![endif]-->
+<!--[if mso]></td></tr></table><![endif]-->
 ```
 
 ### `<row>` / `<columns>`
@@ -201,16 +205,24 @@ media-query enhancement.
 ```
 
 Column widths are computed as `container_width × large / column_count`, capped
-at `container_width`, **with no gutter model**: two `large="6"` columns sit
-edge-to-edge (300px + 300px in a 600px container). Add padding inside your
-columns for gutters, and keep the `large` sizes of a row summing to at most
-`column_count`, otherwise the ghost cells will wrap in Outlook.
+at `container_width`. A nested `<columns>` is sized against its enclosing column
+(a `large="6"` inside a `large="6"` is 150px in a 600px container). Keep the
+`large` sizes of a row summing to at most `column_count`, otherwise the ghost
+cells will wrap in Outlook.
+
+Gutters are border-box padding inlined on the columns: `gutter` (8px) on each
+side between two columns, and `container_gutter` (16px) on the outer edge of the
+first and last column, so content never touches the screen edge. A nested row
+adds no outer gutter. Both are spacing tokens
+(`config.tokens.spacing :container_gutter, '0px'` restores edge-to-edge columns)
+and SCSS variables (`$am-gutter`, `$am-container-gutter`).
 
 ### `<button>`
 
 Bulletproof button styled inline from the tokens (`Tokens#button_style`): the
-padding lives on the `<a>` so the whole control is clickable, and a variant
-border sits on the cell only. `class="secondary"` selects the secondary variant;
+padding lives on the `<a>` so the whole control is clickable (mirrored on the
+cell with `mso-padding-alt` for Outlook), the fill and radius sit on the cell
+only, and a variant border sits on the cell as well. `class="secondary"` selects the secondary variant;
 `expand` makes it full width; without `href` the label renders as a `<span>`.
 
 ```html
@@ -220,8 +232,8 @@ border sits on the cell only. `class="secondary"` selects the secondary variant;
 ```html
 <table class="secondary button"><tbody><tr><td>
   <table><tbody><tr>
-    <td style="background:#264653;border-radius:4px;">
-      <a href="#" style="display:inline-block;text-decoration:none;padding:12px 24px;background:#264653;color:#ffffff;font-weight:bold;border-radius:4px;">Go</a>
+    <td style="background:#264653;border-radius:4px;mso-padding-alt:12px 24px;">
+      <a href="#" style="display:inline-block;text-decoration:none;padding:12px 24px;font-family:Arial, sans-serif;line-height:1.25;color:#ffffff;font-weight:bold;">Go</a>
     </td>
   </tr></tbody></table>
 </td></tr></tbody></table>
@@ -258,7 +270,7 @@ border sits on the cell only. `class="secondary"` selects the secondary variant;
 
 - `<wrapper class="header">` → `<table class="header wrapper" align="center" style="width:100%;">` with a `.wrapper-inner` cell.
 - `<h-line>` → a full-width single-cell table drawn as a 1px rule in the `border` color.
-- `<center>` adds `align="center"` and `.float-center` to its element children (and `.float-center` to nested menu items).
+- `<center>` renders a `<center align="center" class="float-center">` around its content and leaves the content untouched.
 
 ### `<raw>`
 
@@ -367,8 +379,14 @@ expect(rendered_html).to be_a_valid_email
 
 The Guard checks byte size (Gmail clips ~102 KB), parse errors,
 `role="presentation"` on every table, `alt` on every image, `lang` on full
-documents, a single `<html>`/`<body>`, missing translations, and — given a
-message — a plain text part. Built-in rules can be disabled and your own added:
+documents, a single `<html>`/`<body>`, missing translations, a non-blank
+`<title>`, an `href` on every link, unresolved `{{placeholders}}`, CSS colors
+clients ignore (`rgb(… %)`, `hsl()`, `color-mix()`, `var()`), and — given a
+message — a plain text part free of HTML entities. A mailer that declines to
+send (`NullMail`) is a violation unless it is listed in `allow_declined`
+(`assert_email_quality(mail, allow_declined: true)` or
+`be_a_valid_email(allow_declined: true)` for one call). Built-in rules can be
+disabled and your own added:
 
 ```ruby
 signature = ActiveMail::Quality::Rule.html(:single_signature) do |doc, _html|
@@ -377,6 +395,7 @@ end
 
 ActiveMail::Quality.configure do |c|
   c.required_previews = %w[welcome_mailer#welcome]
+  c.allow_declined = %w[reminder_mailer#maybe_skipped] # previews allowed to return a NullMail
   c.guard = ActiveMail::Quality::Guard.new(max_bytes: 90_000, disable: %i[img_alt], rules: [signature])
   c.locales = %i[fr en]                      # or ->(preview) { [...] }; each preview gets params[:locale]
   c.formats = %i[html text]

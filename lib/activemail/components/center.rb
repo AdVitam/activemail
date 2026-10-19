@@ -10,12 +10,14 @@ module ActiveMail
 
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
-        node.elements.each do |child|
-          child['align'] = 'center'
-          child['class'] = combine_classes(child, 'float-center')
-        end
-        node.css('.menu-item').each { |item| item['class'] = combine_classes(item, 'float-center') }
-        %(<center#{root_attributes(node, classes: nil)}>#{inner}</center>)
+        %(<center#{root_attributes(node, classes: 'float-center')} align="center">#{inner}</center>)
+      end
+
+      private
+
+      sig { override.returns(T::Array[String]) }
+      def consumed_attributes
+        ['align']
       end
     end
   end

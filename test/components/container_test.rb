@@ -7,9 +7,9 @@ class ContainerTest < ActiveMailTest
     assert_renders(
       '<container></container>',
       <<~HTML
-        <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="600"><tr><td><![endif]-->
+        <!--[if mso]><table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="600"><tr><td><![endif]-->
         <table class="container" style="width:100%;max-width:600px;margin:0 auto;" role="presentation" border="0" cellpadding="0" cellspacing="0" align="center"><tbody><tr><td></td></tr></tbody></table>
-        <!--[if mso | IE]></td></tr></table><![endif]-->
+        <!--[if mso]></td></tr></table><![endif]-->
       HTML
     )
   end

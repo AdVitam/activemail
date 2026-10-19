@@ -11,12 +11,12 @@ module ActiveMail
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         small, large = column_sizes(node)
-        width_px = ghost_width(large)
+        width_px = ghost_width(node, large)
 
         [
-          %(<!--[if mso | IE]><td width="#{width_px}" valign="top"><![endif]-->),
+          %(<!--[if mso]><td width="#{width_px}" valign="top"><table #{TABLE_RESET} width="#{width_px}"><tr><![endif]-->),
           column_markup(node, inner, column_classes(node, small, large), width_px, expander(node, large)),
-          '<!--[if mso | IE]></td><![endif]-->'
+          '<!--[if mso]></tr></table></td><![endif]-->'
         ].join
       end
 
@@ -65,11 +65,14 @@ module ActiveMail
         %(<th class="expander"></th>)
       end
 
-      # Clamp: an oversized `large` would push the MSO ghost cell past the
-      # container and force a wrap in Outlook Word.
-      sig { params(large: Integer).returns(Integer) }
-      def ghost_width(large)
-        [((large.to_f / column_count) * container_width).round, container_width].min
+      # Columns are transformed leaves first, so the enclosing <columns> are still raw
+      # nodes whose sizes are readable. Each share is clamped: an oversized `large`
+      # would push the MSO ghost cell past its parent and force a wrap in Outlook Word.
+      sig { params(node: Nokogiri::XML::Node, large: Integer).returns(Integer) }
+      def ghost_width(node, large)
+        shares = [large, *node.ancestors('columns').map { |ancestor| column_sizes(ancestor).last }]
+        ratio = shares.reduce(Rational(1)) { |product, share| product * Rational([share, column_count].min, column_count) }
+        (container_width * ratio).round
       end
 
       sig { params(node: Nokogiri::XML::Node, inner: String, classes: String, width_px: Integer, expander: String).returns(String) }
