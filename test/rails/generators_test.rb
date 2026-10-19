@@ -43,7 +43,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     assert_generated 'app/views/layouts/mailer.html.inky-erb'
 
     assert_includes file_content('config/initializers/activemail.rb'), 'ActiveMail.configure do |config|'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'activemail_inline_styles'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'layouts/activemail/document_head'
     refute_includes file_content('app/views/layouts/mailer.html.inky-erb'), 'stylesheet_link_tag'
     assert_includes file_content('app/views/layouts/mailer.html.inky-erb'), '<container>'
   end
@@ -58,7 +58,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     run_generator ['mailer', '--haml']
 
     assert_generated 'app/views/layouts/mailer.html.inky-haml'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'activemail_inline_styles'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'layouts/activemail/document_head'
     refute_includes file_content('app/views/layouts/mailer.html.inky-haml'), 'stylesheet_link_tag'
   end
 
@@ -66,7 +66,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     run_generator ['mailer', '--slim']
 
     assert_generated 'app/views/layouts/mailer.html.inky-slim'
-    assert_includes file_content('app/views/layouts/mailer.html.inky-slim'), 'activemail_inline_styles'
+    assert_includes file_content('app/views/layouts/mailer.html.inky-slim'), 'layouts/activemail/document_head'
     refute_includes file_content('app/views/layouts/mailer.html.inky-slim'), 'stylesheet_link_tag'
   end
 
@@ -119,6 +119,7 @@ class ViewsGeneratorTest < Rails::Generators::TestCase
     run_generator
 
     assert_generated 'app/views/layouts/activemail/mailer.html.inky-erb'
+    assert_generated 'app/views/layouts/activemail/_document_head.html.erb'
     assert_generated 'app/views/layouts/activemail/_head.html.inky-erb'
     assert_generated 'app/views/layouts/activemail/_footer.html.inky-erb'
   end
@@ -163,6 +164,12 @@ class EngineDefaultLayoutTest < ActiveMailTest
     refute_includes html, '<link'
   end
 
+  def test_default_layout_titles_the_document_with_the_subject
+    html = render_default_layout(FakeAssets.new(CSS))
+
+    assert_includes html, "<title>#{MessageStub::SUBJECT}</title>"
+  end
+
   def test_default_layout_raises_when_the_framework_stylesheet_is_unreadable
     error = assert_raises(ActionView::Template::Error) { render_default_layout(FakeAssets.new(nil)) }
 
@@ -182,7 +189,7 @@ class EngineDefaultLayoutTest < ActiveMailTest
       lookup = ActionView::LookupContext.new([views])
       view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
       # A real app auto-includes the engine's app/helpers into mailer views.
-      view.extend(ActiveMail::StylesHelper)
+      view.extend(ActiveMail::StylesHelper, MessageStub)
 
       ActiveMail::AssetPipeline.stub(:current, assets) { view.render(template: 'mailers/sample', layout: 'layouts/activemail/mailer') }
     end

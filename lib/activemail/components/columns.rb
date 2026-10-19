@@ -11,12 +11,12 @@ module ActiveMail
       sig { override.params(node: Nokogiri::XML::Node, inner: String).returns(String) }
       def transform(node, inner)
         small, large = column_sizes(node)
-        width_px = ghost_width(large)
+        width_px = ghost_width(node, large)
 
         [
-          %(<!--[if mso | IE]><td width="#{width_px}" valign="top"><![endif]-->),
+          %(<!--[if mso]><td width="#{width_px}" valign="top"><table #{TABLE_RESET} width="#{width_px}"><tr><![endif]-->),
           column_markup(node, inner, column_classes(node, small, large), width_px, expander(node, large)),
-          '<!--[if mso | IE]></td><![endif]-->'
+          '<!--[if mso]></tr></table></td><![endif]-->'
         ].join
       end
 
@@ -65,11 +65,35 @@ module ActiveMail
         %(<th class="expander"></th>)
       end
 
-      # Clamp: an oversized `large` would push the MSO ghost cell past the
-      # container and force a wrap in Outlook Word.
-      sig { params(large: Integer).returns(Integer) }
-      def ghost_width(large)
-        [((large.to_f / column_count) * container_width).round, container_width].min
+      # Columns are transformed leaves first, so the enclosing <columns> are still raw nodes whose
+      # sizes and positions are readable. A nested row shares the content box of its parent column.
+      sig { params(node: Nokogiri::XML::Node, large: Integer).returns(Integer) }
+      def ghost_width(node, large)
+        available = node.ancestors('columns').reverse.reduce(Rational(container_width)) do |width, ancestor|
+          share_of(width, column_sizes(ancestor).last) - horizontal_padding(ancestor)
+        end
+        share_of(available, large).round
+      end
+
+      # Clamped: an oversized `large` would push the MSO ghost cell past its parent and force a wrap in Outlook Word.
+      sig { params(width: Rational, share: Integer).returns(Rational) }
+      def share_of(width, share)
+        width * Rational([share, column_count].min, column_count)
+      end
+
+      # Mirrors _grid.scss, whose padding is inlined on each column.
+      sig { params(node: Nokogiri::XML::Node).returns(Rational) }
+      def horizontal_padding(node)
+        return Rational(0) if node.ancestors('row').any? { |row| class?(row, 'collapse') }
+
+        siblings = column_siblings(node)
+        outer_side = node.ancestors('columns').empty? ? spacing(:container_gutter) : Rational(0)
+        [siblings.first, siblings.last].sum(Rational(0)) { |edge| edge == node ? outer_side : spacing(:sm) }
+      end
+
+      sig { params(name: Symbol).returns(Rational) }
+      def spacing(name)
+        Rational(core.config.tokens.spacing!(name).delete_suffix('px'))
       end
 
       sig { params(node: Nokogiri::XML::Node, inner: String, classes: String, width_px: Integer, expander: String).returns(String) }

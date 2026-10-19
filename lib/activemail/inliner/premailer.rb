@@ -12,10 +12,11 @@ module ActiveMail
       def inline(html)
         # premailer is a hard runtime dependency (the default inliner), so require
         # can't fail — unlike the optional Roadie adapter, which guards LoadError.
-        require 'premailer'
+        # Loaded on first use: premailer is slow to load and a :roadie or :null host never needs it.
+        require_relative 'premailer/document'
         # warn_level NONE: premailer's un-inlinable-CSS warnings are noise at delivery
         # time; the quality layer is where coverage gaps should surface.
-        ::Premailer.new(html, with_html_string: true, warn_level: ::Premailer::Warnings::NONE).to_inline_css
+        Document.new(html, with_html_string: true, warn_level: ::Premailer::Warnings::NONE).to_inline_css
       end
     end
   end

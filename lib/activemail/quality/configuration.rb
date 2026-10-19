@@ -6,11 +6,14 @@ require 'sorbet-runtime'
 
 require_relative 'guard'
 require_relative 'output_dir'
+require_relative 'output_filter'
+require_relative 'rule_exemptions'
 
 module ActiveMail
   module Quality
     class Configuration
       extend T::Sig
+      include RuleExemptions
 
       FORMATS = T.let(%i[html text].freeze, T::Array[Symbol])
       DEFAULT_LOCALES = T.let(->(_preview) { [I18n.default_locale] }, Proc)
@@ -38,14 +41,29 @@ module ActiveMail
       # reported.
       sig { returns(T::Array[String]) }
       def required_previews
-        @required_previews.dup.freeze
+        @preview_keys.fetch(:required).dup.freeze
       end
 
-      sig { params(value: T.untyped).returns(T::Array[String]) }
+      sig { params(value: T.untyped).void }
       def required_previews=(value)
-        raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_a'" unless value.respond_to?(:to_a)
+        @preview_keys[:required] = preview_keys(value)
+      end
 
-        @required_previews = value.to_a.map(&:to_s)
+      # Preview keys that may legitimately decline to send (NullMail); any other
+      # preview returning one is a violation.
+      sig { returns(T::Array[String]) }
+      def allow_declined
+        @preview_keys.fetch(:allow_declined).dup.freeze
+      end
+
+      sig { params(value: T.untyped).void }
+      def allow_declined=(value)
+        @preview_keys[:allow_declined] = preview_keys(value)
+      end
+
+      sig { params(key: String).returns(T::Boolean) }
+      def allow_declined?(key)
+        @preview_keys.fetch(:allow_declined).include?(key)
       end
 
       sig { returns(T.any(T::Array[Symbol], Proc)) }
@@ -98,14 +116,14 @@ module ActiveMail
       def output_filters=(value)
         raise TypeError, "output_filters must be an Array, got #{value.class}" unless value.is_a?(Array)
 
-        @output_filters = value.map { |filter| output_filter(filter) }
+        @output_filters = value.map { |filter| OutputFilter.coerce(filter) }
       end
 
       sig { void }
       def initialize
         @guard = T.let(Guard.new, Guard)
         @output_dir = T.let('tmp/activemail_previews', String)
-        @required_previews = T.let([], T::Array[String])
+        @preview_keys = T.let({ required: [], allow_declined: [] }, T::Hash[Symbol, T::Array[String]])
         @locales = T.let(DEFAULT_LOCALES, T.any(T::Array[Symbol], Proc))
         @formats = T.let(FORMATS, T::Array[Symbol])
         @around_each = T.let(nil, T.nilable(Proc))
@@ -114,22 +132,19 @@ module ActiveMail
 
       private
 
+      sig { params(value: T.untyped).returns(T::Array[String]) }
+      def preview_keys(value)
+        raise TypeError, "#{value.inspect} (#{value.class}) does not respond to 'to_a'" unless value.respond_to?(:to_a)
+
+        value.to_a.map(&:to_s)
+      end
+
       sig { params(value: T.untyped).returns(T::Array[Symbol]) }
       def normalize_locales(value)
         raise TypeError, "locales must be an Array, got #{value.class}" unless value.is_a?(Array)
         raise ArgumentError, 'locales must not be empty' if value.empty?
 
         value.map(&:to_sym)
-      end
-
-      sig { params(filter: T.untyped).returns(Proc) }
-      def output_filter(filter)
-        return filter if filter.is_a?(Proc)
-
-        pattern, replacement = filter if filter.is_a?(Array) && filter.size == 2
-        raise TypeError, "output filter must be a Proc or [Regexp, String], got #{filter.inspect}" unless pattern.is_a?(Regexp) && replacement.is_a?(String)
-
-        ->(content) { content.gsub(pattern, replacement) }
       end
     end
   end

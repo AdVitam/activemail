@@ -64,6 +64,7 @@ class TokensTest < ActiveMailTest
     assert_includes scss, '$am-color-primary:'
     assert_includes scss, '$am-font-body:'
     assert_includes scss, '$am-spacing-md:'
+    assert_includes scss, '$am-spacing-container-gutter: 16px !default;'
     assert_includes scss, '!default;'
   end
 

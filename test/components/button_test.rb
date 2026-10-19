@@ -4,22 +4,39 @@ require 'test_helper'
 
 class ButtonTest < ActiveMailTest
   def test_simple_button_is_bulletproof
+    ActiveMail.tokens.font(:body, 'Arial, sans-serif')
     assert_renders(
       '<button href="https://example.com">Button</button>',
       <<~HTML
         <table class="button" role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td>
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td style="background:#2a9d8f;border-radius:4px;">
-            <a href="https://example.com" style="display:inline-block;text-decoration:none;padding:12px 24px;background:#2a9d8f;color:#ffffff;font-weight:bold;border-radius:4px;">Button</a>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td style="background:#2a9d8f;border-radius:4px;mso-padding-alt:12px 24px;">
+            <a href="https://example.com" style="display:inline-block;text-decoration:none;padding:12px 24px;font-family:Arial, sans-serif;line-height:1.25;color:#ffffff;font-weight:bold;">Button</a>
           </td></tr></tbody></table>
         </td></tr></tbody></table>
       HTML
     )
   end
 
-  def test_padding_lives_on_the_anchor
-    output = render('<button href="#">Go</button>')
+  def test_padding_lives_on_the_anchor_and_is_mirrored_for_outlook
+    fragment = Nokogiri::HTML.fragment(render('<button href="#">Go</button>'))
 
-    assert_match(/<a [^>]*style="[^"]*padding:12px 24px;[^"]*"/, output)
+    assert_includes fragment.at_css('a')['style'], 'padding:12px 24px;'
+    assert_includes fragment.at_css('td[style*="background"]')['style'], 'mso-padding-alt:12px 24px;'
+  end
+
+  def test_fill_and_radius_live_on_the_cell_only
+    fragment = Nokogiri::HTML.fragment(render('<button href="#">Go</button>'))
+
+    refute_match(/background|border-radius/, fragment.at_css('a')['style'])
+    assert_match(/background:#2a9d8f;border-radius:4px;/, fragment.at_css('td[style*="background"]')['style'])
+  end
+
+  def test_anchor_carries_the_body_font_and_line_height
+    ActiveMail.tokens.font(:body, 'Georgia, serif')
+    style = Nokogiri::HTML.fragment(render('<button href="#">Go</button>')).at_css('a')['style']
+
+    assert_includes style, 'font-family:Georgia, serif;'
+    assert_includes style, 'line-height:1.25;'
   end
 
   def test_colors_come_from_tokens

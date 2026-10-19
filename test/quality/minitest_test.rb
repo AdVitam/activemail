@@ -3,13 +3,14 @@
 require_relative 'quality_test_helper'
 require 'activemail/quality/minitest'
 require 'mail'
+require 'action_mailer'
 
 class MinitestQualityTest < QualityTest
   include ActiveMail::Quality::Minitest
 
   CLEAN = <<~HTML.freeze
     <!DOCTYPE html>
-    <html lang="en"><head></head><body>
+    <html lang="en"><head><title>Welcome</title></head><body>
       <table role="presentation"><tr><td>#{'x ' * 600}</td></tr></table>
     </body></html>
   HTML
@@ -74,6 +75,40 @@ class MinitestQualityTest < QualityTest
 
     assert_raises(Minitest::Assertion) { assert_email_quality(html_only) }
     assert_email_quality(build_preview(CLEAN).call('welcome'))
+  end
+
+  def test_assert_email_quality_fails_on_a_declined_send_unless_allowed
+    declined = ActionMailer::Base::NullMail.new
+
+    assert_raises(Minitest::Assertion) { assert_email_quality(declined) }
+    assert_email_quality(declined, allow_declined: true)
+  end
+
+  def test_preview_quality_allows_a_declined_send_listed_in_the_configuration
+    preview = Object.new
+    preview.define_singleton_method(:call) { |_email, _params = {}| ActionMailer::Base::NullMail.new }
+    preview.define_singleton_method(:preview_name) { 'fake' }
+
+    assert_raises(Minitest::Assertion) { assert_preview_quality(preview, 'skipped') }
+    ActiveMail::Quality.config.allow_declined = ['fake#skipped']
+    assert_preview_quality(preview, 'skipped')
+  end
+
+  def test_assert_email_quality_skips_the_given_rules
+    assert_raises(Minitest::Assertion) { assert_email_quality(VIOLATING, skip: %i[img_alt]) }
+    assert_email_quality(VIOLATING, skip: ActiveMail::Quality::Guard.new.violations(VIOLATING).map(&:rule))
+  end
+
+  def test_preview_quality_honours_the_configured_rule_exemptions
+    mail = build_mail(html: VIOLATING, text: nil)
+    preview = Object.new
+    preview.define_singleton_method(:preview_name) { 'fake' }
+    preview.define_singleton_method(:call) { |_email, _params = {}| mail }
+    exempt = ActiveMail::Quality::Guard.new.violations(mail).map(&:rule)
+
+    assert_raises(Minitest::Assertion) { assert_preview_quality(preview, 'hi') }
+    ActiveMail::Quality.config.rule_exemptions = { 'fake' => exempt }
+    assert_preview_quality(preview, 'hi')
   end
 
   def test_assert_email_quality_applies_custom_rules

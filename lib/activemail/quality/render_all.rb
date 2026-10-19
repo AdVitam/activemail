@@ -40,6 +40,7 @@ module ActiveMail
 
       sig { returns(Result) }
       def call
+        @config.check_exemptions!(@config.guard)
         clean_previous_output
         previews = PreviewRenderer.all
         PreviewRenderer.cases(@config, previews).each { |preview, email, locale| render_locale(preview, email, locale) }
@@ -105,10 +106,9 @@ module ActiveMail
       sig { params(preview: T.untyped, email: String, locale: Symbol, label: String).returns(T.nilable(T::Array[Guard::Violation])) }
       def render_one(preview, email, locale, label)
         PreviewRenderer.within(preview, email, locale, @config.around_each) do |mail|
-          next [] if PreviewRenderer.declined?(mail)
-
-          write(preview, email, locale, mail)
-          @config.guard.violations(mail)
+          write(preview, email, locale, mail) unless PreviewRenderer.declined?(mail)
+          key = PreviewRenderer.key(preview, email)
+          @config.guard.violations(mail, allow_declined: @config.allow_declined?(key), skip: @config.exempt_rules_for(key))
         end
       rescue SystemCallError
         raise # disk/permission failures are not template bugs — let them abort the run

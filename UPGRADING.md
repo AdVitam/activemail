@@ -1,3 +1,76 @@
+# Upgrading to ActiveMail 2.1
+
+## Gemfile
+
+```ruby
+gem 'activemail', '~> 2.1'
+```
+
+## Outer gutter
+
+Rows now keep content off the screen edge: the first and last column of a row
+get a 16px (`container_gutter`) border-box padding on their outer side, inlined
+like every other framework rule. Columns still sum to `container_width`; the
+text area is 16px narrower on each side.
+
+- To keep edge-to-edge columns: `config.tokens.spacing :container_gutter, '0px'`
+  (or `$am-container-gutter: 0`).
+- Content you padded by hand to avoid the edge now has the padding twice:
+  remove it.
+- A nested row does not repeat the outer gutter. The `.columns.first.last` SCSS
+  rule is gone; ejected `_grid.scss` copies (`activemail:styles`) must be
+  re-ejected.
+
+## Outlook markup
+
+- Conditional comments are `<!--[if mso]>` (`mso` alone targets Outlook
+  for Windows). Tests matching `[if mso | IE]` must change.
+- Each column ghost cell wraps its column in a `<table><tr>`. A nested column
+  is sized against the content box of its enclosing column: `large="6"` in a
+  lone `large="6"` is 134px (300px minus two 16px gutters, halved), not 300px.
+
+## Buttons
+
+- The fill and the radius are on the cell, not on the `<a>`. The `<a>` carries
+  `display:inline-block`, `font-family` (the `body` font token) and
+  `line-height:1.25`; the cell gets `mso-padding-alt`.
+- A dark-mode override of the button fill must target `table td`, not `a`.
+
+## Center
+
+`<center>` no longer adds `align="center"` and `.float-center` to its children
+(nor to nested menu items): it renders one `<center align="center">` and leaves
+its content as written. Put `class="float-center"` or `align="center"` on the
+children that need it.
+
+## Layouts
+
+The `<head>` of the default layout moved to `layouts/activemail/_document_head`,
+with `<title><%= message.subject %></title>`. The generated layouts
+(`activemail:install`, `--haml`, `--slim`) render that partial and the `_head`
+and `_footer` partials: regenerate yours or add the `<title>`. The partial reads
+`message`, so it only renders inside a mailer view.
+
+## Quality
+
+New built-in rules flag emails that passed before: `title`, `anchor_href`,
+`placeholder`, `unsupported_color`, `text_entities`. Disable any with
+`Guard.new(disable: [...])`.
+
+A `NullMail` (a mailer that returned without sending) is now a `declined`
+violation, in `Guard`, `render_all`, `assert_email_quality`,
+`assert_quality_for_all_previews` and `be_a_valid_email`. List the previews that
+decline on purpose:
+
+```ruby
+ActiveMail::Quality.configure { |c| c.allow_declined = %w[reminder_mailer#maybe_skipped] }
+```
+
+or pass `allow_declined: true` to `Guard#violations`, `Guard#valid?`,
+`assert_email_quality` and `be_a_valid_email`.
+
+---
+
 # Upgrading to ActiveMail 2.0
 
 ## Gemfile

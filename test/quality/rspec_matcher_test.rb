@@ -2,12 +2,13 @@
 
 require_relative 'quality_test_helper'
 require 'activemail/quality/rspec'
+require 'action_mailer'
 
 # Tests the matcher object directly — no RSpec boot required.
 class RspecMatcherTest < QualityTest
   CLEAN = <<~HTML.freeze
     <!DOCTYPE html>
-    <html lang="en"><head></head><body>
+    <html lang="en"><head><title>Welcome</title></head><body>
       <table role="presentation"><tr><td>#{'x ' * 600}</td></tr></table>
     </body></html>
   HTML
@@ -40,6 +41,20 @@ class RspecMatcherTest < QualityTest
 
   def test_description
     assert_equal 'be a valid email', matcher.description
+  end
+
+  def test_a_declined_send_matches_only_when_allowed
+    declined = ActionMailer::Base::NullMail.new
+
+    refute matcher.matches?(declined)
+    assert matcher(allow_declined: true).matches?(declined)
+  end
+
+  def test_skip_exempts_the_named_rules
+    all = ActiveMail::Quality::Guard.new.violations(VIOLATING).map(&:rule)
+
+    refute matcher(skip: %i[img_alt]).matches?(VIOLATING)
+    assert matcher(skip: all).matches?(VIOLATING)
   end
 
   def test_respects_custom_guard

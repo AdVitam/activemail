@@ -90,20 +90,44 @@ class ScssRenderHarnessTest < ActiveMailTest
                     "columns (#{total}px) overflow container (#{ActiveMail.configuration.container_width}px)"
   end
 
+  def test_outer_gutter_is_inlined_on_the_edge_columns_only
+    first, last = Nokogiri::HTML(inline(rendered_email)).css('th.large-6.columns').map { |col| col['style'].to_s }
+
+    assert_match(/padding-left:\s*16px/, first)
+    assert_match(/padding-right:\s*8px/, first)
+    assert_match(/padding-left:\s*8px/, last)
+    assert_match(/padding-right:\s*16px/, last)
+  end
+
+  def test_container_gutter_follows_the_token
+    ActiveMail.tokens.spacing(:container_gutter, '0px')
+    first = Nokogiri::HTML(inline(rendered_email(css: ScssCompiler.compile))).at_css('th.large-6.columns.first')
+
+    assert_match(/padding-left:\s*0/, first['style'].to_s)
+  end
+
+  def test_nested_columns_do_not_repeat_the_outer_gutter
+    nested = '<row><columns large="6"><row><columns large="6">a</columns><columns large="6">b</columns></row></columns></row>'
+    doc = Nokogiri::HTML(inline(rendered_email(sample: nested)))
+    inner_first = doc.at_css('th.columns th.columns.first')
+
+    assert_match(/padding-left:\s*0/, inner_first['style'].to_s)
+  end
+
   private
 
   # The real default layout, so the assertions fail if the layout or the helper stops emitting the <style> block.
-  def rendered_email
-    ActiveMail::AssetPipeline.stub(:current, FakeAssets.new(@css)) do
+  def rendered_email(sample: SAMPLE, css: @css)
+    ActiveMail::AssetPipeline.stub(:current, FakeAssets.new(css)) do
       Dir.mktmpdir do |dir|
         views = File.join(dir, 'views')
         FileUtils.mkdir_p(File.join(views, 'mailers'))
         FileUtils.cp_r(File.join(ENGINE_VIEWS, 'layouts'), views)
-        File.write(File.join(views, 'mailers', 'sample.html.inky-erb'), SAMPLE)
+        File.write(File.join(views, 'mailers', 'sample.html.inky-erb'), sample)
 
         lookup = ActionView::LookupContext.new([views])
         view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
-        view.extend(ActiveMail::StylesHelper)
+        view.extend(ActiveMail::StylesHelper, MessageStub)
 
         view.render(template: 'mailers/sample', layout: 'layouts/activemail/mailer')
       end

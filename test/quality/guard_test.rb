@@ -8,7 +8,7 @@ class GuardTest < QualityTest
   CLEAN_DOC = <<~HTML.freeze
     <!DOCTYPE html>
     <html lang="en">
-      <head><meta charset="utf-8"></head>
+      <head><meta charset="utf-8"><title>Welcome</title></head>
       <body>
         <table role="presentation"><tr><td>#{'padding ' * 200}</td></tr></table>
         <img src="logo.png" alt="Logo">
@@ -231,8 +231,106 @@ class GuardTest < QualityTest
     assert_includes found, :text_part_present
   end
 
-  def test_declined_send_has_nothing_to_check
-    assert_empty @guard.violations(ActionMailer::Base::NullMail.new)
+  def test_blank_or_missing_title_is_a_violation
+    assert_includes rules(CLEAN_DOC.sub('<title>Welcome</title>', '')), :title
+    assert_includes rules(CLEAN_DOC.sub('Welcome', '  ')), :title
+    refute_includes rules(CLEAN_DOC), :title
+  end
+
+  def test_title_is_not_required_of_a_fragment
+    refute_includes rules('<table role="presentation"><tr><td>hi</td></tr></table>'), :title
+  end
+
+  def test_anchor_without_href_is_a_violation
+    assert_includes rules(CLEAN_DOC.sub('<img', '<a>no link</a><img')), :anchor_href
+    assert_includes rules(CLEAN_DOC.sub('<img', '<a href=" ">blank</a><img')), :anchor_href
+    refute_includes rules(CLEAN_DOC.sub('<img', '<a href="https://example.com">ok</a><img')), :anchor_href
+  end
+
+  def test_unresolved_placeholder_is_a_violation
+    assert_includes rules(CLEAN_DOC.sub('<img', '{{ first_name }}<img')), :placeholder
+    refute_includes rules(CLEAN_DOC.sub('<img', '<style>a{b:{c}}</style><img')), :placeholder
+    refute_includes rules(CLEAN_DOC), :placeholder
+  end
+
+  def test_placeholder_pattern_is_public
+    assert_match ActiveMail::Quality::BuiltinRules::PLACEHOLDER, 'Hello {{name}}'
+    refute_match ActiveMail::Quality::BuiltinRules::PLACEHOLDER, 'Hello {name}'
+  end
+
+  def test_placeholder_ignores_style_and_script_blocks
+    html = CLEAN_DOC.sub('<img', '<script>var a = {{b}};</script><img')
+
+    refute_includes rules(html), :placeholder
+  end
+
+  def test_unsupported_color_in_inline_style_is_a_violation
+    ['color:rgb(0 0 0 / 50%)', 'color:rgba(0,0,0,50%)', 'color:hsl(10 20% 30%)', 'color:color-mix(in srgb, red, blue)', 'color:var(--brand)'].each do |style|
+      assert_includes rules(CLEAN_DOC.sub('<img', %(<p style="#{style}">x</p><img))), :unsupported_color, style
+    end
+  end
+
+  def test_supported_colors_pass
+    html = CLEAN_DOC.sub('<img', '<p style="color:#fff;background:rgb(1, 2, 3);border-color:rgba(0,0,0,0.5)">x</p><img')
+
+    refute_includes rules(html), :unsupported_color
+  end
+
+  def test_html_entities_in_the_text_part_are_a_violation
+    assert_includes message_rules(build_mail(text: 'Tom &amp; Jerry')), :text_entities
+    assert_includes message_rules(build_mail(text: 'caf&#233; &#xE9; &nbsp;')), :text_entities
+    refute_includes message_rules(build_mail(text: 'Tom & Jerry; a < b')), :text_entities
+  end
+
+  def test_new_rules_can_be_disabled
+    guard = ActiveMail::Quality::Guard.new(disable: %i[title anchor_href placeholder unsupported_color text_entities])
+    html = CLEAN_DOC.sub('<title>Welcome</title>', '').sub('<img', '<a>x</a>{{y}}<p style="color:var(--a)">z</p><img')
+
+    assert_empty guard.violations(build_mail(html: html, text: '&amp;'))
+  end
+
+  def test_declined_send_is_a_violation_unless_allowed
+    assert_equal [:declined], @guard.violations(ActionMailer::Base::NullMail.new).map(&:rule)
+    assert_empty @guard.violations(ActionMailer::Base::NullMail.new, allow_declined: true)
+    refute @guard.valid?(ActionMailer::Base::NullMail.new)
+    assert @guard.valid?(ActionMailer::Base::NullMail.new, allow_declined: true)
+  end
+
+  def test_skip_exempts_a_built_in_rule_and_keeps_the_others
+    html = '<html><body><img src="x.png"></body></html>'
+    all = @guard.violations(html).map(&:rule)
+
+    assert_includes all, :img_alt
+    assert_includes all, :lang
+    assert_equal all - [:img_alt], @guard.violations(html, skip: %i[img_alt]).map(&:rule)
+    refute @guard.valid?(html, skip: %i[img_alt])
+  end
+
+  def test_skip_exempts_a_custom_rule_and_a_message_rule
+    custom = ActiveMail::Quality::Rule.html(:no_x) { |_doc, html| 'has x' if html.include?('padding') }
+    guard = ActiveMail::Quality::Guard.new(rules: [custom])
+    mail = build_mail(html: CLEAN_DOC, text: nil)
+
+    assert_includes guard.violations(CLEAN_DOC).map(&:rule), :no_x
+    assert guard.valid?(CLEAN_DOC, skip: %i[no_x])
+    assert_includes guard.violations(mail).map(&:rule), :text_part_present
+    assert guard.valid?(mail, skip: %i[text_part_present no_x])
+  end
+
+  def test_skip_rejects_unknown_rule_names
+    error = assert_raises(ArgumentError) { @guard.violations(CLEAN_DOC, skip: %i[img_alt nope]) }
+
+    assert_includes error.message, ':nope'
+  end
+
+  def test_skip_accepts_a_disabled_rule
+    guard = ActiveMail::Quality::Guard.new(disable: %i[img_alt])
+
+    assert guard.valid?(CLEAN_DOC, skip: %i[img_alt])
+  end
+
+  def test_skip_is_validated_for_a_declined_send_too
+    assert_raises(ArgumentError) { @guard.violations(ActionMailer::Base::NullMail.new, skip: %i[nope]) }
   end
 
   def test_html_part_present_can_be_disabled

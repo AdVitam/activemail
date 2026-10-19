@@ -32,25 +32,30 @@
     color: $am-dark-link !important;
   }
 
+  // The fill lives on the cell alone: a filled link would square off its rounded corners.
   .button table td,
+  .cta table td {
+    background: $am-button-primary-bg !important;
+  }
+
   .button a,
   .button span,
-  .cta table td,
   .cta a,
   .cta span {
-    background: $am-button-primary-bg !important;
     color: $am-button-primary-color !important;
   }
 
   // Restore the secondary fill AND text — the primary rule above would be unreadable
   // on a light secondary fill.
   .button.secondary table td,
+  .cta.secondary table td {
+    background: $am-button-secondary-bg !important;
+  }
+
   .button.secondary a,
   .button.secondary span,
-  .cta.secondary table td,
   .cta.secondary a,
   .cta.secondary span {
-    background: $am-button-secondary-bg !important;
     color: $am-button-secondary-color !important;
   }
 
@@ -104,22 +109,26 @@
   }
 
   [data-ogsc] .button table td,
+  [data-ogsc] .cta table td {
+    background: $am-button-primary-bg !important;
+  }
+
   [data-ogsc] .button a,
   [data-ogsc] .button span,
-  [data-ogsc] .cta table td,
   [data-ogsc] .cta a,
   [data-ogsc] .cta span {
-    background: $am-button-primary-bg !important;
     color: $am-button-primary-color !important;
   }
 
   [data-ogsc] .button.secondary table td,
+  [data-ogsc] .cta.secondary table td {
+    background: $am-button-secondary-bg !important;
+  }
+
   [data-ogsc] .button.secondary a,
   [data-ogsc] .button.secondary span,
-  [data-ogsc] .cta.secondary table td,
   [data-ogsc] .cta.secondary a,
   [data-ogsc] .cta.secondary span {
-    background: $am-button-secondary-bg !important;
     color: $am-button-secondary-color !important;
   }
 

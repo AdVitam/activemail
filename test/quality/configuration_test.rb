@@ -121,6 +121,50 @@ class QualityConfigurationTest < QualityTest
     assert_raises(TypeError) { @config.required_previews = 42 }
   end
 
+  def test_allow_declined_coerces_to_strings_and_is_frozen
+    assert_empty @config.allow_declined
+    @config.allow_declined = [:skipped, 'mailer#hi']
+
+    assert_equal %w[skipped mailer#hi], @config.allow_declined
+    assert_predicate @config.allow_declined, :frozen?
+    assert @config.allow_declined?('mailer#hi')
+    refute @config.allow_declined?('mailer#other')
+  end
+
+  def test_allow_declined_rejects_non_enumerable
+    assert_raises(TypeError) { @config.allow_declined = 42 }
+  end
+
+  def test_rule_exemptions_coerces_and_is_frozen
+    assert_empty @config.rule_exemptions
+    @config.rule_exemptions = { infra: ['img_alt'], 'mailer#hi' => :title }
+
+    assert_equal({ 'infra' => %i[img_alt], 'mailer#hi' => %i[title] }, @config.rule_exemptions)
+    assert_predicate @config.rule_exemptions, :frozen?
+    assert_predicate @config.rule_exemptions['infra'], :frozen?
+  end
+
+  def test_exempt_rules_for_unions_the_preview_name_and_the_full_key
+    @config.rule_exemptions = { 'infra/fax' => %i[img_alt title], 'infra/fax#send' => %i[title lang], 'other' => %i[lang] }
+
+    assert_equal %i[title lang img_alt], @config.exempt_rules_for('infra/fax#send')
+    assert_equal %i[img_alt title], @config.exempt_rules_for('infra/fax#other')
+    assert_equal %i[img_alt title], @config.exempt_rules_for('infra/fax')
+    assert_empty @config.exempt_rules_for('unknown#send')
+  end
+
+  def test_exempt_rules_for_full_key_alone
+    @config.rule_exemptions = { 'mailer#hi' => %i[title] }
+
+    assert_equal %i[title], @config.exempt_rules_for('mailer#hi')
+    assert_empty @config.exempt_rules_for('mailer#bye')
+  end
+
+  def test_rule_exemptions_rejects_non_hash
+    assert_raises(TypeError) { @config.rule_exemptions = %w[img_alt] }
+    assert_raises(TypeError) { @config.rule_exemptions = nil }
+  end
+
   def test_module_configure_yields_shared_config
     custom = ActiveMail::Quality::Guard.new(max_bytes: 5)
     ActiveMail::Quality.configure { |c| c.guard = custom }

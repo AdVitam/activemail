@@ -37,6 +37,15 @@ FakeAssets = Struct.new(:css) do
   end
 end
 
+# A mailer view reads its subject through `message`; plain ActionView has none.
+module MessageStub
+  SUBJECT = 'Welcome aboard'
+
+  def message
+    Struct.new(:subject).new(SUBJECT)
+  end
+end
+
 # Shared fixture: a minimal custom component used across several test files.
 class CustomComponent < ActiveMail::Components::Base
   extend T::Sig

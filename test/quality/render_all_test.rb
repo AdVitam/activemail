@@ -9,7 +9,7 @@ require 'activemail/quality/render_all'
 class RenderAllTest < QualityTest
   CLEAN = <<~HTML.freeze
     <!DOCTYPE html>
-    <html lang="en"><head></head><body>
+    <html lang="en"><head><title>Welcome</title></head><body>
       <table role="presentation"><tr><td>#{'x ' * 600}</td></tr></table>
     </body></html>
   HTML
@@ -56,6 +56,14 @@ class RenderAllTest < QualityTest
     assert_equal 2, result.discovered
   end
 
+  def test_an_unknown_exempted_rule_aborts_the_run_instead_of_failing_a_render
+    config = ActiveMail::Quality::Configuration.new
+    config.rule_exemptions = { 'mailer' => %i[img_atl] }
+
+    error = assert_raises(ArgumentError) { run_with_previews([build_preview('mailer', welcome: CLEAN)], config) }
+    assert_includes error.message, ':img_atl'
+  end
+
   def test_discovered_is_zero_when_no_previews
     result = run_with_previews([], ActiveMail::Quality::Configuration.new)
 
@@ -75,14 +83,36 @@ class RenderAllTest < QualityTest
     assert_equal 'text of welcome', @contents['mailer/welcome.txt']
   end
 
-  def test_declined_send_is_rendered_without_files_or_failures
+  def test_declined_send_fails_unless_allowed_and_writes_no_files
     preview = build_preview('mailer', skipped: :declined)
     result = run_with_previews([preview], ActiveMail::Quality::Configuration.new)
 
     assert_equal 1, result.rendered
     assert_empty result.render_failures
+    assert_equal [:declined], result.guard_failures['mailer#skipped'].map(&:rule)
+    assert_empty @written
+  end
+
+  def test_allowed_declined_send_is_rendered_without_files_or_failures
+    config = ActiveMail::Quality::Configuration.new
+    config.allow_declined = ['mailer#skipped']
+    result = run_with_previews([build_preview('mailer', skipped: :declined)], config)
+
+    assert_equal 1, result.rendered
     assert_empty result.guard_failures
     assert_empty @written
+  end
+
+  def test_configured_rule_exemptions_skip_the_named_rules_only
+    preview = build_preview('mailer', bad: VIOLATING, other: VIOLATING)
+    plain = run_with_previews([preview], ActiveMail::Quality::Configuration.new)
+    exempt = plain.guard_failures['mailer#bad'].map(&:rule) - [:img_alt]
+    config = ActiveMail::Quality::Configuration.new
+    config.rule_exemptions = { 'mailer#bad' => exempt, 'mailer#other' => %i[img_alt] }
+    result = run_with_previews([preview], config)
+
+    assert_equal [:img_alt], result.guard_failures['mailer#bad'].map(&:rule)
+    refute_includes result.guard_failures['mailer#other'].map(&:rule), :img_alt
   end
 
   def test_collects_guard_failures

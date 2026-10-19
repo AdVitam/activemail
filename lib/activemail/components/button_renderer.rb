@@ -14,6 +14,8 @@ module ActiveMail
       abstract!
 
       CONTROL_PADDING = 'padding:12px 24px;'
+      MSO_CELL_PADDING = 'mso-padding-alt:12px 24px;'
+      LINE_HEIGHT = '1.25'
 
       sig { abstract.returns(String) }
       def root_class; end
@@ -38,7 +40,8 @@ module ActiveMail
         LINK_ATTRIBUTES
       end
 
-      # Padding on the control makes the whole button a clickable target.
+      # Padding on the control makes the whole button a clickable target; Outlook Word
+      # ignores it there, so the cell repeats it as `mso-padding-alt`.
       sig { params(node: Nokogiri::XML::Node, inner: String, style: ActiveMail::Tokens::ButtonStyle, expand: T::Boolean).returns(String) }
       def control(node, inner, style, expand)
         css = control_style(style, expand)
@@ -48,17 +51,18 @@ module ActiveMail
         anchor(node, inner, before: extra, after: style_attribute(node, css))
       end
 
-      # The outline lives on the cell only: repeating it on the control would double the line.
+      # Fill, corners and outline live on the cell only: repeating them on the control would double them.
       sig { params(style: ActiveMail::Tokens::ButtonStyle, expand: T::Boolean).returns(String) }
       def cell_style(style, expand)
         border = style.border ? "border:1px solid #{style.border};" : ''
-        "background:#{style.background};border-radius:#{style.radius};#{border}#{'text-align:center;' if expand}"
+        "background:#{style.background};border-radius:#{style.radius};#{border}#{MSO_CELL_PADDING}#{'text-align:center;' if expand}"
       end
 
       sig { params(style: ActiveMail::Tokens::ButtonStyle, expand: T::Boolean).returns(String) }
       def control_style(style, expand)
         "display:#{expand ? 'block' : 'inline-block'};text-decoration:none;#{CONTROL_PADDING}" \
-          "background:#{style.background};color:#{style.color};font-weight:bold;border-radius:#{style.radius};"
+          "font-family:#{escape_attr(core.config.tokens.font!(:body))};line-height:#{LINE_HEIGHT};" \
+          "color:#{style.color};font-weight:bold;"
       end
     end
   end
