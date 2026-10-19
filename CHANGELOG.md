@@ -27,6 +27,8 @@ Behaviour changes to review before upgrading: see [UPGRADING.md](UPGRADING.md).
   and `be_a_valid_email`: exempt a preview from named rules, built-in or custom,
   without disabling them for every preview.
 - `mso-padding-alt` on the button cell so Outlook keeps the padding.
+- Below the container width, stacked columns take the container gutter on both
+  sides in clients that keep media queries.
 
 ### Changed
 

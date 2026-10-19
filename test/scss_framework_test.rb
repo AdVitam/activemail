@@ -119,6 +119,14 @@ class ScssFrameworkTest < ActiveMailTest
     assert_match(/font-size: 1px;\s*line-height: 1px/, css)
   end
 
+  def test_stacked_columns_take_the_container_gutter_on_both_sides
+    css = ScssCompiler.compile
+    query = css[/@media only screen and \(max-width: 599px\)\s*\{.*?\n\}/m].to_s
+
+    assert_match(/\.columns\s*\{\s*padding-left: 16px !important;\s*padding-right: 16px !important;/, query)
+    assert_match(/\.columns \.columns,\s*\.row\.collapse \.columns\s*\{\s*padding-left: 0 !important;/, query)
+  end
+
   def test_block_grid_up_n_rules_follow_the_column_count
     css = ScssCompiler.compile
 
