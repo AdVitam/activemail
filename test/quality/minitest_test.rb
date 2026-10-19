@@ -94,6 +94,23 @@ class MinitestQualityTest < QualityTest
     assert_preview_quality(preview, 'skipped')
   end
 
+  def test_assert_email_quality_skips_the_given_rules
+    assert_raises(Minitest::Assertion) { assert_email_quality(VIOLATING, skip: %i[img_alt]) }
+    assert_email_quality(VIOLATING, skip: ActiveMail::Quality::Guard.new.violations(VIOLATING).map(&:rule))
+  end
+
+  def test_preview_quality_honours_the_configured_rule_exemptions
+    mail = build_mail(html: VIOLATING, text: nil)
+    preview = Object.new
+    preview.define_singleton_method(:preview_name) { 'fake' }
+    preview.define_singleton_method(:call) { |_email, _params = {}| mail }
+    exempt = ActiveMail::Quality::Guard.new.violations(mail).map(&:rule)
+
+    assert_raises(Minitest::Assertion) { assert_preview_quality(preview, 'hi') }
+    ActiveMail::Quality.config.rule_exemptions = { 'fake' => exempt }
+    assert_preview_quality(preview, 'hi')
+  end
+
   def test_assert_email_quality_applies_custom_rules
     rule = ActiveMail::Quality::Rule.html(:no_x) { |_doc, html| 'has x' if html.include?('x ') }
     guard = ActiveMail::Quality::Guard.new(rules: [rule])

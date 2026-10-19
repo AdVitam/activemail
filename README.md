@@ -386,7 +386,10 @@ message — a plain text part free of HTML entities. A mailer that declines to
 send (`NullMail`) is a violation unless it is listed in `allow_declined`
 (`assert_email_quality(mail, allow_declined: true)` or
 `be_a_valid_email(allow_declined: true)` for one call). Built-in rules can be
-disabled and your own added:
+disabled and your own added; a single email can also be exempt from a rule
+(`assert_email_quality(html, skip: %i[img_alt])`, `be_a_valid_email(skip: …)`, or
+`rule_exemptions` below) while every other rule still applies to it. A name the
+guard does not know raises an `ArgumentError`.
 
 ```ruby
 signature = ActiveMail::Quality::Rule.html(:single_signature) do |doc, _html|
@@ -396,6 +399,10 @@ end
 ActiveMail::Quality.configure do |c|
   c.required_previews = %w[welcome_mailer#welcome]
   c.allow_declined = %w[reminder_mailer#maybe_skipped] # previews allowed to return a NullMail
+  c.rule_exemptions = {                      # a preview name covers all its emails
+    'legacy_mailer' => %i[img_alt],
+    'welcome_mailer#welcome' => %i[single_signature]
+  }
   c.guard = ActiveMail::Quality::Guard.new(max_bytes: 90_000, disable: %i[img_alt], rules: [signature])
   c.locales = %i[fr en]                      # or ->(preview) { [...] }; each preview gets params[:locale]
   c.formats = %i[html text]

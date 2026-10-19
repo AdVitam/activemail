@@ -30,30 +30,33 @@ module ActiveMail
       DEFAULT_MAX_BYTES = 102_400
       # A full HTML document smaller than this carries no real layout and is suspect.
       DEFAULT_MIN_FULL_DOC_BYTES = 1_024
+      NO_SKIP = T.let([].freeze, T::Array[Symbol])
 
       sig { params(max_bytes: Integer, min_full_doc_bytes: Integer, disable: T::Array[Symbol], rules: T::Array[Rule]).void }
       def initialize(max_bytes: DEFAULT_MAX_BYTES, min_full_doc_bytes: DEFAULT_MIN_FULL_DOC_BYTES, disable: [], rules: [])
         all = assemble_rules(BuiltinRules.new(max_bytes: max_bytes, min_full_doc_bytes: min_full_doc_bytes), disable, rules)
         @html_rules = T.let(all.select { |rule| rule.level == :html }, T::Array[Rule])
         @message_rules = T.let(all.select { |rule| rule.level == :message }, T::Array[Rule])
+        @rule_names = T.let(all.map(&:name).freeze, T::Array[Symbol])
       end
 
       # A String only gets the HTML rules; a message gets both levels. A declined send
       # (NullMail) has nothing to check, but it is a violation unless the caller expects it.
-      sig { params(html_or_message: T.untyped, allow_declined: T::Boolean).returns(T::Array[Violation]) }
-      def violations(html_or_message, allow_declined: false)
-        return html_violations(html_or_message) if html_or_message.is_a?(String)
+      sig { params(html_or_message: T.untyped, allow_declined: T::Boolean, skip: T::Array[Symbol]).returns(T::Array[Violation]) }
+      def violations(html_or_message, allow_declined: false, skip: NO_SKIP)
+        check_skippable!(skip)
+        return html_violations(html_or_message, skip) if html_or_message.is_a?(String)
 
         mail = PreviewRenderer.mail(html_or_message)
         return declined_violations(allow_declined) if PreviewRenderer.declined?(mail)
 
         html = PreviewRenderer.html_body(mail)
-        (html.empty? ? [] : html_violations(html)) + apply(@message_rules, [mail])
+        (html.empty? ? [] : html_violations(html, skip)) + apply(@message_rules, [mail], skip)
       end
 
-      sig { params(html_or_message: T.untyped, allow_declined: T::Boolean).returns(T::Boolean) }
-      def valid?(html_or_message, allow_declined: false)
-        violations(html_or_message, allow_declined: allow_declined).empty?
+      sig { params(html_or_message: T.untyped, allow_declined: T::Boolean, skip: T::Array[Symbol]).returns(T::Boolean) }
+      def valid?(html_or_message, allow_declined: false, skip: NO_SKIP)
+        violations(html_or_message, allow_declined: allow_declined, skip: skip).empty?
       end
 
       private
@@ -79,14 +82,24 @@ module ActiveMail
         rules
       end
 
-      sig { params(html: String).returns(T::Array[Violation]) }
-      def html_violations(html)
-        apply(@html_rules, [Nokogiri::HTML(html), html])
+      sig { params(skip: T::Array[Symbol]).void }
+      def check_skippable!(skip)
+        return if skip.empty?
+
+        unknown = skip - @rule_names
+        raise ArgumentError, "unknown rule(s) to skip: #{unknown.inspect}, expected a subset of #{@rule_names.inspect}" unless unknown.empty?
       end
 
-      sig { params(rules: T::Array[Rule], args: T::Array[T.untyped]).returns(T::Array[Violation]) }
-      def apply(rules, args)
+      sig { params(html: String, skip: T::Array[Symbol]).returns(T::Array[Violation]) }
+      def html_violations(html, skip)
+        apply(@html_rules, [Nokogiri::HTML(html), html], skip)
+      end
+
+      sig { params(rules: T::Array[Rule], args: T::Array[T.untyped], skip: T::Array[Symbol]).returns(T::Array[Violation]) }
+      def apply(rules, args, skip)
         rules.flat_map do |rule|
+          next [] if skip.include?(rule.name)
+
           rule.messages(args).map { |message| Violation.new(rule: rule.name, message: message) }
         end
       end

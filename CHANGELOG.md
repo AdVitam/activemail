@@ -22,6 +22,10 @@ Breaking release: see [UPGRADING.md](UPGRADING.md).
 - `Quality::Configuration#allow_declined` and the `allow_declined:` option of
   `Guard#violations`, `Guard#valid?`, `assert_email_quality` and
   `be_a_valid_email`.
+- `Quality::Configuration#rule_exemptions` (by preview name or `preview#email`) and
+  the `skip:` option of `Guard#violations`, `Guard#valid?`, `assert_email_quality`
+  and `be_a_valid_email`: exempt a preview from named rules, built-in or custom,
+  without disabling them for every preview.
 - `mso-padding-alt` on the button cell so Outlook keeps the padding.
 
 ### Changed

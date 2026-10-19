@@ -7,11 +7,13 @@ require 'sorbet-runtime'
 require_relative 'guard'
 require_relative 'output_dir'
 require_relative 'output_filter'
+require_relative 'rule_exemptions'
 
 module ActiveMail
   module Quality
     class Configuration
       extend T::Sig
+      include RuleExemptions
 
       FORMATS = T.let(%i[html text].freeze, T::Array[Symbol])
       DEFAULT_LOCALES = T.let(->(_preview) { [I18n.default_locale] }, Proc)

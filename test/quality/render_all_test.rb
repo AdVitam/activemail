@@ -95,6 +95,18 @@ class RenderAllTest < QualityTest
     assert_empty @written
   end
 
+  def test_configured_rule_exemptions_skip_the_named_rules_only
+    preview = build_preview('mailer', bad: VIOLATING, other: VIOLATING)
+    plain = run_with_previews([preview], ActiveMail::Quality::Configuration.new)
+    exempt = plain.guard_failures['mailer#bad'].map(&:rule) - [:img_alt]
+    config = ActiveMail::Quality::Configuration.new
+    config.rule_exemptions = { 'mailer#bad' => exempt, 'mailer#other' => %i[img_alt] }
+    result = run_with_previews([preview], config)
+
+    assert_equal [:img_alt], result.guard_failures['mailer#bad'].map(&:rule)
+    refute_includes result.guard_failures['mailer#other'].map(&:rule), :img_alt
+  end
+
   def test_collects_guard_failures
     preview = build_preview('mailer', bad: VIOLATING)
     result = run_with_previews([preview], ActiveMail::Quality::Configuration.new)

@@ -50,6 +50,13 @@ class RspecMatcherTest < QualityTest
     assert matcher(allow_declined: true).matches?(declined)
   end
 
+  def test_skip_exempts_the_named_rules
+    all = ActiveMail::Quality::Guard.new.violations(VIOLATING).map(&:rule)
+
+    refute matcher(skip: %i[img_alt]).matches?(VIOLATING)
+    assert matcher(skip: all).matches?(VIOLATING)
+  end
+
   def test_respects_custom_guard
     tiny = ActiveMail::Quality::Guard.new(max_bytes: 10)
 

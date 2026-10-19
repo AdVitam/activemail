@@ -106,7 +106,8 @@ module ActiveMail
       def render_one(preview, email, locale, label)
         PreviewRenderer.within(preview, email, locale, @config.around_each) do |mail|
           write(preview, email, locale, mail) unless PreviewRenderer.declined?(mail)
-          @config.guard.violations(mail, allow_declined: @config.allow_declined?(PreviewRenderer.key(preview, email)))
+          key = PreviewRenderer.key(preview, email)
+          @config.guard.violations(mail, allow_declined: @config.allow_declined?(key), skip: @config.exempt_rules_for(key))
         end
       rescue SystemCallError
         raise # disk/permission failures are not template bugs — let them abort the run

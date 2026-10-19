@@ -8,9 +8,9 @@ module ActiveMail
     module Minitest
       extend T::Sig
 
-      sig { params(html_or_message: T.untyped, guard: Guard, allow_declined: T::Boolean).void }
-      def assert_email_quality(html_or_message, guard: ActiveMail::Quality.guard, allow_declined: false)
-        assert_no_quality_violations(guard.violations(html_or_message, allow_declined: allow_declined))
+      sig { params(html_or_message: T.untyped, guard: Guard, allow_declined: T::Boolean, skip: T::Array[Symbol]).void }
+      def assert_email_quality(html_or_message, guard: ActiveMail::Quality.guard, allow_declined: false, skip: Guard::NO_SKIP)
+        assert_no_quality_violations(guard.violations(html_or_message, allow_declined: allow_declined, skip: skip))
       end
 
       sig do
@@ -60,8 +60,13 @@ module ActiveMail
           .returns(T::Array[Guard::Violation])
       end
       def preview_violations(preview, email, locale, guard, around_each)
-        allowed = ActiveMail::Quality.config.allow_declined?(PreviewRenderer.key(preview, email))
-        PreviewRenderer.within(preview, email, locale, around_each) { |mail| guard.violations(mail, allow_declined: allowed) }
+        config = ActiveMail::Quality.config
+        key = PreviewRenderer.key(preview, email)
+        allowed = config.allow_declined?(key)
+        skip = config.exempt_rules_for(key)
+        PreviewRenderer.within(preview, email, locale, around_each) do |mail|
+          guard.violations(mail, allow_declined: allowed, skip: skip)
+        end
       end
 
       # A non-required preview that can't render is skipped, not a silent pass.

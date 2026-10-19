@@ -296,6 +296,40 @@ class GuardTest < QualityTest
     assert @guard.valid?(ActionMailer::Base::NullMail.new, allow_declined: true)
   end
 
+  def test_skip_exempts_a_built_in_rule_and_keeps_the_others
+    html = '<html><body><img src="x.png"></body></html>'
+    all = @guard.violations(html).map(&:rule)
+
+    assert_includes all, :img_alt
+    assert_includes all, :lang
+    assert_equal all - [:img_alt], @guard.violations(html, skip: %i[img_alt]).map(&:rule)
+    refute @guard.valid?(html, skip: %i[img_alt])
+  end
+
+  def test_skip_exempts_a_custom_rule_and_a_message_rule
+    custom = ActiveMail::Quality::Rule.html(:no_x) { |_doc, html| 'has x' if html.include?('padding') }
+    guard = ActiveMail::Quality::Guard.new(rules: [custom])
+    mail = build_mail(html: CLEAN_DOC, text: nil)
+
+    assert_includes guard.violations(CLEAN_DOC).map(&:rule), :no_x
+    assert guard.valid?(CLEAN_DOC, skip: %i[no_x])
+    assert_includes guard.violations(mail).map(&:rule), :text_part_present
+    assert guard.valid?(mail, skip: %i[text_part_present no_x])
+  end
+
+  def test_skip_rejects_unknown_and_disabled_rule_names
+    error = assert_raises(ArgumentError) { @guard.violations(CLEAN_DOC, skip: %i[img_alt nope]) }
+
+    assert_includes error.message, ':nope'
+    assert_includes error.message, ':img_alt'
+    guard = ActiveMail::Quality::Guard.new(disable: %i[img_alt])
+    assert_raises(ArgumentError) { guard.valid?(CLEAN_DOC, skip: %i[img_alt]) }
+  end
+
+  def test_skip_is_validated_for_a_declined_send_too
+    assert_raises(ArgumentError) { @guard.violations(ActionMailer::Base::NullMail.new, skip: %i[nope]) }
+  end
+
   def test_html_part_present_can_be_disabled
     guard = ActiveMail::Quality::Guard.new(disable: %i[html_part_present text_part_present])
     mail = Mail.new do
