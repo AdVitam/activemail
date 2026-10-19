@@ -47,15 +47,27 @@
   padding-right: 0;
 }
 
-// Below the container width every multi-column row stacks, so each column edge is an outer one.
-// Gmail strips this query and keeps the inlined gutters above.
+// Below the container width every full row stacks, so each top-level column edge is an outer one.
+// Nested columns may still sit side by side and keep the regular gutters. Gmail strips this query.
 @media only screen and (max-width: $am-breakpoint - 1px) {
   .columns {
     padding-left: $am-container-gutter !important;
     padding-right: $am-container-gutter !important;
   }
 
-  .columns .columns,
+  .columns .columns {
+    padding-left: $am-gutter !important;
+    padding-right: $am-gutter !important;
+  }
+
+  .columns .columns.first {
+    padding-left: 0 !important;
+  }
+
+  .columns .columns.last {
+    padding-right: 0 !important;
+  }
+
   .row.collapse .columns {
     padding-left: 0 !important;
     padding-right: 0 !important;

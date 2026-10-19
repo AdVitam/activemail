@@ -124,7 +124,10 @@ class ScssFrameworkTest < ActiveMailTest
     query = css[/@media only screen and \(max-width: 599px\)\s*\{.*?\n\}/m].to_s
 
     assert_match(/\.columns\s*\{\s*padding-left: 16px !important;\s*padding-right: 16px !important;/, query)
-    assert_match(/\.columns \.columns,\s*\.row\.collapse \.columns\s*\{\s*padding-left: 0 !important;/, query)
+    assert_match(/\.columns \.columns\s*\{\s*padding-left: 8px !important;\s*padding-right: 8px !important;/, query)
+    assert_match(/\.columns \.columns\.first\s*\{\s*padding-left: 0 !important;/, query)
+    assert_match(/\.columns \.columns\.last\s*\{\s*padding-right: 0 !important;/, query)
+    assert_match(/\.row\.collapse \.columns\s*\{\s*padding-left: 0 !important;\s*padding-right: 0 !important;/, query)
   end
 
   def test_block_grid_up_n_rules_follow_the_column_count
