@@ -36,13 +36,6 @@ text area is 16px narrower on each side.
   `line-height:1.25`; the cell gets `mso-padding-alt`.
 - A dark-mode override of the button fill must target `table td`, not `a`.
 
-## Center
-
-`<center>` no longer adds `align="center"` and `.float-center` to its children
-(nor to nested menu items): it renders one `<center align="center">` and leaves
-its content as written. Put `class="float-center"` or `align="center"` on the
-children that need it.
-
 ## Layouts
 
 The `<head>` of the default layout moved to `layouts/activemail/_document_head`,

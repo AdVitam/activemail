@@ -181,18 +181,24 @@ class BlockGridTest < ActiveMailTest
 end
 
 class CenterTest < ActiveMailTest
-  def test_centers_itself_and_leaves_its_children_untouched
+  def test_centers_itself_and_its_direct_children
     assert_renders(
-      '<center><div></div></center>',
-      '<center class="float-center" align="center"><div></div></center>'
+      '<center><div><p></p></div></center>',
+      '<center class="float-center" align="center"><div align="center" class="float-center"><p></p></div></center>'
     )
   end
 
-  def test_keeps_its_own_attributes_and_children
-    output = render('<center id="mid" class="x"><p>kept</p></center>')
+  def test_keeps_its_own_attributes_and_the_children_classes
+    output = render('<center id="mid" class="x"><p class="lead">kept</p></center>')
 
     assert_includes output, '<center class="x float-center" id="mid" align="center">'
-    assert_includes output, '<p>kept</p>'
+    assert_includes output, '<p class="lead float-center" align="center">kept</p>'
+  end
+
+  def test_centers_a_transformed_child_component
+    output = render('<center><cta href="#">Go</cta></center>')
+
+    assert_includes output, '<table class="cta float-center" role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">'
   end
 
   def test_an_author_align_does_not_duplicate_the_attribute
@@ -202,9 +208,9 @@ class CenterTest < ActiveMailTest
     assert_includes output, 'align="center"'
   end
 
-  def test_does_not_touch_menu_items
+  def test_centers_nested_menu_items
     output = render('<center><menu><item href="#"></item></menu></center>')
 
-    refute_includes output, 'menu-item float-center'
+    assert_includes output, 'menu-item float-center'
   end
 end

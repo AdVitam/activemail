@@ -270,7 +270,7 @@ only, and a variant border sits on the cell as well. `class="secondary"` selects
 
 - `<wrapper class="header">` → `<table class="header wrapper" align="center" style="width:100%;">` with a `.wrapper-inner` cell.
 - `<h-line>` → a full-width single-cell table drawn as a 1px rule in the `border` color.
-- `<center>` renders a `<center align="center" class="float-center">` around its content and leaves the content untouched.
+- `<center>` renders a `<center align="center" class="float-center">` and adds `align="center"` and `.float-center` to its direct children and nested menu items.
 
 ### `<raw>`
 
