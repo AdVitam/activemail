@@ -5,3 +5,6 @@
 --ignore=tmp
 --ignore=vendor
 --ignore=lib/generators
+--allowed-extension=.rake
+--allowed-extension=.rb
+--allowed-extension=.rbi
