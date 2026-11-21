@@ -14,7 +14,6 @@ module ActiveMail
     sig { params(ignored_names: T::Array[String]).void }
     def initialize(ignored_names)
       @ignored_names = T.let(ignored_names.to_set, T::Set[String])
-      @seen = T.let({}, T::Hash[String, T::Boolean])
       @unknown = T.let(Set.new, T::Set[String])
     end
 
@@ -25,7 +24,7 @@ module ActiveMail
       name = node.name
       return if @ignored_names.include?(name)
 
-      @unknown << name unless @seen.fetch(name) { @seen[name] = Libxml.known_html_tag?(name) }
+      @unknown << name unless Libxml.known_html_tag?(name)
     end
 
     sig { returns(T::Array[String]) }
