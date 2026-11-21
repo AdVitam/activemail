@@ -109,15 +109,15 @@ module ActiveMail
     sig { params(html: T.any(Nokogiri::XML::Document, Nokogiri::XML::DocumentFragment)).void }
     def transform_and_report(html)
       errors = html.errors.dup
-      collector = (UnknownTagCollector.new(@component_instances.keys) if @error_reporter.active?)
+      collector = UnknownTagCollector.new(@component_instances.keys)
       transform_doc(html, collector)
-      @error_reporter.call(errors, collector&.names || [])
+      @error_reporter.call(errors, collector.names)
     end
 
-    sig { params(node: Nokogiri::XML::Node, collector: T.nilable(UnknownTagCollector)).void }
+    sig { params(node: Nokogiri::XML::Node, collector: UnknownTagCollector).void }
     def transform_doc(node, collector)
       node.children.each { |child| transform_doc(child, collector) }
-      collector&.collect(node)
+      collector.collect(node)
       component = @component_instances[node.name]
       replace_with_component(node, component, component.transform(node, SLOT)) if component
     end

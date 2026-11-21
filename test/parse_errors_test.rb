@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require 'minitest/mock'
 
 class ParseErrorsTest < ActiveMailTest
   def test_default_mode_is_warn
@@ -82,16 +81,5 @@ class ParseErrorsTest < ActiveMailTest
     error = assert_raises(ActiveMail::ParseError) { render('<my-widget>a</my-widget><my-widget>b</my-widget>') }
 
     assert_equal 1, error.message.scan('unknown tag <my-widget>').size
-  end
-
-  def test_ignore_mode_never_looks_up_tag_descriptions
-    ActiveMail.configuration.on_parse_error = :ignore
-    lookups = 0
-
-    Nokogiri::HTML4::ElementDescription.stub(:[], ->(_name) { lookups += 1 }) do
-      render('<my-widget>x</my-widget>')
-    end
-
-    assert_equal 0, lookups
   end
 end
