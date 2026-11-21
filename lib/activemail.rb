@@ -26,6 +26,7 @@ require_relative 'activemail/components/info_box'
 require_relative 'activemail/configuration'
 require_relative 'activemail/pipeline'
 require_relative 'activemail/parse_error_reporter'
+require_relative 'activemail/unknown_tag_collector'
 
 module ActiveMail
   class Core
@@ -39,9 +40,6 @@ module ActiveMail
     # are moved there without being re-serialized.
     SLOT_TEXT = 'activemail-slot'
     SLOT = T.let("<!--#{SLOT_TEXT}-->".freeze, String)
-
-    # The component markup repeats the id of the node it replaces, which libxml2 still has registered.
-    LIBXML_ID_REDEFINED_CODE = 513
 
     RAW_REGEX = T.let(%r{< *raw *>([\s\S]*?)</ *raw *>}i, Regexp)
 
@@ -90,7 +88,7 @@ module ActiveMail
       @component_instances = T.let(build_components(config, components), T::Hash[String, ActiveMail::Components::Base])
       @column_count = T.let(ActiveMail.positive_integer!(:column_count, column_count || config.column_count), Integer)
       @container_width = T.let(ActiveMail.positive_integer!(:container_width, container_width || config.container_width), Integer)
-      @error_reporter = T.let(ParseErrorReporter.new(@component_instances.keys + [INTERIM_TH_TAG], config), ParseErrorReporter)
+      @error_reporter = T.let(ParseErrorReporter.new(config), ParseErrorReporter)
     end
 
     # Object, not String: ActionView::OutputBuffer is no longer a String since Rails 7.1.
@@ -100,22 +98,27 @@ module ActiveMail
       marker = "activemail-raw-#{SecureRandom.hex(8)}-"
       raws = {}
       str = extract_raws(normalize_input(html_string), marker, raws)
-      parse_cmd = ::ActiveMail.full_document?(str) ? :parse : :fragment
-      html = Nokogiri::HTML.public_send(parse_cmd, str)
-      @error_reporter.call(html.errors)
-      transform_doc(html)
+      html = Nokogiri::HTML.public_send(::ActiveMail.full_document?(str) ? :parse : :fragment, str)
+      transform_and_report(html)
       re_inject_raws(postprocess(html.to_html), marker, raws)
     end
 
     private
 
-    sig { returns(T::Hash[String, ActiveMail::Components::Base]) }
-    attr_reader :component_instances
+    # Errors are read first: parsing component markup later resets the document's error list.
+    sig { params(html: T.any(Nokogiri::XML::Document, Nokogiri::XML::DocumentFragment)).void }
+    def transform_and_report(html)
+      errors = html.errors.dup
+      collector = UnknownTagCollector.new(@component_instances.keys)
+      transform_doc(html, collector)
+      @error_reporter.call(errors, collector.names)
+    end
 
-    sig { params(node: Nokogiri::XML::Node).void }
-    def transform_doc(node)
-      node.children.each { |child| transform_doc(child) }
-      component = component_instances[node.name]
+    sig { params(node: Nokogiri::XML::Node, collector: UnknownTagCollector).void }
+    def transform_doc(node, collector)
+      node.children.each { |child| transform_doc(child, collector) }
+      collector.collect(node)
+      component = @component_instances[node.name]
       replace_with_component(node, component, component.transform(node, SLOT)) if component
     end
 
@@ -124,7 +127,7 @@ module ActiveMail
     sig { params(node: Nokogiri::XML::Node, component: ActiveMail::Components::Base, markup: String).void }
     def replace_with_component(node, component, markup)
       fragment = Nokogiri::HTML::DocumentFragment.new(node.document, markup, node)
-      @error_reporter.call(fragment.errors.reject { |error| error.code == LIBXML_ID_REDEFINED_CODE })
+      @error_reporter.call(fragment.errors.reject { |error| error.code == Libxml::ID_REDEFINED_CODE })
       slots = fragment.xpath('.//comment()').select { |comment| comment.content == SLOT_TEXT }
       ensure_slot_usage!(node, component, slots.size)
       slots.first&.replace(node.children)
