@@ -81,7 +81,7 @@ module ActiveMail
 
       sig { params(doc: Nokogiri::XML::Document).returns(T.nilable(String)) }
       def parse_error_message(doc)
-        errors = doc.errors.reject { |e| e.code == LIBXML_UNKNOWN_TAG_CODE }
+        errors = Libxml.markup_errors(doc.errors)
         return if errors.empty?
 
         "malformed HTML: #{errors.first(3).map { |e| e.message.to_s.strip }.join('; ')}"

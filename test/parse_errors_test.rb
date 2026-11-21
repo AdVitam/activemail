@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'minitest/mock'
 
 class ParseErrorsTest < ActiveMailTest
   def test_default_mode_is_warn
@@ -59,14 +60,38 @@ class ParseErrorsTest < ActiveMailTest
     assert_silent { render('<container><b><i>x</b></i></container>') }
   end
 
-  # Locks the libxml2 message format the tag filter depends on: if a Nokogiri
-  # bump changes it, this fails before users drown in false warnings.
-  def test_unknown_tag_filter_matches_pinned_libxml2_message_format
-    error = Nokogiri::HTML.fragment('<row></row>').errors
-                          .find { |e| e.code == ActiveMail::LIBXML_UNKNOWN_TAG_CODE }
+  def test_raise_mode_names_the_unknown_tag
+    ActiveMail.configuration.on_parse_error = :raise
 
-    refute_nil error
-    assert_silent { ActiveMail::ParseErrorReporter.new(['row'], ActiveMail.configuration).call([error]) }
-    assert_output(nil, /\S/) { ActiveMail::ParseErrorReporter.new([], ActiveMail.configuration).call([error]) }
+    error = assert_raises(ActiveMail::ParseError) { render('<row><colums>x</colums></row>') }
+
+    assert_includes error.message, 'unknown tag <colums>'
+  end
+
+  def test_html5_section_tag_warns
+    assert_output(nil, /unknown tag <section>/) { render('<section>x</section>') }
+  end
+
+  def test_unknown_tag_inside_raw_is_silent
+    assert_silent { render('<raw><my-widget>x</my-widget></raw>') }
+  end
+
+  def test_repeated_unknown_tag_is_reported_once
+    ActiveMail.configuration.on_parse_error = :raise
+
+    error = assert_raises(ActiveMail::ParseError) { render('<my-widget>a</my-widget><my-widget>b</my-widget>') }
+
+    assert_equal 1, error.message.scan('unknown tag <my-widget>').size
+  end
+
+  def test_ignore_mode_never_looks_up_tag_descriptions
+    ActiveMail.configuration.on_parse_error = :ignore
+    lookups = 0
+
+    Nokogiri::HTML4::ElementDescription.stub(:[], ->(_name) { lookups += 1 }) do
+      render('<my-widget>x</my-widget>')
+    end
+
+    assert_equal 0, lookups
   end
 end

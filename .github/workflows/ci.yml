@@ -42,6 +42,20 @@ jobs:
       - name: Run tests
         run: bundle exec rake test
 
+  nokogiri-head:
+    name: Nokogiri main
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: gemfiles/nokogiri_head.gemfile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+          bundler-cache: true
+      - name: Run tests
+        run: bundle exec rake test
+
   lint:
     name: Rubocop and Sorbet
     runs-on: ubuntu-latest

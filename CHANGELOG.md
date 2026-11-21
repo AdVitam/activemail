@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-11-21
+
+### Fixed
+
+- Unknown tags are detected by name, so they are still reported on libxml2
+  2.14 and later (Nokogiri 1.20, or a system libxml2), which no longer emits
+  the "Tag X invalid" error.
+
+### Changed
+
+- Nokogiri `< 2` (was `< 1.20`).
+
 ## [2.1.1] - 2026-10-19
 
 ### Fixed
@@ -249,6 +261,7 @@ toolkit for Rails.
 - Rails `>= 7.1` (tested up to 8.1).
 - Nokogiri `>= 1.16`.
 
+[2.1.2]: https://github.com/AdVitam/activemail/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/AdVitam/activemail/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/AdVitam/activemail/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/AdVitam/activemail/compare/v1.2.3...v2.0.0
