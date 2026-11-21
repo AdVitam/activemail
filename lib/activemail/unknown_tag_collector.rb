@@ -6,8 +6,6 @@ require 'sorbet-runtime'
 require_relative 'libxml'
 
 module ActiveMail
-  # One instance per transpile call: collects the element names that are neither
-  # registered components nor known HTML4 tags.
   class UnknownTagCollector
     extend T::Sig
 
