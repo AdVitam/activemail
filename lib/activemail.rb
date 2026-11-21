@@ -109,7 +109,7 @@ module ActiveMail
     sig { params(html: T.any(Nokogiri::XML::Document, Nokogiri::XML::DocumentFragment)).void }
     def transform_and_report(html)
       errors = html.errors.dup
-      collector = (UnknownTagCollector.new(@component_instances.keys + [INTERIM_TH_TAG]) if @error_reporter.active?)
+      collector = (UnknownTagCollector.new(@component_instances.keys) if @error_reporter.active?)
       transform_doc(html, collector)
       @error_reporter.call(errors, collector&.names || [])
     end
