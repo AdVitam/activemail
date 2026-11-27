@@ -33,11 +33,20 @@ module ActiveMail
           result
         end
 
-        sig { returns(T::Array[[T.untyped, String]]) }
-        def all
+        # Rails skips loading previews once one was autoloaded by its constant, so every file is required here.
+        sig { returns(T::Array[T.untyped]) }
+        def previews
           return [] unless defined?(ActionMailer::Preview)
 
-          ActionMailer::Preview.all.flat_map do |preview|
+          ActionMailer::Base.preview_paths.each do |path|
+            Dir["#{path}/**/*_preview.rb"].each { |file| require file }
+          end
+          ActionMailer::Preview.all
+        end
+
+        sig { returns(T::Array[[T.untyped, String]]) }
+        def all
+          previews.flat_map do |preview|
             preview.emails.map { |email| [preview, email] }
           end
         end

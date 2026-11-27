@@ -13,6 +13,7 @@ class SprocketsIntegrationTest < Minitest::Test
       assert_equal 'ActiveMail::AssetPipeline::Sprockets', result['pipeline']
       assert_inlined_single_pass_mail(result)
       assert_untouched_and_failing_cases(result)
+      assert_every_preview_listed(result)
     end
   end
 

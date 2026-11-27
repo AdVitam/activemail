@@ -11,6 +11,7 @@ ActiveMail::Core.prepend(Module.new do
 end)
 
 Rails.application.initialize!
+require 'activemail/quality/preview_renderer'
 
 def capture
   yield
@@ -36,4 +37,6 @@ result['welcome'] = if welcome.is_a?(Hash)
 result['plain'] = plain.is_a?(Hash) ? plain : plain.body.decoded
 result['missing_stylesheet'] = capture { BrokenMailer.hello.message }
 result['annotation_extensions'] = Rails::SourceAnnotationExtractor::Annotation.extensions.map { |pattern, _| pattern.source }
+result['first_preview'] = NotifierMailerPreview.preview_name
+result['previews'] = ActiveMail::Quality::PreviewRenderer.all.map { |preview, email| ActiveMail::Quality::PreviewRenderer.key(preview, email) }.sort
 puts "PROBE_JSON:#{JSON.generate(result)}"

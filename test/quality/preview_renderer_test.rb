@@ -136,4 +136,14 @@ class PreviewRendererTest < QualityTest
     require 'action_mailer'
     ActionMailer::Preview.stub(:all, []) { assert_empty ActiveMail::Quality::PreviewRenderer.all }
   end
+
+  def test_previews_requires_every_preview_file_of_the_preview_paths
+    require 'action_mailer'
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, 'late_mailer_preview.rb'), "class LateMailerPreview < ActionMailer::Preview; end\n")
+      ActionMailer::Base.stub(:preview_paths, [dir]) do
+        assert_includes ActiveMail::Quality::PreviewRenderer.previews.map(&:name), 'LateMailerPreview'
+      end
+    end
+  end
 end
