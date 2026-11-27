@@ -41,6 +41,10 @@ module DummyAppAssertions
     assert_equal '<style>.a{color:red}</style><p class="a">x</p>', welcome['attachment']
   end
 
+  def assert_every_preview_listed(result)
+    assert_equal %w[notifier_mailer#welcome plain_mailer#hello], result['previews']
+  end
+
   def assert_untouched_and_failing_cases(result)
     assert_equal %(<style>.x{color:red}</style><p class="x">hi</p><button href="#">x</button>\n), result['plain']
     assert_equal 'ActionView::Template::Error', result['missing_stylesheet']['error']

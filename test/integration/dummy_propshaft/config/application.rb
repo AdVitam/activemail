@@ -17,6 +17,8 @@ class DummyPropshaft < Rails::Application
   config.secret_key_base = 'dummy'
   config.logger = Logger.new(nil)
   config.autoload_paths << File.join(COMMON, 'mailers')
+  config.autoload_paths << File.join(COMMON, 'previews')
+  config.action_mailer.preview_paths << File.join(COMMON, 'previews')
   config.paths['app/views'] << File.join(COMMON, 'views')
   config.action_mailer.delivery_method = :test
   config.assets.paths << ENV.fetch('ACTIVEMAIL_ASSETS_DIR')

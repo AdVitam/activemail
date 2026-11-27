@@ -6,6 +6,13 @@
 # (RSpec). Neither is a hard gem dependency, so no gem RBI is generated.
 
 module ActionMailer
+  class Base
+    class << self
+      sig { returns(T::Array[String]) }
+      def preview_paths; end
+    end
+  end
+
   class Preview
     class << self
       sig { returns(T::Array[T.untyped]) }
